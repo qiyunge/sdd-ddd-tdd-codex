@@ -1,0 +1,116 @@
+# Implementation Plan: Student Self-Enrollment
+
+**Branch**: `001-enroll-course` | **Date**: 2026-10-21 | **Spec**: [spec.md](spec.md)
+
+**Input**: `specs/001-enroll-course/spec.md`; Project Owner requires Python as the development language, graphql-core as the GraphQL engine, and Flask as the HTTP Transport Adapter. Application owns repository absence handling and exact FR-009 sequencing; Domain owns business policies and invariants.
+
+## Summary
+
+Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchronous HTTP Transport Adapter, Waitress WSGI serving and embedded sqlite3 persistence. Framework-free Domain owns self-enrollment authorization, duplicate-enrollment and offering-eligibility policies and Enrollment invariants; Application handles failed identity verification and repository misses and orchestrates FR-009 through owned ports; adapters perform explicit boundary conversions. The owner selects Python, graphql-core and Flask directly. Preserve FR-001–FR-010, SC-001–SC-004, all fifteen acceptance scenarios and Constitution v1.3.0.
+
+## Technical Context
+
+**Language/Version**: Python 3.12; declare >=3.12,<3.13 for the initial supported/tested runtime. No Java build/runtime dependency.
+
+**Primary Dependencies**: graphql-core (>=3.3,<3.4; import package `graphql`) with Flask (>=3.1,<3.2) and Waitress at runtime plus Python standard library (`sqlite3`, `dataclasses`, `typing`). Development: pytest, HTTPX for real socket tests, coverage.py, mypy, Ruff and Import Linter. Resolve compatible stable versions into committed uv.lock during implementation; do not treat documentation examples as pins.
+
+**Storage**: Local file-backed SQLite, five persisted record types, one immediate transaction/connection per enrollment. No ORM or database server.
+
+**Testing**: pytest; Flask's test client exercises HTTP POST `/graphql` with real GraphQL documents, JSON and credential headers. Acceptance uses real SQLite and an injected deterministic verifier. Add real local Waitress socket smoke/concurrency tests. Focused Domain/Application, adapter, schema and architecture tests complement acceptance.
+
+**Target Platform**: Python 3.12 on Linux, one threaded WSGI process and local database. Each request creates/uses/closes its connection in the same worker; no global connection or async offload needed.
+
+**Project Type**: One Python package with GraphQL HTTP transport and one enrollment use case.
+
+**Performance Goals**: No latency, throughput or volume targets specified. SQLite serializes writers; no distributed deployment or performance guarantee is introduced.
+
+**Constraints**: Exact FR-009 precedence, generic identity denial before persistence, save-time eligibility, pair uniqueness, commit before success, no mutation caused by rejection. Five-second bounded lock wait maps to technical failure. Production identity verification and prerequisite management remain externally supplied.
+
+**Scale/Scope**: Five persisted record types, one mutation; query-root placeholder is schema scaffolding. No UI, management operations, capacity, terms, fees, withdrawal, federation, subscriptions, broker, containers or extra services.
+
+## Constitution Check
+
+*GATE: assessed before Phase 0; re-evaluated after Phase 1. PASS means design conformity with implementation obligations, not executed application checks.*
+
+| Principle | Before research | Post-design obligation |
+|---|---|---|
+| I. Inward dependencies | PASS: Python supports owned ports and adapters | PASS: Import Linter and architecture/signature tests enforce inward dependencies, Core independence and no framework/persistence leakage |
+| II. Domain integrity / Full Bridge | PASS: Domain retains policies; Application handles repository misses | PASS: Core rejection contracts, Application first-match sequencing, validating value classes and construction/reconstitution; explicit GraphQL/provider/row/outcome conversion; no redundant Application–Domain mappings |
+| III. Outside-In TDD | PASS: public boundary declared | PASS: pytest HTTP acceptance drives executed behavioral Red/Green/Refactor; real persistence, identity double and retained evidence |
+| IV. Fitness / coverage | PASS: enforcement strategy selected | PASS: complete Core source scope at 100% statement-and-branch coverage, including whole affected functions; branchless behavioral tests; negative fitness fixtures |
+| V. Evidence / quality | PASS: final-state review required | PASS: pytest, coverage, mypy, Ruff, Import Linter, architecture and evidence checks must run and pass on final implementation state |
+
+No deviations or constitutional exceptions. No implementation checks are claimed to have passed during planning.
+
+### Resolved constitutional planning questions
+
+- **Boundary contracts**: Keep [SDL](contracts/schema.graphqls) and [contract](contracts/enrollment-api.md). Flask/Werkzeug request/response/context proxies, graphql-core execution context/types, WSGI environ, HTTPX objects, sqlite3 rows/connections/exceptions and identity SDK types stay outside Core. Commands can contain raw invalid input; Domain constructors enforce actual valid state. Adapters may directly call public Domain constructors for technical adaptation without orchestrating the use case. Application may directly use Domain values; no redundant mapping solely for layering.
+- **Port ownership / context**: One Enrollment context. Application owns IdentityVerifier and EnrollmentUnitOfWork/Factory Protocols because orchestration needs them. Domain needs no external capability port. No cross-context messaging or distributed transactions.
+- **Transaction coordination**: Application invokes its IdentityVerifier port. A failed verification returns the Core-defined DENIED immediately, without a Domain ownership call or persistence. On success it passes the trusted VerifiedIdentity and validated target StudentId to Domain ownership policy; mismatch returns DENIED before persistence. It loads Student, Programme and Course sequentially, handles each absent repository result by immediately returning its Core-defined missing-record rejection, and calls Domain duplicate and offering-eligibility policies only when their prerequisite records exist. It creates Enrollment through Domain, adds and commits through the port, then returns success. No trivial Domain existence guards or duplicate Application business predicates are introduced. The sqlite3 adapter implements explicit SQL BEGIN IMMEDIATE/COMMIT/ROLLBACK with autocommit=True and closes its worker-owned connection. No SQL or business predicates in the GraphQL resolver.
+- **Rejection ownership and ordering**: Application owns FR-009 sequencing: unverified identity -> non-owner -> missing Student -> missing Programme -> missing Course -> already enrolled -> course not offered. Application handles unverified identity at stage 1; Domain ownership decides mismatch at stage 2 only after verification succeeds. Neither denial accesses persistence. Application handles repository absence for the next three; Domain decides duplicate and offering eligibility when reached. Application may branch on typed Domain outcomes to short-circuit but must not recalculate their predicates. Missing-record rejection types live in Application Core contracts; Domain policy reasons remain in Domain and are used directly in the Application result union. Domain never imports Application result types.
+- **Verification boundary**: IdentityVerifier is Application-owned; its ordinary result is trusted Domain VerifiedIdentity or None when credentials do not establish a verified identity. Application returns the same Core DENIED on None without invoking ownership or opening a UoW. Domain ownership accepts only VerifiedIdentity and StudentId; it neither calls IdentityVerifier nor depends on any verification port or UnverifiedIdentity model. The Core Denied value/type can remain Domain-defined and be reused by Application, preserving inward dependencies and the identical public denial. Existing provider-unavailability technical failures remain distinct from a negative verification result and also short-circuit before Domain/persistence.
+- **GraphQL/HTTP ownership**: graphql-core is the schema/execution engine, not an HTTP application/server. Flask owns HTTP routing, request parsing and response construction. Its adapter owns, method/content/envelope checks, credentials/context, execution invocation and sanitized JSON responses; Waitress owns sockets/workers. Bootstrap injects the GraphQL executor and Application dependencies into a Flask app factory; no Flask context is passed inward. GraphQL wiring owns SDL binding, explicit union type names and output conversions. Build schema/wiring once, then avoid per-request schema mutation. Engine objects stay inside inbound adapters. These technical responsibilities are driven by failing adapter tests.
+- **Flask lifecycle**: An app factory configures dependencies and routes once. The synchronous POST /graphql view extracts JSON and credentials, invokes the injected GraphQL adapter and formats JSON responses. Keep Flask request/current_app/g/session proxies and Werkzeug types out of Domain, Application and GraphQL resolver contracts. Use an adapter-owned plain execution context. Preserve the POST-only protocol by disabling automatic OPTIONS for this route and the unused static route. HTTP error handlers preserve status/Allow headers and return sanitized JSON; do not turn unexpected errors into success.
+- **Application frameworks**: Choose no framework dependencies in Core for this feature. This does not amend the constitution's general permission for appropriate Application frameworks. Dataclasses, enums and typing are standard-library mechanisms; Flask/graphql-core/Waitress/HTTP and database modules remain adapters/bootstrap.
+- **Fitness scope**: Import Linter layers order bootstrap -> adapters -> application -> domain, explicitly permitting adapters to use public Domain types. Forbid outward dependencies, cycles, unrelated sibling adapter coupling and external framework/persistence/provider imports in Core, including re-exports and annotation imports. Include external-package graphs for forbidden-import contracts. AST/signature tests inspect public contracts, resolve aliases and reject external types/unchecked Any; forbid dynamic-import escape hatches in Core. Fail empty scope/scans. Violating fixtures prove detection. Semantic leakage through data containers requires converter tests and review, beyond import rules.
+- **TDD scope**: Every independently testable business/adapter behavior begins with an executed expected behavioral failure. Acceptance guides inner tests; broad tests may drive multiple layers if their failures demonstrate each changed responsibility. Configuration/documentation validation does not require artificial Red. Pure refactors begin green and rerun relevant checks. Import/configuration errors are not behavioral Red. Do not weaken tests merely to make code pass.
+- **Approval**: Project Owner remains specification/change and future exclusion approval authority. The existing ready-for-planning spec is the baseline. Python selection is explicitly authorized; business requirements and ratified constitution are unchanged.
+- **Evidence**: Retain commands, stdout/stderr, exit codes, execution order, test identity and source revision plus working-tree diff digest under `specs/001-enroll-course/evidence/<increment>/`. Preserve Red before production change, Green after minimum behavior, Refactor passing tests or no-refactor rationale. Final manifest binds mandatory checks to source/config/test digest excluding evidence/build output. Later edits invalidate affected results and final gates rerun. Reviewer inspects transcripts, not summaries alone.
+- **Coverage scope**: Entire `src/enrollment/domain/` and `src/enrollment/application/`, including constructors, reconstitution, Domain invariant/authorization/duplicate/eligibility policies, Application identity-verification and repository absence branches, result decisions and orchestration. coverage.py branch=True and fail_under=100 across complete source directories is stronger than the whole-function branch minimum and covers unchanged branches too. Audit discovery of unimported files and default/custom exclusions; no business omissions or no-cover/no-branch suppressions. Include any business behavior introduced elsewhere. No-branch functions require behavior tests. Technical wiring/tooling may remain outside the business threshold only while free of business decisions; all adapter responsibilities still require tests.
+- **Static configuration**: mypy targets Python 3.12, strict mode, warn_unused_ignores, warn_unreachable and disallow_any_unimported; reject broad ignored imports and unexplained casts/Any/suppressions. Isolate justified library typing gaps to checked adapter bridges. Ruff targets py312 with E4/E7/E9, F, I, B and UP rules plus format --check. Import Linter and architecture tests above are mandatory. Pin all configurations/versions in pyproject.toml and uv.lock. None is only an editor recommendation.
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/001-enroll-course/
+├── spec.md
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+│   ├── enrollment-api.md
+│   └── schema.graphqls
+└── evidence/                 # created during implementation
+```
+
+`tasks.md` is generated by the subsequent tasks workflow, not this command.
+
+### Source Code (planned repository root)
+
+```text
+pyproject.toml
+uv.lock
+src/enrollment/
+├── domain/                  # validated IDs, records, policies, Enrollment, reasons
+├── application/             # FR-009 orchestration, missing-record results, owned ports
+├── adapters/
+│   ├── graphql/             # core schema/resolver wiring, output conversion, SDL
+│   ├── http/                # Flask app factory/routes, request and response conversion
+│   ├── persistence/         # sqlite3 UoW, row/error conversion
+│   └── identity/            # external verifier bridge
+└── bootstrap.py             # composition / exported Flask WSGI application
+tests/
+├── acceptance/
+├── domain/
+├── application/
+├── adapters/
+└── architecture/
+scripts/check-quality.sh
+```
+
+**Structure Decision**: One package, process and database preserve a small deployment. The HTTP adapter may depend on the GraphQL execution adapter as an explicit composed inbound pipeline; other sibling adapters remain independent. Core still depends on neither. The runtime packaged SDL must equal the design contract after normalization. No application paths above exist yet; they are implementation deliverables.
+
+## Phase 0: Research Outcome
+
+[research.md](research.md) records the required Python choice, graphql-core/Flask selection, typing and bridges, sqlite3 transaction mechanics, verification strategy and alternatives. No applicable planning clarification remains unresolved. Stable dependency resolution and runtime checks remain implementation obligations.
+
+## Phase 1: Design Outcome
+
+[data-model.md](data-model.md), [contracts/enrollment-api.md](contracts/enrollment-api.md) and [quickstart.md](quickstart.md) use Python with Application-owned repository existence checks and Domain-owned policies. [contracts/schema.graphqls](contracts/schema.graphqls) is unchanged because the public GraphQL contract is language independent. Post-design gates pass at design level. Stop before task generation or implementation.
+
+## Complexity Tracking
+
+No constitutional violations or waivers. Flask handles HTTP integration; direct graphql-core keeps GraphQL schema/resolver wiring explicit. Both stay in inbound adapters with behavioral tests. WSGI serving matches synchronous sqlite3 and avoids async coordination machinery; no additional external infrastructure is required.
