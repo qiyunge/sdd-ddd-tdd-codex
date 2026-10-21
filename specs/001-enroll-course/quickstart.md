@@ -1,6 +1,6 @@
 # Quickstart Validation Guide: Python 3.12 / GraphQL
 
-This guide defines post-implementation validation. The package, pyproject.toml, uv.lock, tests and scripts below are planned deliverables. No implementation check is claimed to have run during planning. Run commands from the repository root after implementation.
+Run these validation commands from the repository root. Python packaging uses the Hatchling PEP 517 backend, with both schemas included in the wheel. See [README](../../README.md) for host identity integration and explicit schema initialization. SQLite must reside on a local filesystem with reliable locking.
 
 ## Prerequisites and setup
 
@@ -65,19 +65,15 @@ Verify Domain requires no UnverifiedIdentity model and imports no IdentityVerifi
 ## Mandatory final checks
 
 ```bash
-uv run coverage erase
-uv run coverage run --branch --source=src/enrollment/domain,src/enrollment/application -m pytest tests -q --junitxml=test-results.xml
-uv run coverage report --fail-under=100
-uv run coverage json -o coverage.json
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy --strict src
-uv run lint-imports
 bash scripts/check-quality.sh
+.venv/bin/python -m scripts.assemble_evidence
+.venv/bin/python -m scripts.check_evidence
 ```
+
+First, the quality script executes all tests (including isolated installed-wheel resource and real Waitress socket tests), architecture checks, Import Linter, strict mypy, Ruff lint/format and complete Core coverage. It records raw commands, stdout/stderr, exit codes and digests in `evidence/final/checks/`. It neither reads nor requires a final manifest. Next, assembly writes `evidence/final/manifest.json` with check references, artifact hashes and increment evidence. Finally, validation checks completeness, consistency, scenario counts, Core scope and digest freshness and writes `evidence/final/validation.json`. A quality pass or manifest alone is insufficient. Run all three stages after any source/config/test change. Historical failed raw results are archived rather than discarded.
 
 Configure Python 3.12/static rules, coverage branch=True/fail_under=100 and Import Linter contracts in pyproject.toml. Source directories must include unimported files. Include business behavior outside Core if any is introduced. No business omissions, no cover/no branch suppressions, default exclusions concealing logic or changed-lines gates. Full-scope 100% statement-and-branch coverage meets the entire-function branch minimum; it does not prove complete behavior. Branchless functions still require behavioral tests.
 
-The quality script runs these checks or consumes results tied to the same final source/config/test digest. It rejects missing/stale coverage data, empty source/test discovery, skipped mandatory scenarios, unjustified exclusions and missing evidence. Negative fixtures prove detection of a missed business branch, forbidden import/external public type, schema mismatch and skipped required scenario. Server threads remain in the instrumented test process; any future subprocess execution needs explicit coverage collection/combination.
+The quality script executes and captures checks tied to the same source/config/test digest. The later evidence validator rejects missing/stale coverage data, empty source/test discovery, skipped mandatory scenarios, unjustified exclusions and missing evidence. Negative fixtures prove detection of a missed business branch, forbidden import/external public type, schema mismatch and skipped required scenario. Server threads remain in the instrumented test process; any future subprocess execution needs explicit coverage collection/combination.
 
 Keep per-increment evidence under `specs/001-enroll-course/evidence/<increment>/`, including commands, output/exit codes, execution order, test identity, source revision and working-tree diff digest. Final manifest binds complete results to a source/config/test digest excluding evidence/build output. Later edits invalidate affected results and require final reruns. Reviewer inspects actual transcripts. Failed, skipped, blocked or missing mandatory checks prevent a feature-completion claim.

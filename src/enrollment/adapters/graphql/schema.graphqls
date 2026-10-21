@@ -1,0 +1,49 @@
+"""Contract for student self-enrollment; credentials are transport context."""
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"""Required query root scaffolding; no business query is exposed."""
+type Query {
+  _empty: Boolean
+}
+
+type Mutation {
+  enrollCourse(input: EnrollCourseInput!): EnrollCourseResult!
+}
+
+input EnrollCourseInput {
+  studentId: ID!
+  courseId: ID!
+}
+
+union EnrollCourseResult = EnrollCourseSuccess | EnrollCourseRejected | EnrollCourseFailure
+
+type EnrollCourseSuccess {
+  studentId: ID!
+  courseId: ID!
+}
+
+type EnrollCourseRejected {
+  reason: EnrollmentRejectionReason!
+}
+
+enum EnrollmentRejectionReason {
+  DENIED
+  MISSING_STUDENT
+  MISSING_PROGRAMME
+  MISSING_COURSE
+  ALREADY_ENROLLED
+  COURSE_NOT_OFFERED
+}
+
+type EnrollCourseFailure {
+  reason: EnrollmentFailureReason!
+}
+
+enum EnrollmentFailureReason {
+  PERSISTENCE_FAILURE
+  IDENTITY_UNAVAILABLE
+  INVALID_REQUEST
+}

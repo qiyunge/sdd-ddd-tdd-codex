@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/.venv/bin/mypy",
+    "src"
+  ],
+  "stage": "typing",
+  "exit_code": 0,
+  "stdout": "Success: no issues found in 20 source files\n",
+  "stderr": "",
+  "digest": "374f094a3a432f69f01dddb6d38d5b59bebe6cd15baad726fa090aaec8459618",
+  "digest_after": "374f094a3a432f69f01dddb6d38d5b59bebe6cd15baad726fa090aaec8459618",
+  "started_ns": 1792623607890541608,
+  "finished_ns": 1792623608058858871
+}

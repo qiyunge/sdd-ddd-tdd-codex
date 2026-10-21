@@ -1,0 +1,9 @@
+# Execution evidence
+
+record.py captures actual commands, output, exit codes, order, revision, working diff and source/config/test digest. Red is a behavioral assertion failure, not an import error. Green and no-refactor verification are rerun after implementation. Stage files are retained with source. The final manifest refers to actual result files; final validation requires matching digests and all checks passing. Build and evidence output do not enter the code digest. No-refactor means the minimum clear design is retained, with a passing rerun.
+
+Final order is `bash scripts/check-quality.sh`, `.venv/bin/python -m scripts.assemble_evidence`, then `.venv/bin/python -m scripts.check_evidence`. Raw final check results are captured without reading a manifest; repeated raw results are archived. The manifest includes artifact SHA-256 hashes, current source/config/test digest, all check references and increment transcripts. The later validator checks these references, scenario counts, full Core scope, skipped tests, suppressions, coverage and review status. Review cannot pass automatically from test success alone.
+
+Coverage.py's default ellipsis exclusion applies to declarative Protocol signatures only; the validator structurally rejects any implementation in those excluded port declarations. There are no business coverage exclusions. The sole source typing suppression documents Waitress's untyped import and is confined to bootstrap.
+
+`review.json` records a process limitation: grouped early Red suites and subsequent grouped implementations do not fully demonstrate the required per-behavior Red–Green–Refactor sequence. The functional implementation can pass every check while final completion remains closed. Do not rewrite historical output or manufacture failures to erase this limitation.

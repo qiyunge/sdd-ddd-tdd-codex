@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "student-enrollment"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["graphql-core>=3.3,<3.4", "flask>=3.1,<3.2", "waitress>=3,<4"]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.28", "coverage[toml]>=7", "mypy>=1", "ruff>=0.9", "import-linter>=2"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/enrollment"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+warn_unreachable = true
+disallow_any_unimported = true
+
+[tool.ruff]
+target-version = "py312"
+extend-exclude = [".specify", ".agents", ".codex"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/enrollment/domain", "src/enrollment/application"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+
+[tool.importlinter]
+root_package = "enrollment"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Inward dependencies"
+type = "layers"
+layers = ["enrollment.bootstrap", "enrollment.adapters", "enrollment.application", "enrollment.domain"]
+
+[[tool.importlinter.contracts]]
+name = "Core has no external adapters"
+type = "forbidden"
+source_modules = ["enrollment.domain", "enrollment.application"]
+forbidden_modules = ["flask", "werkzeug", "graphql", "sqlite3", "waitress", "httpx"]
+
+[[tool.importlinter.contracts]]
+name = "Outbound adapter independence"
+type = "independence"
+modules = ["enrollment.adapters.identity", "enrollment.adapters.persistence", "enrollment.adapters.graphql"]
+
+[[tool.importlinter.contracts]]
+name = "GraphQL execution is Flask-free"
+type = "forbidden"
+source_modules = ["enrollment.adapters.graphql"]
+forbidden_modules = ["flask", "werkzeug", "enrollment.adapters.http"]
+
+[[tool.importlinter.contracts]]
+name = "HTTP does not coordinate outbound adapters"
+type = "forbidden"
+source_modules = ["enrollment.adapters.http"]
+forbidden_modules = ["enrollment.adapters.identity", "enrollment.adapters.persistence"]

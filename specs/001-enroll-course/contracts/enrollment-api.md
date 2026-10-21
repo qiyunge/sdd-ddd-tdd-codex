@@ -14,7 +14,7 @@ mutation Enroll($input: EnrollCourseInput!) {
     __typename
     ... on EnrollCourseSuccess { studentId courseId }
     ... on EnrollCourseRejected { reason }
-    ... on EnrollCourseFailure { reason }
+    ... on EnrollCourseFailure { failureReason: reason }
   }
 }
 ```
