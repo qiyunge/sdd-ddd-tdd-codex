@@ -28,7 +28,15 @@ uv run pytest tests/architecture -q
 uv run pytest tests/acceptance -q
 ```
 
-For each independently testable behavior select its acceptance example, execute the expected behavioral Red before production edits, then follow that failure into inner Red/Green/Refactor cycles as needed. Import/configuration failures do not count as Red. Preserve raw output, exit codes, execution order and source associations. When no refactor is needed record the rationale and rerun relevant tests. Focused passes cannot substitute for final checks.
+Choose a cohesive behavioral increment guided by acceptance examples. Execute relevant
+behavioral tests and retain their expected failure before implementation; implement
+the required behavior and verify relevant tests pass. Consider refactoring and keep
+relevant tests passing; no code change or separate no-refactor artifact is needed
+when none is warranted. Related behaviors may share one cycle and tests may span
+layers through a shared behavioral boundary. Import/configuration failures do not
+count as Red. Lightweight commands/results may be consolidated across increments;
+passing tests and coverage alone do not prove TDD. Focused passes do not replace
+mandatory final checks.
 
 ## Acceptance expectations
 
@@ -58,7 +66,7 @@ Application tests drive missing Student, Programme and Course outcomes with repo
 
 Application tests drive failed verification -> DENIED without invoking ownership/persistence, and successful verification -> trusted VerifiedIdentity plus StudentId forwarded to ownership. Domain tests independently drive ownership for matching/mismatched verified identities, duplicate-enrollment rules, course-offering eligibility and Enrollment construction/reconstitution/transitions. Application tests exercise ordered policy delegation and unchanged outcome propagation without duplicating actor equality, duplicate or offering predicates. Branching on a typed policy result to stop is allowed. Existing HTTP acceptance examples retain their exact outcomes and cover combined conditions across both owners. In particular, already-enrolled plus ineligible returns ALREADY_ENROLLED without loading offering data or invoking eligibility.
 
-Review Core signatures to keep Application missing-record types/result union out of Domain and preserve explicit adapter conversions. Measure whole Application orchestration functions, including verification success/failure and every existence/short-circuit branch, plus whole Domain policy methods under the unchanged 100% statement-and-branch gate. Keep executed Outside-In Red/Green/Refactor evidence for both responsibilities.
+Review Core signatures to keep Application missing-record types/result union out of Domain and preserve explicit adapter conversions. Measure whole Application orchestration functions, including verification success/failure and every existence/short-circuit branch, plus whole Domain policy methods under the unchanged 100% statement-and-branch gate. Verify both responsibilities; shared behavioral tests may cover them within cohesive increments with lightweight execution evidence.
 
 Verify Domain requires no UnverifiedIdentity model and imports no IdentityVerifier/Application port. Negative verification must not construct a fake Domain identity or target StudentId; validate the target only after verification succeeds, then call ownership. Keep provider-unavailability technical handling separate from an ordinary negative verification result, with zero ownership/persistence calls for both.
 
@@ -76,7 +84,12 @@ Configure Python 3.12/static rules, coverage branch=True/fail_under=100 and Impo
 
 The quality script executes and captures checks tied to the same source/config/test digest. The later evidence validator rejects missing/stale coverage data, empty source/test discovery, skipped mandatory scenarios, unjustified exclusions and missing evidence. Negative fixtures prove detection of a missed business branch, forbidden import/external public type, schema mismatch and skipped required scenario. Server threads remain in the instrumented test process; any future subprocess execution needs explicit coverage collection/combination.
 
-Keep per-increment evidence under `specs/001-enroll-course/evidence/<increment>/`, including commands, output/exit codes, execution order, test identity, source revision and working-tree diff digest. Final manifest binds complete results to a source/config/test digest excluding evidence/build output. Later edits invalidate affected results and require final reruns. Reviewer inspects actual transcripts. Failed, skipped, blocked or missing mandatory checks prevent a feature-completion claim.
+Retain lightweight commands/results and enough test/ordering context to demonstrate
+relevant failure before implementation and success afterward. Consolidation across
+cohesive increments is permitted. Exhaustive per-behavior histories, intermediate
+source snapshots and separate no-refactor artifacts are not required. Final results
+must still match the final source/config/test state; changes require final reruns.
+Failed, skipped, blocked or missing mandatory checks prevent completion claims.
 
 
 ## Student details extension validation
@@ -106,23 +119,22 @@ Add cases for Unicode whitespace such as NBSP and casefold expansion (`Straße@e
 
 Exercise SQL constraints on the production schema using configured connections: nonblank fields, duplicate casefold keys on insert/update and registration on every write path. A connection lacking required functions fails closed; no ASCII fallback or forged key is accepted. Verify restoring malformed legacy/corrupt rows produces StorageFailure/PERSISTENCE_FAILURE without leaking diagnostics. Initialization must refuse a pre-extension schema unchanged, accept a fresh schema and preserve data on compatible repeated initialization; no migration or fabricated defaults.
 
-Before production edits for each increment, capture the selected acceptance command through the existing recorder, using fresh task IDs assigned by the next tasks workflow:
+Before production edits, retain relevant behavioral Red and subsequent Green for each
+cohesive increment. The current recorder and validator still enforce the previous
+prospective protocol; the new lightweight format is not implemented yet. Follow the
+[tooling migration design](plan.md#execution-evidence-and-tooling-migration) before
+using revised evidence as a completion gate. No new recorder command is asserted here.
 
-```text
-uv run python -m scripts.record <new-increment> red .venv/bin/python -m pytest <selected-test> -q
-uv run python -m scripts.record <new-increment> green .venv/bin/python -m pytest <selected-test> -q
-uv run python -m scripts.record <new-increment> refactor .venv/bin/python -m pytest <relevant-tests> -q
-```
+Missing imports or constructor signatures alone are not behavioral Red. Update
+fixtures for approved required fields while preserving existing behavioral assertions.
 
-These are command patterns with placeholders, not commands to execute verbatim. Red must fail for the expected behavior, not a missing import or constructor signature. Retain real output/order and source/diff associations. Record no-refactor rationale when applicable. Update fixture constructors/seeds to valid name/email for existing tests; this is justified by the newly approved required-field contract, not permission to remove existing assertions.
+Before final completion, extend manifest assembly/validation to require all 15 enrollment and 7 student-detail scenario identities plus lightweight execution evidence covering changed behavior, consolidated across cohesive increments. Add negative tests showing a missing/skipped new scenario, absent relevant Red/Green evidence, stale final coverage or mismatched final evidence fails validation, plus positive tests accepting consolidated coherent increments without snapshots or no-refactor artifacts. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
 
-Before final completion, extend manifest assembly/validation to require all 15 enrollment and 7 student-detail scenario identities plus the new TDD increments. Add negative tests showing a missing/skipped new scenario, absent new increment, stale coverage or mismatched evidence fails validation. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
-
-## Failure-contract alignment validation (Constitution v1.4.0)
+## Failure-contract alignment validation (Constitution v2.0.0)
 
 This is planned verification; no implementation pass is claimed by this update.
 Use the existing acceptance, focused tests and final evidence commands above after
-implementing the revised contracts. Add fresh Red/Green/Refactor increments for:
+implementing the revised contracts. Use cohesive Red/Green/Refactor increments covering these behaviors; related items MAY share a cycle:
 
 - Domain factories returning invalid-ID/invalid-text outcomes without raising; direct
   valid construction/restoration and internal misuse guards remain invariant-safe.
@@ -150,7 +162,7 @@ unexpected internal execution failures use the sanitized error envelope. Keep th
 ## StudentEmail equality and identity validation
 
 After implementation, use the focused Domain/Application and acceptance commands
-above with fresh Red/Green/Refactor evidence for these behaviors:
+above with lightweight Red/Green evidence for cohesive increments covering these behaviors; consider refactoring and keep relevant tests passing:
 
 - Case variants across both address parts compare equal and have equal hashes.
 - Unicode expansion pairs (`Straße@example.com`, `STRASSE@EXAMPLE.COM`) compare
@@ -172,3 +184,16 @@ above with fresh Red/Green/Refactor evidence for these behaviors:
 These are planned tests, not executed implementation results. Include equality and
 hash methods in complete Core coverage and retain the existing acceptance scenario
 families and final evidence gates.
+
+## Verification after tooling simplification
+
+Use the acceptance and final-check commands above after implementing the
+[evidence migration](plan.md#execution-evidence-and-tooling-migration) and
+[fitness simplification](plan.md#architecture-fitness-simplification). Positive and
+negative cases must establish that consolidated evidence is accepted, genuine
+Red/Green remains required, and dependency, isolation and boundary protections remain
+effective. Preserve historical execution records unchanged.
+
+Report the [constitutional coverage minimum and approved project target](plan.md#coverage-minimum-versus-approved-target)
+separately. Retain the configured complete-Core 100% statement-and-branch gate,
+source scope and exclusion policy. This guide authorizes no relaxation.

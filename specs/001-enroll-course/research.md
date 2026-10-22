@@ -1,6 +1,6 @@
 # Research: Python 3.12 Student Self-Enrollment
 
-**Date**: 2026-10-21 | **Spec**: [spec.md](spec.md) | **Constitution**: v1.4.0
+**Date**: 2026-10-21 | **Spec**: [spec.md](spec.md) | **Constitution**: v2.0.0
 
 ## 1. Implementation language
 
@@ -81,13 +81,15 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## 6. Outside-In TDD, coverage and evidence
 
-**Decision**: pytest HTTP acceptance tests guide inner Red/Green/Refactor cycles. Use a deterministic identity double, real temporary SQLite files and port spies for short circuits. Record raw commands/output/results/order and source revision/diff association for each increment. Framework/import/configuration failures alone are not behavioral Red. Final-state evidence and reviewer inspection remain mandatory.
+**Decision**: Acceptance tests guide cohesive Outside-In Red/Green/Refactor increments. Use the existing deterministic identity double, real temporary SQLite and port spies. Tests MAY exercise several layers through a shared behavioral boundary. Retain lightweight commands/results demonstrating relevant behavioral failure before implementation and passing tests afterward; evidence MAY be consolidated across cohesive increments. Refactoring consideration need not produce code changes or separate no-refactor artifacts. Import/configuration failures are not behavioral Red.
 
-**Rationale**: Tests prove observable behavior; transcripts prove execution order. All fifteen specification examples remain required. No language or framework can replace this evidence with an agent summary.
+**Rationale**: Constitution v2.0.0 explicitly permits coherent grouping and rejects exhaustive per-behavior histories and intermediate snapshots as mandatory proof. Final acceptance/regression, coverage, architecture, static analysis and contract checks remain mandatory. Passing tests and coverage alone do not establish TDD.
+
+**Alternatives considered**: Retaining the current prospective snapshot/per-behavior protocol as a mandatory gate would contradict the revised evidence rules. Discarding execution evidence and relying on final Green would also violate them. Keep richer historical records as optional support and migrate tooling to accept valid lightweight evidence. Reassess C1 from original execution records without treating grouping alone as a violation or declaring the finding automatically resolved.
 
 **Coverage**: coverage.py branch measurement with a 100% combined statement-and-branch gate across the entire Domain and Application source directories, including unimported modules and all unchanged measurable branches. This stronger complete-scope gate implies all included functions' measurable branches are covered; it does not need a custom per-function coverage parser. Scope/exclusion/discovery audits and negative fixtures prevent vacuous passes. Any business behavior outside Core joins this scope. No business exclusions, no cover/no branch suppressions or changed-lines gate. Zero-branch functions still need behavioral tests. [Branch measurement](https://coverage.readthedocs.io/en/latest/branch.html), [configuration](https://coverage.readthedocs.io/en/latest/config.html).
 
-**Alternatives considered**: A sub-100 aggregate percentage, changed-lines coverage or a final green run alone cannot meet the constitution. Coverage is not proof of complete scenarios; exception, construction, reconstitution, transition, privacy and concurrency tests remain necessary. Generated code/configuration does not authorize hiding business behavior.
+**Alternatives considered**: A sub-100 complete-Core aggregate fails the approved project gate; constitutional compliance is assessed separately against 100% branches of each whole affected business-logic function/method. Changed-lines coverage cannot establish that floor, and a final green run alone cannot establish TDD. Coverage is not proof of complete scenarios; exception, construction, reconstitution, transition, privacy and concurrency tests remain necessary. Generated code/configuration does not authorize hiding business behavior.
 
 ## Resolution
 
@@ -120,7 +122,7 @@ All applicable planning questions have decisions in [plan.md](plan.md). Python i
 
 **Evidence impact**: Existing scripts count only 15 enrollment scenarios and fixed historical increments. Extend manifest assembly/validation and negative fixtures to require all seven additional named scenario families and new increment evidence; historical passes do not validate the new spec. No unresolved research question or constitutional exception remains.
 
-## 10. Expected failure contracts (v1.4.0 amendment)
+## 10. Expected failure contracts (v2.0.0 amendment)
 
 **Decision**: Use Domain result-returning validation factories, existing typed policy
 rejections, repository absence values, and explicit PairConflict/EmailKeyConflict
@@ -167,3 +169,60 @@ lower(), partial-address matching and provider normalization alter the specified
 String coercion would introduce heterogeneous equality. Email-based Student identity
 would change identity on replacement and confuse uniqueness with entity identity.
 Persisted Python hashes are unsuitable; persistence continues using the comparison key.
+
+## 12. Constitution v2.0.0 tooling compatibility
+
+**Decision**: Schedule recorder, manifest/validator and negative-fixture alignment in
+subsequent tasks. Current working-tree scripts enforce snapshots, per-behavior mappings
+and REFACTOR/NO_REFACTOR records; the earlier positional CLI examples are obsolete.
+The current recorder requires EVIDENCE_REQUEST JSON and uppercase stages; no
+compatible lightweight CLI is claimed until migration is implemented. Keep final
+source/check digest freshness separate from optional intermediate snapshots.
+
+**Rationale**: Documentation alignment cannot establish that the existing gates accept
+consolidated cohesive increments. Historical review and new work need honest execution
+evidence, while final-state verification remains unchanged.
+
+**Alternatives considered**: Recreating historical failures or automatically flipping
+review status would manufacture proof. Leaving obsolete gate requirements mandatory
+would defeat the amendment. No external research or dependency change is needed for
+this policy migration; the constitution and local source are the decision bases.
+
+## 13. Remove process-only mechanisms; simplify distinct verification responsibilities
+
+The plan consolidates these decisions into one verification design. Required acceptance
+scenario identities remain independent from the flexible grouping of TDD evidence;
+no fixed inventory of future increment IDs is a completion requirement.
+
+**Decision**: Replace prospective snapshots/blobs, global hash-chain continuity,
+per-behavior maps/reviews and compulsory refactor/no-refactor stages with consolidated
+lightweight commands/results and ordinary review context. Preserve historical files
+and final-check digest integrity. The current fixed historical increment inventories
+are not a valid mandatory organization for future cohesive increments.
+
+**Rationale**: These process mechanisms exist to enforce the superseded granularity.
+Actual behavioral failures before implementation and passes afterward remain required;
+a complex protocol does not add constitutional obligations. Keep final quality results
+and required acceptance identities independent from TDD log layout.
+
+**Decision**: Make Import Linter the primary dependency graph verifier. Consolidate
+redundant AST import rules after equivalent positive/negative fixture coverage is
+shown. Retain targeted public-type/dynamic-escape checks and semantic converter tests.
+Replace exact call-name sets and source-text ownership checks with meaningful
+behavioral ownership and short-circuit tests.
+
+**Rationale**: Local inspection of `tests/architecture/test_boundaries.py` shows import
+checks overlap configured Import Linter rules, while annotations, dynamic loading
+and boundary semantics require distinct verification. Exact `policies` call sets and
+comparison substrings constrain implementation spelling rather than responsibility.
+
+**Alternatives considered**: Deleting all fitness tests in favor of imports alone
+would lose boundary semantics/type protection. Keeping two general import scanners
+adds maintenance without a distinct responsibility. Retain specialized checks only
+where they close a demonstrated gap, and preserve every approved architecture rule.
+
+**Coverage decision**: Constitution IV sets whole-affected-business-function 100%
+branch coverage. The configured complete-Core 100% statement-and-branch target is a
+stronger approved project policy and remains unchanged. No exclusion, scope or target
+relaxation is authorized by this planning update. No new dependency decision or
+external research is needed; the constitution, source and configuration are the bases.

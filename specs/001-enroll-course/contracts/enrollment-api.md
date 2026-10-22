@@ -80,7 +80,7 @@ A plain Python use-case signature accepts a neutral enrollment command and retur
 
 The UoW adapter opens sqlite3 with autocommit=True, executes BEGIN IMMEDIATE before prerequisite reads, executes explicit SQL COMMIT/ROLLBACK, and closes in the same worker. Connection commit()/rollback() must not substitute for SQL in this mode. No global connection, ORM, ASGI dependency or asynchronous transaction splitting is introduced.
 
-Complete Core source coverage is measured with coverage.py branch=True and fail_under=100, including unimported modules and full affected functions/methods. Import/signature fitness checks and runtime converter tests complement strict typing. No business branch exclusions or changed-lines approximation. Behavioral Red/Green/Refactor transcripts and final-state checks are still required; passing type checks or coverage alone does not establish TDD or correctness.
+Complete Core source coverage is measured with coverage.py branch=True and fail_under=100, including unimported modules and full affected functions/methods. Import/signature fitness checks and runtime converter tests complement strict typing. No business branch exclusions or changed-lines approximation. Lightweight behavioral Red/Green execution evidence for cohesive increments, refactoring consideration with relevant tests passing, and final-state checks are required; passing type checks or coverage alone does not establish TDD or correctness.
 
 ## Direct graphql-core adapter contract
 
@@ -92,7 +92,7 @@ Invoke graphql_sync with explicit context_value, variable_values, operation_name
 
 The Flask HTTP adapter routes only `/graphql`: unknown path -> 404; unsupported method -> 405 with Allow: POST; non-JSON media type -> 415; malformed JSON or envelope shape -> 400. POST application/json accepts one object with query string, optional operationName string/null and variables object/null. Do not accept a client-asserted acting identity or verification flag. Well-formed requests receive application/json GraphQL result responses; expected union outcomes use HTTP 200. Syntax/validation/execution error-envelope handling is adapter-tested and must not disclose record state or call persistence for a non-executable document. No HTTP batching, GET mutations or additional protocol surface is needed.
 
-The Flask HTTP adapter can call the GraphQL execution adapter as one composed inbound pipeline. This is a declared technical dependency; no persistence or identity adapter is imported by either. Bootstrap supplies the Application use case through injection. All new HTTP, binding and formatting behavior requires executed adapter Red/Green/Refactor evidence and automated checks.
+The Flask HTTP adapter can call the GraphQL execution adapter as one composed inbound pipeline. This is a declared technical dependency; no persistence or identity adapter is imported by either. Bootstrap supplies the Application use case through injection. Automated tests verify HTTP, binding and formatting responsibilities and may span layers through a shared boundary. Cohesive increments retain lightweight Red/Green evidence and consider refactoring with relevant tests passing; separate cycles per assertion or branch are not required.
 
 ## Flask HTTP Transport Adapter
 
@@ -123,7 +123,7 @@ Core Denied is reusable from Domain by Application, so both negative verificatio
 
 Student reads now return records containing required Domain-validated name and email. Enrollment input/output SDL and FR-009 sequencing remain unchanged: no new detail arguments or email-conflict rejection is added here. Enrollment never creates/edits Student records. Corrupt or incompatible persisted details are StorageFailure and map to the existing sanitized PERSISTENCE_FAILURE, rather than MISSING_STUDENT or a new eligibility rule. Host-only record establishment and replacement use the separate [student-details contract](student-details.md); its outcomes are not GraphQL enum additions.
 
-## Expected outcomes and unexpected failures (Constitution v1.4.0)
+## Expected outcomes and unexpected failures (Constitution v2.0.0)
 
 The existing SDL is unchanged. DENIED, missing-record, ALREADY_ENROLLED,
 COURSE_NOT_OFFERED and structural INVALID_REQUEST are expected returned outcomes.

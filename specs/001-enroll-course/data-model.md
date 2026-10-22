@@ -90,7 +90,7 @@ Internal student-record operation transitions: raw details -> validated candidat
 
 Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core StorageFailure and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.
 
-## Validation and failure representation (v1.4.0)
+## Validation and failure representation (v2.0.0)
 
 Domain values retain their invariants. Raw-input factories return `ValidValue |
 ValidationFailure` and never expose a partially valid Domain value. Guarded internal
