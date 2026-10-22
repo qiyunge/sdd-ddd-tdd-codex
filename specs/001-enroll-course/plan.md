@@ -341,7 +341,8 @@ work, and retain original execution records.
 
 ### Email comparison and storage integrity
 
-Use Python 3.12 Unicode str.casefold() on the complete supplied address. Preserve original
+Implement FR-012 full Unicode caseless comparison with Python 3.12 str.casefold() on the
+complete supplied address, including multi-character expansions. Preserve original
 spelling; do not trim, parse, validate email syntax, normalize Unicode composition, or apply
 provider alias rules. Nonblank uses Python whitespace semantics (value.strip() only as a
 validity predicate); names need not be unique. Casefold expansions are included, e.g.

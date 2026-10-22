@@ -59,31 +59,50 @@ def test_student_details_2(tmp_path, field, value):
 
 
 @pytest.mark.parametrize(
-    "email",
-    ["Alex@Example.com", "alex@Example.com", "Alex@example.COM", "aLEX@EXAMPLE.COM"],
-    ids=["exact", "local", "domain", "mixed"],
+    "existing,email",
+    [
+        ("Alex@Example.com", "Alex@Example.com"),
+        ("Alex@Example.com", "alex@Example.com"),
+        ("Alex@Example.com", "Alex@example.COM"),
+        ("Alex@Example.com", "aLEX@EXAMPLE.COM"),
+        ("Straße@example.com", "STRASSE@EXAMPLE.COM"),
+    ],
+    ids=["exact", "local", "domain", "mixed", "unicode-expansion"],
 )
-def test_student_details_3(tmp_path, email):
+def test_student_details_3(tmp_path, existing, email):
     path = tmp_path / "db"
     initialize(path)
-    invoke(path)
+    invoke(path, email=existing)
     assert (
         invoke(path, student_id="other", programme_id="other", email=email)
         == "EMAIL_CONFLICT"
     )
+    with connect(path) as db:
+        assert db.execute("SELECT student_id,email FROM students").fetchall() == [
+            ("s", existing)
+        ]
 
 
 @pytest.mark.parametrize(
-    "email",
-    ["alex+other@example.com", "alex@other.example", " Alex@Example.com "],
-    ids=["tag", "domain", "spaces"],
+    "existing,email",
+    [
+        ("Alex@Example.com", "alex+other@example.com"),
+        ("Alex@Example.com", "alex@other.example"),
+        ("Alex@Example.com", " Alex@Example.com "),
+        ("caf\u00e9@example.com", "cafe\u0301@example.com"),
+    ],
+    ids=["tag", "domain", "spaces", "unicode-composition"],
 )
-def test_student_details_4(tmp_path, email):
+def test_student_details_4(tmp_path, existing, email):
     path = tmp_path / "db"
     initialize(path)
-    invoke(path)
+    invoke(path, email=existing)
     result = invoke(path, student_id="other", email=email)
     assert result is not None and getattr(result, "student_id", None) is not None
+    with connect(path) as db:
+        assert db.execute(
+            "SELECT student_id,email FROM students ORDER BY student_id"
+        ).fetchall() == [("other", email), ("s", existing)]
 
 
 def test_student_details_5(tmp_path):

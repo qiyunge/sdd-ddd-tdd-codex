@@ -8,8 +8,8 @@
   "exit_code": 0,
   "stdout": "Name                                              Stmts   Miss Branch BrPart  Cover   Missing\n---------------------------------------------------------------------------------------------\nsrc/enrollment/application/__init__.py                0      0      0      0   100%\nsrc/enrollment/application/cleanup.py                11      0      2      0   100%\nsrc/enrollment/application/contracts.py              24      0      0      0   100%\nsrc/enrollment/application/enroll.py                 54      0     22      0   100%\nsrc/enrollment/application/ports.py                   8      0      0      0   100%\nsrc/enrollment/application/student_contracts.py      10      0      0      0   100%\nsrc/enrollment/application/student_details.py        36      0     12      0   100%\nsrc/enrollment/application/student_ports.py           6      0      0      0   100%\nsrc/enrollment/domain/__init__.py                     0      0      0      0   100%\nsrc/enrollment/domain/models.py                      77      0     32      0   100%\nsrc/enrollment/domain/outcomes.py                    14      0      0      0   100%\nsrc/enrollment/domain/policies.py                    11      0      0      0   100%\nsrc/enrollment/domain/values.py                      54      0     12      0   100%\n---------------------------------------------------------------------------------------------\nTOTAL                                               305      0     80      0   100%\n",
   "stderr": "",
-  "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
-  "digest_after": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
-  "started_ns": 1792638409299828242,
-  "finished_ns": 1792638409417939409
+  "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "digest_after": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "started_ns": 1792685297198716046,
+  "finished_ns": 1792685297326474800
 }

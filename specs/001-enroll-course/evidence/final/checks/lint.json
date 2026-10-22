@@ -6,10 +6,10 @@
   ],
   "stage": "lint",
   "exit_code": 0,
-  "stdout": "All checks passed!\n",
+  "stdout": "\u001b[1;32mAll checks passed!\u001b[0m\n",
   "stderr": "",
-  "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
-  "digest_after": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
-  "started_ns": 1792638409235113704,
-  "finished_ns": 1792638409262419069
+  "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "digest_after": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "started_ns": 1792685297129315145,
+  "finished_ns": 1792685297161007000
 }

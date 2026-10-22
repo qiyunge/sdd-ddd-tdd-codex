@@ -7,18 +7,21 @@ and Constitution v2.0.0.
 
 **Organization**: Two P1 stories: US1 Student Self-Enrollment and US2 Valid Student
 Details. T001–T050 below preserve the historical delivery record and checked markers.
-T051–T094 are complete. T050 was reassessed and completed during final validation
+T051–T094 record the completed pre-amendment delivery. Phase 10 (T095–T100) completed final verification of the amended Unicode acceptance suite; T100 passed on 2026-10-22. T050 was reassessed and completed during final validation
 under Constitution v2.0.0. IDs remain stable; original execution evidence is preserved. Existing source/tooling edits
 must be inspected and retained where compatible rather than overwritten.
 
 ## Active execution rules
 
-Historical task descriptions are archival and MUST NOT be executed or used as active
-implementation instructions. Only unchecked tasks T051–T094 and these active execution
-rules govern subsequent work, except T050, which is reassessed during final validation
-under T090–T094. T050 MUST NOT be executed from its archival description or used to
-reinstate superseded process requirements. Historical dependencies, strategies and
-traceability sections are reference material only.
+All tasks T001–T100 are complete; no unchecked tasks remain. T001–T094 record the
+pre-amendment delivery, and Phase 10 (T095–T100) verified the Unicode acceptance
+amendment, with T100 passing evidence validation for the amended digest. T090–T094 completed the T050 reassessment under Constitution
+v2.0.0, as recorded in the final implementation outcome below. These execution rules
+remain applicable to future changes. Historical task descriptions are archival and
+MUST NOT be executed or used as active implementation instructions. T050 MUST NOT
+be executed from its archival description or used to reinstate superseded process
+requirements. Historical dependencies, strategies and traceability sections are
+reference material only.
 
 Acceptance tests guide Outside-In TDD in cohesive behavioral increments. For each
 increment, execute relevant tests that fail for the expected behavioral reason before
@@ -54,8 +57,10 @@ for every listed branch. Paths are repository-relative.
 
 The following original descriptions, historical claims and statuses are retained for
 traceability only. All historical task descriptions, dependencies and strategies are
-archival and MUST NOT be executed or used as active implementation instructions. Historical test totals are not current results. T050 stays pending
-until the evidence-based reassessment and final validation below. Grouping alone is
+archival and MUST NOT be executed or used as active implementation instructions.
+Historical test totals are not current results. T050 was pending at this historical
+stage; T090–T094 subsequently completed its evidence-based reassessment and final
+validation under Constitution v2.0.0. Grouping alone is
 not a violation under v2.0.0; neither historical failure nor final Green automatically
 settles current compliance. Original review/output remains unchanged.
 
@@ -203,7 +208,7 @@ settles current compliance. Original review/output remains unchanged.
 
 The functional implementation and final quality capture pass: 148 tests, all fifteen numbered acceptance scenarios, 100% complete Core statement/branch coverage, strict mypy, Ruff and five Import Linter contracts. T048 captured raw results and T049 assembled the matching manifest.
 
-**T050 remains incomplete.** Evidence validation was executed and failed closed solely because the review did not pass. Several early increments used grouped Red suites followed by grouped implementations, so the recorded history does not fully demonstrate the required per-behavior Red–Green–Refactor execution order. Checked delivery markers above do not resolve that process nonconformance or imply feature completion. See [review](evidence/review.json) and [final validation](evidence/final/validation.json). No historical result was rewritten or manufactured to claim compliance.
+**T050 was incomplete at this historical stage.** Evidence validation was executed and failed closed solely because the review did not pass. The original review rejected grouped Red suites followed by grouped implementations under the former per-behavior Red–Green–Refactor rule; checked delivery markers alone did not resolve that finding or establish completion. See the [original review](evidence/history/pre-reconciliation/review.json) and [original final validation](evidence/history/pre-reconciliation/final/validation.json). T090–T094 subsequently reassessed the retained execution evidence under Constitution v2.0.0 and completed T050; see the [current review](evidence/reconciliation/review.json) and [current final validation](evidence/final/validation.json). No historical result was rewritten or manufactured to claim compliance.
 
 ## Historical dependencies and execution order (T001–T050)
 
@@ -338,9 +343,9 @@ when needed to reach assertions; import/signature errors do not count as Red.
 
 - [X] T062 [US2] Drive result-returning ID factories in src/enrollment/domain/values.py, outcomes.py and tests/domain/test_values.py from T061 and focused behavioral tests: preserve "Identifiers are nonempty opaque strings, compared exactly, with no trimming/case folding" and "runtime checks for actual string type and nonempty value". Return validation outcomes for raw input; guarded constructors remain internal misuse protection, not routine parsing. Factories already exist in values.py; verify result-returning invalid and valid paths, type distinctions and complete affected-function coverage rather than recreate them.
 
-- [X] T063 [US2] Drive StudentName/StudentEmail values in src/enrollment/domain/values.py, outcomes.py and tests/domain/test_student_values.py: "Actual string containing a non-whitespace character; original text retained; no uniqueness" and "Same required-text invariant; whole supplied value casefold() is the comparison key". Test None/non-text/empty/spaces/tabs/newlines/Unicode whitespace; no syntax/length/trimming/provider normalization rules.
+- [X] T063 [US2] (Amended 2026-10-22; amended criteria verified by T096–T100) Drive StudentName/StudentEmail values in src/enrollment/domain/values.py, outcomes.py and tests/domain/test_student_values.py: "Actual string containing a non-whitespace character; original text retained; no uniqueness" and "Same required-text invariant; whole supplied value casefold() is the comparison key". Apply FR-012 full Unicode case folding, including multi-character expansions, while retaining original spelling. Test None/non-text/empty/spaces/tabs/newlines/Unicode whitespace; verify composed café@example.com (U+00E9) and decomposed café@example.com (U+0065 U+0301) remain unequal with original spelling retained; no syntax/length/trimming/Unicode composition/provider normalization rules.
 
-- [X] T064 [US2] Drive StudentEmail equality/hash in src/enrollment/domain/values.py and tests/domain/test_student_values.py: compare complete Unicode str.casefold() keys only between StudentEmail instances, equal values have equal hashes, heterogeneous __eq__ returns NotImplemented, original spelling survives. Cover casefold expansion, sets/dicts and significant spaces; do not assert unequal keys have unequal hashes. Equality/hash code already exists; add or verify direct value tests for symmetric equality/inequality, heterogeneous operands, Unicode expansion and set/dictionary behavior before declaring this task complete.
+- [X] T064 [US2] (Amended 2026-10-22; amended criteria verified by T096–T100) Drive StudentEmail equality/hash in src/enrollment/domain/values.py and tests/domain/test_student_values.py: compare complete Unicode str.casefold() keys only between StudentEmail instances, equal values have equal hashes, heterogeneous __eq__ returns NotImplemented, original spelling survives. Cover the FR-012 conflict example Straße@example.com versus STRASSE@EXAMPLE.COM, casefold expansion, sets/dicts and significant spaces; do not assert unequal keys have unequal hashes. Equality/hash code already exists; add or verify direct value tests for symmetric equality/inequality, heterogeneous operands, Unicode expansion and set/dictionary behavior before declaring this task complete.
 
 - [X] T065 [US2] Drive Student records/factories/replacement in src/enrollment/domain/models.py and tests/domain/test_records.py: "Student's frozen fields require both typed values, with no defaults"; enforce typed text on construction/reconstitution/change and preserve "One referenced programme; a dangling programme reference must remain representable so MISSING_PROGRAMME can be returned". Student identity/equality is StudentId alone; if hashable, hash only by immutable StudentId. Adapt affected Student constructors, test factories and repository doubles incrementally in tests/conftest.py, tests/support/database.py, tests/support/application.py and the owning tests alongside this model change, preserving approved assertions and intentional invalid fixtures. Reach genuine behavioral assertions before counting Red; constructor/import failures do not qualify. Verify the adapted focused regressions now rather than deferring them to T077. The Student shape already changed in models.py; audit constructor/reconstitution/replacement invariants, StudentId-only equality/hash and record factories, including complete affected-method coverage. Preserve current fixture adaptations.
 
@@ -350,7 +355,7 @@ when needed to reach assertions; import/signature errors do not count as Red.
 
 - [X] T068 [US2] Drive create/full-replace orchestration in src/enrollment/application/student_details.py and tests/application/test_student_details.py: coordinate Domain factories and uniqueness policy, stop with no writes on rejection, use target identity for mode/self-exclusion, retain supplied programme without new existence checks, commit before Accepted. No business predicates duplicated and no constructor exception parsing.
 
-- [X] T069 [US2] Drive registered connection functions and constrained storage in src/enrollment/adapters/persistence/sqlite.py, schema.sql and tests/adapters/test_sqlite.py: "name TEXT NOT NULL", "email TEXT NOT NULL", explicit text/nonblank checks and unique students_email_key expression index using Domain whole-address casefold semantics. Register deterministic functions before all schema access; invalid/null function results cannot bypass checks. Unconfigured writers fail closed; no NOCASE/lower/forged key fallback. Adapt affected named-column seeds, schema setup helpers and configured fixture connections in tests/support/database.py, tests/conftest.py and owning adapter tests alongside this schema change; preserve intentional legacy/corrupt fixtures. Schema setup failures are not behavioral Red; rerun affected tests against successfully configured production-schema fixtures before T077. Current SQL functions duplicate strip/casefold predicates in the adapter; drive delegation to public Domain validation/comparison mechanisms so storage and Domain cannot drift.
+- [X] T069 [US2] (Amended 2026-10-22; amended criteria verified by T096–T100) Drive registered connection functions and constrained storage in src/enrollment/adapters/persistence/sqlite.py, schema.sql and tests/adapters/test_sqlite.py: "name TEXT NOT NULL", "email TEXT NOT NULL", explicit text/nonblank checks and unique students_email_key expression index using Domain whole-address full Unicode casefold semantics from FR-012, including Straße@example.com conflicting with STRASSE@EXAMPLE.COM. Register deterministic functions before all schema access; invalid/null function results cannot bypass checks. Unconfigured writers fail closed; no NOCASE/lower/forged key fallback. Adapt affected named-column seeds, schema setup helpers and configured fixture connections in tests/support/database.py, tests/conftest.py and owning adapter tests alongside this schema change; preserve intentional legacy/corrupt fixtures. Schema setup failures are not behavioral Red; rerun affected tests against successfully configured production-schema fixtures before T077. Current SQL functions duplicate strip/casefold predicates in the adapter; drive delegation to public Domain validation/comparison mechanisms so storage and Domain cannot drift.
 
 - [X] T070 [US2] Drive fresh/compatible initialization and legacy refusal in src/enrollment/adapters/persistence/sqlite.py and tests/adapters/test_sqlite.py: compatible repeated initialization preserves data, missing required fields fail clearly without schema alteration or invented defaults. No automatic migration/backfill. Update configured fixture connections only as needed for approved required fields. Adapt initialization-specific fixtures alongside the initialization change and verify their focused regressions here, not only at T077; setup failures alone do not count as behavioral Red.
 
@@ -368,7 +373,7 @@ when needed to reach assertions; import/signature errors do not count as Red.
 
 - [X] T077 [US2] Perform the final fixture compatibility and regression audit of tests/conftest.py, tests/support/database.py, tests/support/application.py and owning tests after incremental adaptation during T065/T069/T070 and any other affected model/schema change. Verify valid constructors, unique required Student details, named-column seeds, configured connections and doubles; preserve intentional corrupt/legacy fixtures and every approved assertion. Correct remaining fixture gaps and run affected regressions. This audit is not the first fixture adaptation; fixture-only changes require regression verification, not manufactured Red or constructor/import/schema setup failures.
 
-- [X] T078 [US2] Run all seven named acceptance families and parameter variants in tests/acceptance/test_student_details.py plus focused Domain/Application/persistence tests; retain lightweight execution results under specs/001-enroll-course/evidence/reconciliation/. Confirm host-only access, explicit outcome contracts, StudentId identity and no added public endpoint; this checkpoint alone is not final completion. Current test functions are named test_student_details_1 through test_student_details_7; establish the contracted student-details-1 through student-details-7 identity mapping and declared parameter variants explicitly for T088. Passing function counts alone do not satisfy identity/variant completeness.
+- [X] T078 [US2] (Amended 2026-10-22; amended criteria verified by T096–T100) Run all seven named acceptance families and parameter variants in tests/acceptance/test_student_details.py plus focused Domain/Application/persistence tests; retain lightweight execution results under specs/001-enroll-course/evidence/reconciliation/. Confirm host-only access, explicit outcome contracts, StudentId identity and no added public endpoint; this checkpoint alone is not final completion. Current test functions are named test_student_details_1 through test_student_details_7; establish the contracted student-details-1 through student-details-7 identity mapping and declared parameter variants explicitly for T088. Passing function counts alone do not satisfy identity/variant completeness. The amended suite requires 23 named cases, including student-details-3[unicode-expansion] and student-details-4[unicode-composition], with reopened-state preservation assertions.
 
 ## Phase 8: User Story 1 — Enrollment compatibility and failure contracts (P1)
 
@@ -402,7 +407,7 @@ Invalid IDs, returned conflicts, provider outages and programming faults remain 
 **Purpose**: Validate both stories, reassess historical process evidence under the
 current rule, and enforce all approved final gates.
 
-- [X] T088 Extend tests/architecture/test_quality_gates.py and scripts/assemble_evidence.py/check_evidence.py to require explicit identities for all 15 enrollment and seven Student-detail families plus declared variants; reject missing/ambiguous duplicate/skipped variants independently from TDD grouping. Retain consolidation-positive and missing-Red/failed-Green/stale-final negative tests; run failing behavioral gate tests before changes. Test actual assembled manifests containing current lightweight records and separate current review; do not rely solely on synthetic validator summaries or keep enrollment-only scenario completeness.
+- [X] T088 (Amended 2026-10-22; amended criteria verified by T096–T100) Extend tests/architecture/test_quality_gates.py and scripts/assemble_evidence.py/check_evidence.py to require explicit identities for all 15 enrollment and seven Student-detail families plus declared variants in scripts/acceptance_inventory.py, including test_student_details_3[unicode-expansion] and test_student_details_4[unicode-composition] (23 required Student-detail cases); reject missing/ambiguous duplicate/skipped variants independently from TDD grouping. Retain consolidation-positive and missing-Red/failed-Green/stale-final negative tests; run failing behavioral gate tests before changes. Test actual assembled manifests containing current lightweight records and separate current review; do not rely solely on synthetic validator summaries or keep enrollment-only scenario completeness.
 
 - [X] T089 Update README.md, specs/001-enroll-course/quickstart.md and evidence/README.md with tested host CREATE/REPLACE usage, required fields, casefold equality and StudentId identity, explicit failures, configured SQL functions, legacy refusal/external migration responsibility, actual lightweight evidence CLI and unchanged final gate sequence. Execute documented commands; add no management endpoint or migration workflow.
 
@@ -418,8 +423,11 @@ current rule, and enforce all approved final gates.
 
 ## Dependencies and execution order
 
+The following graph records the pre-amendment completed delivery sequence, followed by
+the completed Phase 10 amendment verification chain.
+
 ```text
-Historical T001–T049 retained; T050 pending current reassessment/final validation
+Historical T001–T049 retained; T050 completed through T090–T094 reassessment/final validation
 T051 -> T052 -> (T053 -> T054 -> T055 || T056 -> T057 -> T058)
              -> T059 -> T060
 T060 -> US2 T061 acceptance Red -> T062 -> T063 -> T064 -> T065 -> T066
@@ -429,7 +437,15 @@ T078 -> US1 T079 -> T080 -> T081 -> T082 -> T083 -> T084 -> T085
      -> T086 -> T087 (US1 independent checkpoint)
 T087 -> T088 -> T089 -> T090 historical reassessment -> T091 final checks
      -> T092 current review -> T093 assembly -> T094 validation / T050 decision
+T094 + Unicode amendment edits -> T095 archive -> US2 T096 verification record
+     -> T097 final checks -> T098 current review -> T099 assembly
+     -> T100 validation / amendment completion decision
 ```
+
+Phase 10 is strictly sequential: T097–T100 operate on one stable
+src/tests/scripts/pyproject.toml/uv.lock state, and any edit to those paths after
+T097 starts requires repeating T097–T100. T095 must finish before T097 because
+quality capture and assembly overwrite the current final artifacts.
 
 US2 runs first because valid Student values/schema support US1's equal-priority
 compatibility work. It is independently tested without HTTP; US1 uses prepared valid
@@ -460,7 +476,7 @@ and final review operate on one stable source state.
 
 ## Requirements traceability
 
-| Basis | Pending owning tasks |
+| Basis | Completed owning tasks |
 |---|---|
 | FR-011 / SC-005; US2 1–2, required text/restoration | T061–T065, T067–T072, T075–T078 |
 | FR-012 / SC-006; US2 3–6, global/caseless/concurrent uniqueness | T064, T066–T074, T076–T078 |
@@ -471,6 +487,7 @@ and final review operate on one stable source state.
 | Architecture simplification without lost isolation/conversion protection | T056–T059, T085, T091 |
 | Cohesive TDD / consolidated lightweight evidence / history preservation | T051–T055, T060, each behavioral task, T088–T094 |
 | Constitutional coverage floor versus unchanged approved target | T059, T088, T091–T094 |
+| FR-012 / SC-006 Unicode amendment; US2 3[unicode-expansion], 4[unicode-composition]; 23-case inventory | T095–T100 |
 
 ## Implementation strategy and MVP
 
@@ -486,21 +503,28 @@ and final review operate on one stable source state.
 5. Reassess C1/T050 under v2.0.0 with real evidence, run final checks, review, assemble
    and validate. Grouping is permitted; missing genuine Red/Green remains reportable.
    Planning/task generation does not approve implementation or certify compliance.
+6. For the Unicode acceptance amendment, verify the unchanged production behavior
+   against the 23-case suite and refresh final evidence through T095–T100. No
+   production change is planned; a genuine failure is handled as new behavioral work
+   under T096.
 
 No dependency upgrade, new public management endpoint, authentication flow, email
 syntax/normalization rule or automatic data migration is included.
 
-## Final implementation outcome
+## Historical final implementation outcome (before Unicode acceptance amendment)
 
-All T001–T094 markers are complete, including the T050 reassessment authorized by
-T090–T094. The original failed review and execution records remain unchanged;
+All T001–T094 tasks were completed for the pre-amendment suite. T090–T094
+completed the T050 reassessment and closed C1 under Constitution v2.0.0 based on the
+retained execution evidence and passing final validation. The original failed review
+and execution records remain unchanged;
 `evidence/reconciliation/review.json` records the separate current decision under
 Constitution v2.0.0. Historical per-behavior descriptions remain archival.
 
 Final quality capture passed 207 tests, all five Import Linter contracts, strict mypy,
 Ruff lint/format, installed-wheel resources, real Waitress sockets, schema/contracts
 and complete Core 100% statement-and-branch coverage. All 15 enrollment families and
-seven Student-detail families with 21 required parameterized cases are verified.
+seven Student-detail families with the then-required 21 parameterized cases were verified.
+The amended suite requires 23 cases; this historical capture does not verify the amendment.
 The final manifest references actual consolidated/historical execution records and
 current review; `evidence/final/validation.json` reports a passing result for the final
 source/config/test digest. Passing coverage alone was not used as proof of TDD.
@@ -510,3 +534,59 @@ execution records preserve failed attempts and environmental/setup failures with
 counting those failures as behavioral Red. No historical result was rewritten and no
 correct behavior was broken to manufacture Red. Future source/test/config changes
 require final quality recapture, review, assembly and validation.
+
+## Phase 10: Unicode acceptance amendment — final verification
+
+**Purpose**: Re-establish passing final evidence after the 2026-10-22 refinement of
+FR-012, US2 scenarios 3–4 and SC-006. Constitution V forbids a completion claim until
+T100 passes.
+
+**Current status**: US2 scenario 3 now includes `unicode-expansion`
+(`Straße@example.com` conflicts with `STRASSE@EXAMPLE.COM`); scenario 4 includes
+`unicode-composition` (precomposed `café@example.com` and decomposed
+`cafe\u0301@example.com` are both accepted and retained). tests/domain/test_student_values.py
+adds `test_email_composition_is_not_normalized`, and scripts/acceptance_inventory.py
+now requires 23 Student-detail cases. These edits changed tests/ and scripts/, which
+the evidence digest in scripts/record.py covers, so evidence/final/checks/,
+evidence/final/manifest.json, evidence/final/validation.json and
+evidence/reconciliation/review.json all describe a stale digest. T063, T064, T069,
+T078 and T088 keep their historical completed markers; their amended criteria are
+verified only by T096–T100. No production source change was made: the amendment
+makes existing casefold behavior explicit, so no new behavioral Red was expected or
+manufactured.
+
+**Outcome (2026-10-22)**: T095 archived the pre-amendment manifest, validation,
+tests.xml, coverage.json and review byte-for-byte under
+evidence/history/pre-unicode-amendment/ with a verified hash index. T096's
+verification record
+(evidence/reconciliation/1792685275374012602-unicode-amendment-verification.json)
+passed 38 tests on its first run, including all 23 Student-detail cases, so no Red
+was recorded. T097 passed all eight checks on digest
+`c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa`: 210 tests with
+none skipped (including installed-wheel and real Waitress socket tests), 15
+enrollment scenarios, 23 Student-detail cases with scenario properties, 5 Import
+Linter contracts kept, strict mypy, Ruff lint/format and 100% Core statement and
+branch coverage (305 statements, 80 branches). T098 recorded the current review
+(`passed: true`). T099 assembled a manifest hashing 121 artifacts, and T100's
+evidence/final/validation.json reports `passed: true` with no errors for the same
+digest. Any later edit to src/, tests/, scripts/, pyproject.toml or uv.lock
+requires repeating T097–T100.
+
+**Independent test**: The 23 named `tests/acceptance/test_student_details.py` cases,
+including `test_student_details_3[unicode-expansion]` and
+`test_student_details_4[unicode-composition]`, pass with `scenario` properties
+`student-details-3` and `student-details-4` in evidence/final/checks/tests.xml;
+`.venv/bin/python -m scripts.check_evidence` then reports `"passed": true` for the
+current digest.
+
+- [X] T095 Archive the current pre-amendment final evidence before anything overwrites it: copy specs/001-enroll-course/evidence/final/manifest.json, final/validation.json, final/checks/tests.xml, final/checks/coverage.json and reconciliation/review.json byte-for-byte into specs/001-enroll-course/evidence/history/pre-unicode-amendment/ at the same relative paths (final/..., reconciliation/review.json). Write specs/001-enroll-course/evidence/history/pre-unicode-amendment/index.json mapping each archived relative path to its SHA-256, and verify each hash against its source before continuing. Do not modify reconciliation/history-index.json, history/pre-reconciliation/ or history/pre-student-details/. final/checks/*.json need no manual copy because scripts/check_quality.py archives them into final/checks/history/ automatically.
+
+- [X] T096 [US2] Record a verification-stage run of the amended suites with `.venv/bin/python -m scripts.record unicode-amendment verification .venv/bin/pytest -v -p no:cacheprovider tests/acceptance/test_student_details.py tests/domain/test_student_values.py`, producing specs/001-enroll-course/evidence/reconciliation/<ns>-unicode-amendment-verification.json. Confirm exit code 0, 23 passing `test_student_details_*` cases including `[unicode-expansion]` and `[unicode-composition]`, and a passing `test_email_composition_is_not_normalized`. Use stage `verification`, not `red`: production behavior is unchanged, and a passing first run is the expected honest outcome. If either new case genuinely fails, stop. Keep the verification record as context, then rerun the same command as `.venv/bin/python -m scripts.record unicode-amendment red ...`, because scripts/check_evidence.py counts only red-stage records with exit code 1 and an AssertionError as Red and scripts/assemble_evidence.py ignores verification records. Correct only the demonstrated defect in src/enrollment/domain/values.py or src/enrollment/adapters/persistence/sqlite.py, record the Green with `scripts.record unicode-amendment green ...`, and only then continue.
+
+- [X] T097 Run `bash scripts/check-quality.sh` on the stable amended state after T095–T096, with no further edits to src/, tests/, scripts/, pyproject.toml or uv.lock. Require all eight checks in specs/001-enroll-course/evidence/final/checks/ (tests, architecture, imports, typing, lint, format, coverage-report, coverage-data) to exit 0 with `digest == digest_after`. Confirm tests.xml contains all 15 `test_scenario[N-...]` enrollment cases and all 23 STUDENT_CASES names with matching `scenario` properties, and that coverage.json reports complete Domain/Application 100% statement and branch coverage. Preserve any failed result, fix it through the owning task, then rerun T097.
+
+- [X] T098 Update specs/001-enroll-course/evidence/reconciliation/review.json as the current completion review against T097: set `source_digest` to the T097 digest and refresh `final_checks` with each check's reference, exit code and digest. Add a `new_execution_records["unicode-amendment"]` entry for the T096 record and a `new_work_review` entry explaining verification-only treatment of the clarified FR-012 behavior (no new Red claimed, no TDD inferred from Green). Append the T096 record and every history/pre-unicode-amendment/ file to `historical_records` so that assembly hashes them. Keep `historical_reassessment`, earlier entries and the "21 initial acceptance variants" statement unchanged as historical facts. Set `passed` to true only if T097 fully passed and the review finds no gap; otherwise set it to false and record the reasons in `notes`.
+
+- [X] T099 Run `.venv/bin/python -m scripts.assemble_evidence` to rewrite specs/001-enroll-course/evidence/final/manifest.json. Confirm its `digest` equals the T097 digest, `review` equals the T098 file, and `artifacts` hashes the eight check files, tests.xml, coverage.json, review.json, the T096 record and the archived pre-unicode-amendment files. Assembly is not validation or a completion claim.
+
+- [X] T100 Run `.venv/bin/python -m scripts.check_evidence` and retain specs/001-enroll-course/evidence/final/validation.json. Mark T095–T100 complete only if it reports `"passed": true` with no errors and a digest equal to T097's. Then update this Phase 10 status paragraph and the outcome sections above with the actual test totals and the 23-case result. If validation fails, leave the failing tasks unchecked, record the reported errors here, and repeat from the earliest affected task; any later edit to src/, tests/, scripts/, pyproject.toml or uv.lock requires repeating T097–T100.

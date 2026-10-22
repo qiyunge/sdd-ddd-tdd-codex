@@ -49,3 +49,12 @@ def test_record_factories_return_expected_failures():
     assert isinstance(factory("", "c"), InvalidIdentifier)
     assert isinstance(factory("s", ""), InvalidIdentifier)
     assert isinstance(factory("s", "c"), Enrollment)
+
+
+def test_email_composition_is_not_normalized():
+    composed = StudentEmail("caf\u00e9@example.com")
+    decomposed = StudentEmail("cafe\u0301@example.com")
+    assert composed != decomposed
+    assert len({composed, decomposed}) == 2
+    assert composed.value == "caf\u00e9@example.com"
+    assert decomposed.value == "cafe\u0301@example.com"

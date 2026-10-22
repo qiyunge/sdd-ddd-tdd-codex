@@ -9,8 +9,8 @@
   "exit_code": 0,
   "stdout": "76 files already formatted\n",
   "stderr": "",
-  "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
-  "digest_after": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
-  "started_ns": 1792638409268240366,
-  "finished_ns": 1792638409294529662
+  "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "digest_after": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "started_ns": 1792685297166849264,
+  "finished_ns": 1792685297192314400
 }

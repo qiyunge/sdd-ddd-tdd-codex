@@ -9,11 +9,11 @@ STUDENT_CASES = {
     },
     **{
         f"test_student_details_3[{variant}]": "student-details-3"
-        for variant in ("exact", "local", "domain", "mixed")
+        for variant in ("exact", "local", "domain", "mixed", "unicode-expansion")
     },
     **{
         f"test_student_details_4[{variant}]": "student-details-4"
-        for variant in ("tag", "domain", "spaces")
+        for variant in ("tag", "domain", "spaces", "unicode-composition")
     },
     "test_student_details_5": "student-details-5",
     "test_student_details_6": "student-details-6",
