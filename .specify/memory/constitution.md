@@ -74,13 +74,13 @@ architectural layering.
 
 ### III. Outside-In Test-Driven Development
 
-All new or modified business behavior MUST use Outside-In TDD. Feature development
-MUST begin with executable acceptance tests. Acceptance tests MUST express business
-outcomes derived from the approved specification at a declared public boundary.
+New or changed business behavior MUST follow Outside-In TDD using cohesive
+behavioral increments. Feature development MUST begin with executable acceptance
+tests. Acceptance tests MUST express business outcomes derived from the approved specification at a declared public boundary.
 Acceptance tests MUST guide subsequent inner-layer TDD cycles until the specified
 outcomes are satisfied. Writing an acceptance test first MUST NOT, by itself, be
-considered sufficient evidence of Outside-In TDD. Each independently testable
-behavior increment MUST still follow Red → Green → Refactor as defined below.
+considered sufficient evidence of Outside-In TDD. Each cohesive behavioral increment MUST
+still follow Red → Green → Refactor as defined below.
 
 Planning MUST declare the public acceptance-test boundary and select any transport
 protocol, acceptance-test framework, test-double strategy, and test environment.
@@ -88,17 +88,23 @@ This Constitution MUST NOT mandate a specific choice for any of those technologi
 or strategies.
 
 Each affected layer, including Application, Domain, and Adapters, MUST have its
-responsibilities verified by appropriate automated tests. Production behavior in
-each affected layer MUST be driven by failing tests.
+responsibilities verified by appropriate automated tests. Tests MAY exercise multiple
+layers through a shared behavioral boundary.
 
-Every independently testable behavior increment MUST follow Red → Green → Refactor:
+Each increment MUST:
 
-- Red: write and execute a test that fails for the expected behavioral reason before
-  implementing the corresponding production behavior. Infrastructure, configuration,
-  or unrelated failures alone MUST NOT count as Red.
-- Green: implement the minimum production code necessary to pass the test.
-- Refactor: improve design where appropriate while preserving behavior, then rerun
-  relevant tests.
+1. Execute a relevant failing behavioral test before implementing the behavior (Red).
+   The test MUST fail for the expected behavioral reason; infrastructure,
+   configuration, or unrelated failures alone MUST NOT count as Red.
+2. Implement the behavior required by the increment and verify that the relevant
+   tests pass (Green).
+3. Consider refactoring and verify that relevant tests remain passing (Refactor).
+
+Related behaviors MAY be grouped into one increment when they form a coherent
+implementation unit. Separate cycles for every assertion, branch, or independently
+testable behavior are NOT required.
+
+Refactoring does not require code changes when none are warranted.
 
 Test scope and granularity MUST reflect layer responsibilities and risks. Tests MUST
 verify observable behavior and architectural responsibilities, rather than
@@ -109,9 +115,14 @@ Tests MUST NOT be weakened, deleted, skipped, or modified solely to make an
 implementation pass. Changes to existing tests MUST be justified by approved
 requirement changes or verified test defects.
 
-TDD compliance MUST have recorded execution evidence showing commands, results,
-execution order, and relevant failures for Red → Green → Refactor. Agent summaries
-without corresponding execution evidence MUST NOT satisfy this requirement.
+Lightweight execution evidence MUST demonstrate that relevant behavioral tests failed
+before implementation and passed afterward. Evidence MAY be consolidated across
+cohesive increments. Exhaustive per-behavior execution histories, intermediate source
+snapshots, and separate no-refactor artifacts are NOT required.
+
+Final acceptance tests, regression tests, coverage requirements, architecture fitness
+tests, static analysis, and contract verification remain mandatory. Passing tests and
+coverage alone MUST NOT be presented as proof that TDD was followed.
 
 ### IV. Automated Architecture and Coverage Verification
 
@@ -172,8 +183,10 @@ reported rather than silently assigned a project-wide interpretation.
   tooling. Distinguish statically testable dependencies from semantic representation
   leakage requiring behavioral tests or review.
 - TODO(TDD_SCOPE): Define treatment of behavior-preserving refactors, generated code,
-  configuration, and exploratory work. Clarify whether layer-specific failing tests
-  must be separate tests or may be satisfied by broader behavioral tests.
+  configuration, and exploratory work. Tests MAY exercise multiple layers through
+  a shared behavioral boundary as defined in Principle III. These planning choices
+  MUST preserve the cohesive increment rules in Principle III;
+  considering refactoring does not require code changes when none are warranted.
 - TODO(ACCEPTANCE_TEST_BOUNDARY): During feature planning, declare the public boundary
   at which acceptance tests express specified business outcomes, and select any
   transport protocol, acceptance-test framework, test-double strategy, and test
@@ -181,8 +194,10 @@ reported rather than silently assigned a project-wide interpretation.
   acceptance-guided relationship to inner TDD cycles is defined in Principle III
   and is not an unresolved planning choice.
 - TODO(TDD_EVIDENCE): Define evidence location, retention, association with code
-  revisions, and review mechanism. Specify what evidence is required when no refactor
-  is needed and how later edits invalidate prior verification.
+  revisions, and review mechanism, including how later edits invalidate prior
+  verification. These choices MUST preserve the lightweight evidence requirements
+  in Principle III and MUST NOT require exhaustive per-behavior execution histories,
+  intermediate source snapshots, or separate no-refactor artifacts.
 - TODO(COVERAGE_SCOPE): During feature planning, identify all applicable new or
   modified business-logic functions and methods, including Domain and Application
   logic; select tooling and map changes to entire affected functions or methods.
@@ -197,9 +212,11 @@ reported rather than silently assigned a project-wide interpretation.
    define applicable coverage scope and static checks; and resolve applicable open
    questions above.
 3. Tasks and implementation MUST preserve test-first ordering and record execution
-   evidence for each behavior increment.
+   evidence as defined in Principle III, which MAY be consolidated across cohesive
+   increments.
 4. Completion review MUST inspect architecture checks, invariant and acceptance tests,
-   coverage, static checks, and TDD evidence against the final implementation state.
+   regression tests, coverage, static checks, contract verification, and TDD evidence
+   against the final implementation state.
    Any missing or failing mandatory check prevents a successful completion claim.
 
 ## Governance
@@ -220,4 +237,4 @@ and amendment date and record its impact for review. Specifications, plans, and
 completion reviews MUST assess compliance and explicitly report deviations; a plan
 alone MUST NOT waive a mandatory constitutional rule.
 
-**Version**: 1.4.0 | **Ratified**: 2026-10-21 | **Last Amended**: 2026-10-21
+**Version**: 2.0.0 | **Ratified**: 2026-10-21 | **Last Amended**: 2026-10-21
