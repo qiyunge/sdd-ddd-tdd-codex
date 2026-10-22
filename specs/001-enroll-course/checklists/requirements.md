@@ -39,3 +39,6 @@
 
 - Revalidated on 2026-10-21 after the Student attribute update: all 16 criteria pass. User Story 2 covers FR-011–FR-013 and SC-005–SC-007, including required text, whole-address case-insensitive uniqueness across programmes, self-exclusion, concurrent claims, and preservation on rejection.
 - No student-management interface, email-format rules, or changes to enrollment rejection precedence are introduced.
+
+- Revalidated on 2026-10-21 against Constitution v2.0.0: all 16 specification-quality criteria pass. Business scope, FR-001–FR-013, SC-001–SC-007, and both stories' acceptance scenarios are unchanged. Governance assumptions now permit cohesive increments, shared layer boundaries, consolidated lightweight Red/Green evidence, and refactoring without code changes; final quality gates remain mandatory.
+- Governance requirements are recorded as delivery constraints without selecting implementation technologies. C1 and T050 remain subject to evidence-based reassessment; this checklist does not certify implementation or historical TDD compliance. Next phase: `$speckit-plan` to align design and verification artifacts.

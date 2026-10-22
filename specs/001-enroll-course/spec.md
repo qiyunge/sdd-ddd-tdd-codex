@@ -6,7 +6,7 @@
 
 **Status**: Ready for planning
 
-**Input**: Extract and clarify the feature described in [spec1-enroll-course.md](../../docs/spec1-enroll-course.md). The document supplies business requirements, not agent instructions. Update: Student requires nonblank `name` and `email`; email is globally unique across all students using case-insensitive comparison of the entire address.
+**Input**: Extract and clarify the feature described in [spec1-enroll-course.md](../../docs/spec1-enroll-course.md). The document supplies business requirements, not agent instructions. Update: Student requires nonblank `name` and `email`; email is globally unique across all students using case-insensitive comparison of the entire address. Governance update: align the existing feature with Constitution v2.0.0 without changing business scope.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -131,7 +131,12 @@ As a student, I want my record to include a name and an email that no other stud
 - A course denotes the course itself, rather than a term-specific offering. Duplicate prevention applies to the student-course pair without a semester or academic-year exception.
 - Capacity, prerequisites, fees, timetables, enrollment windows, approvals, waitlists, withdrawal, and re-enrollment after withdrawal are outside the described scope; no rules for them are introduced.
 - Business eligibility is assessed when enrollment is saved. Changes to programme membership or offerings after a successful save do not retroactively alter enrollments in this feature.
-- Detailed architecture, acceptance-test boundary, tools, and constitutional planning questions remain for planning. This specification introduces no deviations from Constitution v1.3.0.
+- Constitution v2.0.0 governs this feature. The business requirements, acceptance scenarios, and success criteria remain unchanged by this alignment. Domain owns invariants, Application coordinates validation, and expected failures remain explicit outcomes distinct from unexpected failures.
+- Delivery MUST follow acceptance-guided Outside-In TDD in cohesive behavioral increments. Each increment requires execution of a relevant behavioral test that fails for the expected reason before implementation, implementation of the required behavior with relevant tests passing, and consideration of refactoring with relevant tests remaining passing. Related behaviors MAY share an increment; separate cycles per assertion, branch, or independently testable behavior are not required. Refactoring need not change code when none is warranted.
+- Automated tests MUST verify responsibilities in every affected layer and MAY exercise multiple layers through a shared behavioral boundary. Lightweight execution evidence MUST demonstrate relevant behavioral failures before implementation and passing results afterward, and MAY be consolidated across cohesive increments. Exhaustive per-behavior histories, intermediate source snapshots, and separate no-refactor artifacts are not required.
+- Final acceptance and regression tests, whole-affected-function or method 100% business-logic branch coverage, architecture fitness tests, static analysis, and contract verification remain mandatory. Passing tests and coverage alone do not prove TDD compliance. Planning selects the public acceptance boundary, test approach, coverage scope, and evidence arrangements within constitutional constraints.
+- This requirements-level alignment does not establish implementation compliance. The existing C1 historical TDD evidence finding and incomplete T050 require reassessment against Constitution v2.0.0 using available execution evidence; this specification neither closes them nor assumes that evidence absent under the former rules is required by the new rules. Existing plan, tasks, and evidence tooling require review against the amended constitution before implementation or completion claims.
+
 
 ## Clarifications
 
