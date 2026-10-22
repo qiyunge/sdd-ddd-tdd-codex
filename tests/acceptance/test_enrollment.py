@@ -1,7 +1,6 @@
-import sqlite3
-
 import pytest
 
+from enrollment.adapters.persistence.sqlite import connect
 from enrollment.bootstrap import create_app
 from tests.support.database import rows
 
@@ -47,7 +46,7 @@ def request(app, token="s", student="s", course="c"):
     ids=lambda value: str(value),
 )
 def test_scenario(database, scenario, expected, monkeypatch):
-    with sqlite3.connect(database) as c:
+    with connect(database) as c:
         if scenario == 2:
             c.execute("INSERT INTO programmes VALUES ('p2')")
             c.execute("INSERT INTO programme_course_offerings VALUES ('p2','c')")
@@ -63,7 +62,7 @@ def test_scenario(database, scenario, expected, monkeypatch):
             c.execute("INSERT INTO enrollments VALUES ('s','c')")
 
     def prerequisites():
-        with sqlite3.connect(database) as db:
+        with connect(database) as db:
             return {
                 table: db.execute(
                     f"SELECT * FROM {table} ORDER BY 1,2"

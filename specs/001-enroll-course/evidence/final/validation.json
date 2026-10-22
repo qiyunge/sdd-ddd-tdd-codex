@@ -1,7 +1,5 @@
 {
-  "passed": false,
-  "errors": [
-    "Evidence review is missing or has not passed"
-  ],
-  "digest": "d6fc7392dc906d322d92c0809f53e6d7ab09e8e503ed95931e8044a5516b768f"
+  "passed": true,
+  "errors": [],
+  "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
 }

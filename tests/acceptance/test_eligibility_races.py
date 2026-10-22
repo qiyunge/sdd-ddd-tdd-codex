@@ -1,10 +1,9 @@
-import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 
 import pytest
 
-from enrollment.adapters.persistence.sqlite import Session
+from enrollment.adapters.persistence.sqlite import Session, connect
 from enrollment.bootstrap import create_app
 from tests.acceptance.test_enrollment import request
 from tests.support.database import rows
@@ -13,7 +12,7 @@ from tests.support.database import rows
 @pytest.mark.parametrize("change", ["offering", "membership"])
 def test_change_before_lock(database, change):
     def verify(c):
-        with sqlite3.connect(database) as db:
+        with connect(database) as db:
             if change == "offering":
                 db.execute("DELETE FROM programme_course_offerings")
             else:
@@ -45,7 +44,7 @@ def test_writer_waits_until_commit(database, monkeypatch, change):
 
     def writer():
         assert locked.wait(2)
-        with sqlite3.connect(database, timeout=3) as db:
+        with connect(database, timeout=3) as db:
             attempting.set()
             if change == "offering":
                 db.execute("DELETE FROM programme_course_offerings")

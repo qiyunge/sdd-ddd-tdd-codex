@@ -1,7 +1,7 @@
-import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 
+from enrollment.adapters.persistence.sqlite import connect
 from enrollment.bootstrap import create_app
 from tests.acceptance.test_enrollment import request
 from tests.support.database import rows
@@ -30,8 +30,10 @@ def test_same_pair_overlap(database):
 
 
 def test_invalid_overlaps_unrelated_success(database):
-    with sqlite3.connect(database) as db:
-        db.execute("INSERT INTO students VALUES ('other','p')")
+    with connect(database) as db:
+        db.execute(
+            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('other','p','Other','other@example.com')"
+        )
         db.execute("INSERT INTO courses VALUES ('unoffered')")
     together = Barrier(2)
 

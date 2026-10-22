@@ -1,9 +1,18 @@
 from dataclasses import dataclass
+from typing import ClassVar, Self
+
+from .outcomes import InvalidIdentifier, InvalidStudentDetails
 
 
 @dataclass(frozen=True)
 class Identifier:
     value: str
+
+    @classmethod
+    def create(cls, raw: object) -> Self | InvalidIdentifier:
+        if not isinstance(raw, str) or not raw:
+            return InvalidIdentifier()
+        return cls(raw)
 
     def __post_init__(self) -> None:
         if not isinstance(self.value, str) or not self.value:
@@ -33,3 +42,40 @@ class VerifiedIdentity:
     def __post_init__(self) -> None:
         if not isinstance(self.subject_id, SubjectId):
             raise ValueError("Verified identity requires SubjectId")
+
+
+@dataclass(frozen=True)
+class RequiredText:
+    value: str
+    field: ClassVar[str] = "text"
+
+    @classmethod
+    def create(cls, raw: object) -> Self | InvalidStudentDetails:
+        if not isinstance(raw, str) or not raw.strip():
+            return InvalidStudentDetails(cls.field)
+        return cls(raw)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.value, str) or not self.value.strip():
+            raise ValueError("Required text must contain a non-whitespace character")
+
+
+class StudentName(RequiredText):
+    field = "name"
+
+
+@dataclass(frozen=True, eq=False)
+class StudentEmail(RequiredText):
+    field = "email"
+
+    @property
+    def key(self) -> str:
+        return self.value.casefold()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, StudentEmail):
+            return NotImplemented
+        return self.key == other.key
+
+    def __hash__(self) -> int:
+        return hash(self.key)

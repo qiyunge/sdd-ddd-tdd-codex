@@ -2,20 +2,31 @@ import sqlite3
 
 import pytest
 
-from enrollment.adapters.persistence.sqlite import Session, StorageFailure
+from enrollment.adapters.persistence.sqlite import Session, StorageFailure, connect
 from enrollment.domain.models import (
     Course,
     Programme,
     ProgrammeCourseOffering,
     Student,
 )
-from enrollment.domain.values import CourseId, ProgrammeId, StudentId
+from enrollment.domain.values import (
+    CourseId,
+    ProgrammeId,
+    StudentEmail,
+    StudentId,
+    StudentName,
+)
 
 
 def test_reads(database):
     s = Session(database)
     try:
-        assert s.student(StudentId("s")) == Student(StudentId("s"), ProgrammeId("p"))
+        assert s.student(StudentId("s")) == Student(
+            StudentId("s"),
+            ProgrammeId("p"),
+            StudentName("Alex"),
+            StudentEmail("alex@example.com"),
+        )
         assert s.student(StudentId("absent")) is None
         assert s.programme(ProgrammeId("p")) == Programme(ProgrammeId("p"))
         assert s.programme(ProgrammeId("absent")) is None
@@ -31,7 +42,8 @@ def test_reads(database):
 
 
 def test_corrupt_row(database):
-    with sqlite3.connect(database) as c:
+    with connect(database) as c:
+        c.execute("PRAGMA ignore_check_constraints=ON")
         c.execute("UPDATE students SET programme_id='' WHERE student_id='s'")
     s = Session(database)
     try:
@@ -57,7 +69,7 @@ def test_schema_id_constraints(tmp_path, table, columns, value):
 
     path = tmp_path / "schema.db"
     initialize(path)
-    with sqlite3.connect(path) as db:
+    with connect(path) as db:
         # No FK configuration here: test each column's own NOT NULL/TEXT/nonempty constraint.
         for column in columns:
             data = {key: "valid" for key in columns}
@@ -74,10 +86,12 @@ def test_restrictive_schema_and_pair_uniqueness(tmp_path):
 
     path = tmp_path / "schema.db"
     initialize(path)
-    with sqlite3.connect(path) as db:
+    with connect(path) as db:
         db.execute("PRAGMA foreign_keys=ON")
         db.execute("INSERT INTO programmes VALUES ('p')")
-        db.execute("INSERT INTO students VALUES ('s','dangling')")
+        db.execute(
+            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('s','dangling','Alex','alex@example.com')"
+        )
         db.execute("INSERT INTO courses VALUES ('c')")
         db.execute("INSERT INTO programme_course_offerings VALUES ('p','c')")
         db.execute("INSERT INTO enrollments VALUES ('s','c')")

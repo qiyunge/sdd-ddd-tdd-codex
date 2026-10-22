@@ -1,0 +1,14 @@
+{
+  "increment": "historical-association",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": ".......                                                                  [100%]\n7 passed in 0.82s\n",
+  "stderr": "",
+  "started_ns": 1792638078631815255,
+  "finished_ns": 1792638079715248660
+}

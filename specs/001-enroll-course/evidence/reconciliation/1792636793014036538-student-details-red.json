@@ -1,0 +1,14 @@
+{
+  "increment": "student-details",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance/test_student_details.py",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________________________ test_student_details_1 ____________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-119/test_student_details_10')\n\n    def test_student_details_1(tmp_path):\n        path = tmp_path / \"db\"\n        initialize(path)\n        result = invoke(path)\n>       assert result is not None, \"valid student must be committed and returned\"\nE       AssertionError: valid student must be committed and returned\nE       assert None is not None\n\ntests/acceptance/test_student_details.py:22: AssertionError\n=========================== short test summary info ============================\nFAILED tests/acceptance/test_student_details.py::test_student_details_1 - Ass...\n1 failed in 0.06s\n",
+  "stderr": "",
+  "started_ns": 1792636793014036538,
+  "finished_ns": 1792636793317977413
+}

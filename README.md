@@ -27,7 +27,7 @@ Checks capture raw results first. Assembly then binds those results and TDD tran
 
 ## Host integration
 
-The host supplies a synchronous trusted identity verifier with signature `(credential: str | None) -> str | None`. Return a verified subject string on success, `None` for negative verification and raise an exception for provider unavailability. Never derive verification from a caller's target student ID. Missing verifier configuration fails at startup. Deterministic identity callbacks belong only in tests.
+The host supplies a synchronous trusted identity verifier with signature `(credential: str | None) -> str | None`. Return a verified subject string on success or `None` for negative verification. The bridge translates documented `RuntimeError`/`OSError` provider operational faults to identity-unavailable; other programming/contract exceptions propagate to sanitized internal error handling. Wrap provider SDK operational exceptions accordingly. Never derive verification from a caller's target student ID. Missing verifier configuration fails at startup. Deterministic identity callbacks belong only in tests.
 
 Integrate the host's existing verification function with these public factories (replace the host-specific import):
 
@@ -62,3 +62,30 @@ mutation Enroll($input: EnrollCourseInput!) {
 ```
 
 Send JSON `query`, `variables` and optional `operationName`, with opaque credentials in `Authorization`. IDs are exact nonempty strings; GraphQL also applies its standard integer-to-string ID coercion. Expected outcomes return HTTP 200; callers must inspect the union result. See [the validation guide](specs/001-enroll-course/quickstart.md) for rejection precedence, concurrency and fault coverage.
+
+## Required Student details and host integration
+
+Every Student requires nonblank name and email. Email uniqueness compares the entire
+supplied address with Unicode `str.casefold()` across all programmes; submitted text
+is retained, including significant spaces. StudentEmail equality/hash uses that key;
+Student entity identity is StudentId. No email syntax/alias rules are added.
+
+The trusted host can call `enrollment.application.student_details.save_student` with
+a dictionary containing `mode` (`create` or `replace`), `student_id`, `programme_id`,
+`name`, and `email`, plus a factory returning
+`enrollment.adapters.persistence.sqlite.StudentSession(database_path)`. Replacement
+supplies the complete record. This operation is not a web endpoint. It returns a
+committed Student or an explicit invalid-input, existence, email-conflict or technical
+failure outcome. Programming defects propagate to the host error boundary.
+
+Use the adapter's `connect` helper for direct provisioning: it registers Domain-backed
+SQLite validation/comparison functions. Unconfigured writes fail closed. Initialization
+refuses legacy Student schemas without changing their data; hosts must provision a
+fresh compatible schema or arrange their own audited migration. No names/emails are
+fabricated. Compatible initialization is idempotent. Enrollment still cannot write
+Student details and its public GraphQL schema/rejection precedence is unchanged.
+
+For validation and lightweight execution recording see
+[quickstart](specs/001-enroll-course/quickstart.md) and
+[evidence guide](specs/001-enroll-course/evidence/README.md). Final quality capture,
+current evidence review, manifest assembly and validation are all required.

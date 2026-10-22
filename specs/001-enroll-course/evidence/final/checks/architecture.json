@@ -6,10 +6,10 @@
   ],
   "stage": "architecture",
   "exit_code": 0,
-  "stdout": ".......                                                                  [100%]\n7 passed in 0.46s\n",
+  "stdout": "..........                                                               [100%]\n10 passed in 1.30s\n",
   "stderr": "",
-  "digest": "d6fc7392dc906d322d92c0809f53e6d7ab09e8e503ed95931e8044a5516b768f",
-  "digest_after": "d6fc7392dc906d322d92c0809f53e6d7ab09e8e503ed95931e8044a5516b768f",
-  "started_ns": 1792623759233067171,
-  "finished_ns": 1792623759938796342
+  "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
+  "digest_after": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
+  "started_ns": 1792638407344915736,
+  "finished_ns": 1792638408898937213
 }

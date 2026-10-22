@@ -2,8 +2,10 @@
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,26 +28,43 @@ def digest(root: Path = ROOT) -> str:
     ).hexdigest()
 
 
-if __name__ == "__main__":
-    task, stage, *cmd = sys.argv[1:]
-    target = ROOT / "specs/001-enroll-course/evidence" / task
+def capture(
+    root: Path,
+    increment: str,
+    stage: str,
+    command: list[str],
+    request: dict | None = None,
+) -> int:
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", increment):
+        raise ValueError("Invalid increment name")
+    stage = stage.lower()
+    if stage not in {"red", "green", "refactor", "verification"}:
+        raise ValueError("Invalid stage")
+    started = time.time_ns()
+    result = subprocess.run(command, cwd=root, text=True, capture_output=True)
+    target = root / "specs/001-enroll-course/evidence/reconciliation"
     target.mkdir(parents=True, exist_ok=True)
-    count = len(list(target.glob("*.json"))) + 1
-    result = subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
-    state = {
-        "command": cmd,
-        "stage": stage,
-        "exit_code": result.returncode,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-        "digest": digest(),
-        "revision": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-        ).strip(),
-        "diff": subprocess.check_output(
-            ["git", "diff", "--", "."], cwd=ROOT, text=True
-        ),
-    }
-    (target / f"{count:03d}-{stage}.json").write_text(json.dumps(state, indent=2))
+    record = dict(
+        increment=increment,
+        stage=stage,
+        command=command,
+        exit_code=result.returncode,
+        stdout=result.stdout,
+        stderr=result.stderr,
+        started_ns=started,
+        finished_ns=time.time_ns(),
+    )
+    (target / f"{started}-{increment}-{stage}.json").write_text(
+        json.dumps(record, indent=2)
+    )
     print(result.stdout + result.stderr)
-    sys.exit(result.returncode)
+    return result.returncode
+
+
+def main() -> int:
+    increment, stage, *command = sys.argv[1:]
+    return capture(ROOT, increment, stage, command)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

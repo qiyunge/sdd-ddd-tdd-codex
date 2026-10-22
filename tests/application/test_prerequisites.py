@@ -3,7 +3,7 @@ import pytest
 from enrollment.application.contracts import Command, Failure
 from enrollment.application.enroll import enroll
 from enrollment.domain.models import Course, Programme, Student
-from enrollment.domain.values import ProgrammeId
+from enrollment.domain.values import ProgrammeId, StudentEmail, StudentName
 from tests.application.test_identity import Verifier
 
 
@@ -14,7 +14,16 @@ class Session:
 
     def student(self, s):
         self.calls.append("student")
-        return None if self.missing == "student" else Student(s, ProgrammeId("p"))
+        return (
+            None
+            if self.missing == "student"
+            else Student(
+                s,
+                ProgrammeId("p"),
+                StudentName("Alex"),
+                StudentEmail("alex@example.com"),
+            )
+        )
 
     def programme(self, p):
         self.calls.append("programme")

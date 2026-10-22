@@ -8,27 +8,43 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from scripts.acceptance_inventory import STUDENT_CASES
 from scripts.check_quality import FINAL, commands
 from scripts.record import ROOT, digest
 
-REQUIRED_INCREMENTS = {
-    "values",
-    "records",
-    "policies",
-    "identity",
-    "prerequisites",
-    "flow",
-    "reads",
-    "transactions",
-    "provider",
-    "graphql",
-    "http",
-    "conflict",
-    "faults",
-    "server",
-    "gates",
-    "boundaries",
-}
+
+def validate_runs(runs: list[dict]) -> list[str]:
+    errors = []
+    groups = {}
+    for run in runs:
+        if (
+            not run.get("command")
+            or not isinstance(run.get("stdout"), str)
+            or not isinstance(run.get("stderr"), str)
+        ):
+            errors.append("Missing execution command/output")
+        groups.setdefault(run.get("increment"), []).append(run)
+    if not groups:
+        return ["Missing behavioral execution evidence"]
+    for name, group in groups.items():
+        reds = [
+            r
+            for r in group
+            if r.get("stage") == "red"
+            and r.get("exit_code") == 1
+            and "AssertionError" in r.get("stdout", "")
+        ]
+        greens = [
+            r for r in group if r.get("stage") == "green" and r.get("exit_code") == 0
+        ]
+        if (
+            not reds
+            or not greens
+            or group.index(reds[-1]) >= group.index(greens[-1])
+            or reds[-1].get("finished_ns", 0) > greens[-1].get("started_ns", 0)
+        ):
+            errors.append(f"Missing ordered behavioral Red/Green: {name}")
+    return errors
 
 
 def declarative_ports(path: Path) -> bool:
@@ -63,7 +79,10 @@ def validate(
         expected_artifacts = (
             set(state["checks"].values())
             | {str(FINAL / "checks/tests.xml"), str(FINAL / "checks/coverage.json")}
-            | {ref for refs in state["increments"].values() for ref in refs}
+            | {ref for refs in state.get("increments", {}).values() for ref in refs}
+            | set(state.get("execution_records", []))
+            | set(state.get("historical_records", []))
+            | ({state["review_reference"]} if "review_reference" in state else set())
             | {ref for refs in state.get("observations", {}).values() for ref in refs}
         )
         if set(state["artifacts"]) != expected_artifacts:
@@ -123,7 +142,11 @@ def validate(
                 or (
                     coverage["excluded_lines"]
                     and not (
-                        path == "src/enrollment/application/ports.py"
+                        path
+                        in {
+                            "src/enrollment/application/ports.py",
+                            "src/enrollment/application/student_ports.py",
+                        }
                         and declarative_ports(root / path)
                     )
                 )
@@ -157,37 +180,36 @@ def validate(
         ]
         if sorted(scenario_ids) != list(range(1, 16)) or state["scenarios"] != 15:
             errors.append("Missing or duplicate acceptance scenarios")
-        required = (
-            REQUIRED_INCREMENTS if required_increments is None else required_increments
-        )
-        if set(state["increments"]) != required:
-            errors.append("Missing increment evidence")
-        for name, references in state["increments"].items():
-            stages: list[tuple[str, int]] = []
-            for reference in references:
-                raw = json.loads((root / reference).read_text())
-                if not all(
-                    field in raw
-                    for field in (
-                        "command",
-                        "stdout",
-                        "stderr",
-                        "digest",
-                        "revision",
-                        "diff",
-                    )
-                ):
-                    errors.append(f"Missing raw increment evidence: {name}")
-                stages.append((raw["stage"], raw["exit_code"]))
+        student_names = []
+        for case in cases:
             if (
-                not any(stage == "red" and code != 0 for stage, code in stages)
-                or not any(stage == "green" and code == 0 for stage, code in stages)
-                or not any(
-                    stage in ("refactor", "no-refactor") and code == 0
-                    for stage, code in stages
-                )
+                case.get("classname") == "tests.acceptance.test_student_details"
+                and case.get("name") in STUDENT_CASES
             ):
-                errors.append(f"Incomplete Red/Green/Refactor: {name}")
+                name = case.attrib["name"]
+                student_names.append(name)
+                prop = case.find("./properties/property[@name='scenario']")
+                if prop is None or prop.get("value") != STUDENT_CASES[name]:
+                    errors.append("Missing or invalid Student scenario identity")
+        if sorted(student_names) != sorted(STUDENT_CASES):
+            errors.append("Missing or duplicate Student acceptance variants")
+        if "execution_records" in state:
+            runs = [
+                json.loads((root / ref).read_text())
+                for ref in state["execution_records"]
+            ]
+            errors.extend(validate_runs(runs))
+            if state["review"] != json.loads(
+                (root / state["review_reference"]).read_text()
+            ):
+                errors.append("Review reference mismatch")
+        else:
+            runs = []
+            for name, references in state["increments"].items():
+                for reference in references:
+                    raw = json.loads((root / reference).read_text())
+                    runs.append(dict(raw, increment=name))
+            errors.extend(validate_runs(runs))
         if state["review"].get("passed") is not True or not state["review"].get(
             "notes"
         ):

@@ -1,8 +1,6 @@
-import sqlite3
-
 import pytest
 
-from enrollment.adapters.persistence.sqlite import Session, StorageFailure
+from enrollment.adapters.persistence.sqlite import Session, StorageFailure, connect
 from enrollment.domain.models import Enrollment
 from enrollment.domain.values import CourseId, StudentId
 from tests.support.database import rows
@@ -54,9 +52,8 @@ def test_explicit_rollback_and_sql_trace(database):
 
 
 def test_non_pair_unique_is_storage_failure(database):
-    from enrollment.application.contracts import UniqueConflict
 
-    with sqlite3.connect(database) as db:
+    with connect(database) as db:
         db.execute("INSERT INTO courses VALUES ('other')")
         db.execute("INSERT INTO enrollments VALUES ('s','other')")
         db.execute(
@@ -66,27 +63,28 @@ def test_non_pair_unique_is_storage_failure(database):
     try:
         with pytest.raises(StorageFailure) as failure:
             session.add(PAIR)
-        assert not isinstance(failure.value, UniqueConflict)
+        assert isinstance(failure.value, StorageFailure)
     finally:
         session.close()
 
 
 def test_pair_unique_and_foreign_key_classification(tmp_path):
     from enrollment.adapters.persistence.sqlite import initialize
-    from enrollment.application.contracts import UniqueConflict
+    from enrollment.application.contracts import PairConflict
 
     path = tmp_path / "real.db"
     initialize(path)
-    with sqlite3.connect(path) as db:
-        db.execute("INSERT INTO students VALUES ('s','p')")
+    with connect(path) as db:
+        db.execute(
+            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('s','p','Alex','alex@example.com')"
+        )
         db.execute("INSERT INTO courses VALUES ('c')")
         db.execute("INSERT INTO enrollments VALUES ('s','c')")
     session = Session(path)
     try:
-        with pytest.raises(UniqueConflict):
-            session.add(PAIR)
+        assert session.add(PAIR) == PairConflict
         with pytest.raises(StorageFailure) as failure:
             session.add(Enrollment(StudentId("missing"), CourseId("c")))
-        assert not isinstance(failure.value, UniqueConflict)
+        assert isinstance(failure.value, StorageFailure)
     finally:
         session.close()

@@ -1,0 +1,16 @@
+{
+  "increment": "student-verification",
+  "stage": "verification",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/application/test_student_details.py",
+    "tests/domain/test_student_values.py",
+    "tests/adapters/test_student_uow.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "...........................                                              [100%]\n27 passed in 0.34s\n",
+  "stderr": "",
+  "started_ns": 1792637566433032344,
+  "finished_ns": 1792637567033478320
+}

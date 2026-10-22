@@ -1,0 +1,17 @@
+{
+  "increment": "story-checkpoint",
+  "stage": "verification",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance",
+    "tests/domain",
+    "tests/application",
+    "tests/adapters",
+    "-q"
+  ],
+  "exit_code": 2,
+  "stdout": "\n==================================== ERRORS ====================================\n______ ERROR collecting tests/acceptance/test_student_record_integrity.py ______\nImportError while importing test module '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/tests/acceptance/test_student_record_integrity.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/acceptance/test_student_record_integrity.py:2: in <module>\n    from tests.support.application import request\nE   ImportError: cannot import name 'request' from 'tests.support.application' (/home/devuser/wsl-projects/sdd-ddd-tdd-codex/tests/support/application.py)\n=========================== short test summary info ============================\nERROR tests/acceptance/test_student_record_integrity.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.40s\n",
+  "stderr": "",
+  "started_ns": 1792637663217382747,
+  "finished_ns": 1792637663928524072
+}

@@ -1,5 +1,5 @@
 from .models import Enrollment, ProgrammeCourseOffering
-from .outcomes import Rejection
+from .outcomes import DetailRejection, Rejection
 from .values import StudentId, VerifiedIdentity
 
 
@@ -13,3 +13,13 @@ def duplicate(existing: Enrollment | None) -> Rejection | None:
 
 def eligibility(offering: ProgrammeCourseOffering | None) -> Rejection | None:
     return Rejection.COURSE_NOT_OFFERED if offering is None else None
+
+
+def email_available(
+    owner: StudentId | None, candidate: StudentId
+) -> DetailRejection | None:
+    return (
+        DetailRejection.EMAIL_CONFLICT
+        if owner is not None and owner != candidate
+        else None
+    )

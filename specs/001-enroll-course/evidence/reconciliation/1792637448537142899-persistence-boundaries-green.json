@@ -1,0 +1,16 @@
+{
+  "increment": "persistence-boundaries",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/adapters/test_student_uow.py",
+    "tests/adapters/test_sqlite.py",
+    "tests/adapters/test_transactions.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": ".............................                                            [100%]\n29 passed in 1.06s\n",
+  "stderr": "",
+  "started_ns": 1792637448537142899,
+  "finished_ns": 1792637449847889082
+}

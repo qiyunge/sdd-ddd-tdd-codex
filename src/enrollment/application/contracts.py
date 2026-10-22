@@ -28,8 +28,13 @@ class StorageFailure(Exception):
     """A technical persistence failure, not a business rejection."""
 
 
-class UniqueConflict(StorageFailure):
-    """The persisted enrollment pair conflicts."""
+class WriteResult(StrEnum):
+    ADDED = "ADDED"
+    PAIR_CONFLICT = "PAIR_CONFLICT"
+
+
+Added = WriteResult.ADDED
+PairConflict = WriteResult.PAIR_CONFLICT
 
 
 class IdentityUnavailable(Exception):

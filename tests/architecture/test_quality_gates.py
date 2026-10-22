@@ -99,6 +99,12 @@ def fixture(tmp_path):
             f'<testcase classname="tests.acceptance.test_enrollment" name="test_scenario[{i}-outcome]" />'
             for i in range(1, 16)
         )
+        + "".join(
+            f'<testcase classname="tests.acceptance.test_student_details" name="{name}"><properties><property name="scenario" value="{family}" /></properties></testcase>'
+            for name, family in __import__(
+                "scripts.acceptance_inventory", fromlist=["STUDENT_CASES"]
+            ).STUDENT_CASES.items()
+        )
         + "</testsuite></testsuites>"
     )
     # The fixture explicitly supplies its own required cycles to the validator.
@@ -111,7 +117,9 @@ def fixture(tmp_path):
                     "stage": stage,
                     "exit_code": code,
                     "command": ["pytest"],
-                    "stdout": "1 failed" if code else "1 passed",
+                    "stdout": "AssertionError: required behavior"
+                    if code
+                    else "1 passed",
                     "stderr": "",
                     "digest": digest,
                     "revision": "fixture",
@@ -251,3 +259,146 @@ def test_real_coverage_rejects_unimported_module_and_missed_branch(tmp_path):
     assert result.returncode != 0
     assert "business/unimported.py" in result.stdout
     assert "business/policy.py" in result.stdout
+
+
+def test_lightweight_recording(tmp_path):
+    recorder = module("record")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests/test_case.py").write_text("def test_case(): assert True\n")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "fixture",
+        ],
+        cwd=tmp_path,
+        check=True,
+    )
+    request = dict(
+        increment_id="cohesive",
+        behavior="cohesive",
+        test_ids=["tests/test_case.py::test_case"],
+        previous_event=None,
+    )
+    code = recorder.capture(
+        tmp_path,
+        "cohesive",
+        "green",
+        [sys.executable, "-m", "pytest", "tests/test_case.py::test_case", "-q"],
+        request,
+    )
+    assert code == 0
+    assert not list(tmp_path.rglob("snapshots")), (
+        "capture must not require intermediate snapshots"
+    )
+    records = list(
+        (tmp_path / "specs/001-enroll-course/evidence/reconciliation").glob("*.json")
+    )
+    assert len(records) == 1
+    raw = json.loads(records[0].read_text())
+    assert raw["command"] and "passed" in raw["stdout"]
+    assert "before" not in raw and "previous_event" not in raw
+
+
+def test_consolidated_red_green_without_snapshots():
+    validator = module("check_evidence")
+    assert hasattr(validator, "validate_runs"), "lightweight validation unavailable"
+    runs = [
+        dict(
+            increment="coherent",
+            stage="red",
+            exit_code=1,
+            stdout="AssertionError: required behavior",
+            stderr="",
+            command=["pytest", "test_behavior"],
+            started_ns=1,
+            finished_ns=2,
+        ),
+        dict(
+            increment="coherent",
+            stage="green",
+            exit_code=0,
+            stdout="passed",
+            stderr="",
+            command=["pytest", "test_behavior"],
+            started_ns=3,
+            finished_ns=4,
+        ),
+    ]
+    assert validator.validate_runs(runs) == []
+    assert validator.validate_runs(runs[1:])
+    assert validator.validate_runs([runs[0], dict(runs[1], exit_code=1)])
+    assert validator.validate_runs([dict(runs[0], stdout="ImportError"), runs[1]])
+    assert validator.validate_runs(list(reversed(runs)))
+    assert validator.validate_runs(runs + [dict(runs[0], started_ns=5, finished_ns=6)])
+
+
+def test_assembly_reads_consolidated_files_and_current_review(tmp_path):
+    root, manifest = fixture(tmp_path)
+    evidence = root / "specs/001-enroll-course/evidence"
+    log = evidence / "reconciliation"
+    log.mkdir()
+    for stage in ("red", "green"):
+        raw = json.loads((root / f"{stage}.json").read_text())
+        raw.update(
+            increment="coherent",
+            started_ns=1 if stage == "red" else 3,
+            finished_ns=2 if stage == "red" else 4,
+        )
+        (log / f"{stage}.json").write_text(json.dumps(raw))
+    (log / "review.json").write_text(
+        json.dumps(
+            {
+                "passed": True,
+                "notes": "current review",
+                "historical_records": ["specs/001-enroll-course/evidence/review.json"],
+            }
+        )
+    )
+    (evidence / "review.json").write_text(
+        json.dumps({"passed": False, "notes": "historical"})
+    )
+    assembler = module("assemble_evidence")
+    assembler.ROOT = root
+    assembler.assemble()
+    state = json.loads(manifest.read_text())
+    assert state["review"]["passed"] is True
+    assert "specs/001-enroll-course/evidence/review.json" in state["artifacts"], (
+        "historical review references must be preserved and verified"
+    )
+    assert state["execution_records"] and "runs" not in state
+    assert all(ref in state["artifacts"] for ref in state["execution_records"])
+    validator = module("check_evidence")
+    assert validator.validate(manifest, root) == []
+    (root / state["execution_records"][0]).write_text("{}")
+    assert validator.validate(manifest, root)
+
+
+def test_missing_student_variant_cannot_pass_by_family_count(tmp_path):
+    import xml.etree.ElementTree as ET
+
+    root, manifest = fixture(tmp_path)
+    report = root / "specs/001-enroll-course/evidence/final/checks/tests.xml"
+    tree = ET.parse(report)
+    suite = tree.find("testsuite")
+    victim = next(
+        case
+        for case in suite
+        if case.get("name") == "test_student_details_2[unicode-email]"
+    )
+    suite.remove(victim)
+    tree.write(report)
+    state = json.loads(manifest.read_text())
+    ref = str(report.relative_to(root))
+    state["artifacts"][ref] = hashlib.sha256(report.read_bytes()).hexdigest()
+    manifest.write_text(json.dumps(state))
+    assert module("check_evidence").validate(manifest, root), (
+        "missing Student detail variant must fail despite all seven families existing"
+    )

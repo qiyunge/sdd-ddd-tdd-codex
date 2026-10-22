@@ -1,0 +1,238 @@
+{
+  "digest": "d6fc7392dc906d322d92c0809f53e6d7ab09e8e503ed95931e8044a5516b768f",
+  "checks": {
+    "tests": "specs/001-enroll-course/evidence/final/checks/tests.json",
+    "architecture": "specs/001-enroll-course/evidence/final/checks/architecture.json",
+    "imports": "specs/001-enroll-course/evidence/final/checks/imports.json",
+    "typing": "specs/001-enroll-course/evidence/final/checks/typing.json",
+    "lint": "specs/001-enroll-course/evidence/final/checks/lint.json",
+    "format": "specs/001-enroll-course/evidence/final/checks/format.json",
+    "coverage-report": "specs/001-enroll-course/evidence/final/checks/coverage-report.json",
+    "coverage-data": "specs/001-enroll-course/evidence/final/checks/coverage-data.json"
+  },
+  "scenarios": 15,
+  "increments": {
+    "values": [
+      "specs/001-enroll-course/evidence/T011/001-red.json",
+      "specs/001-enroll-course/evidence/T012/001-green.json",
+      "specs/001-enroll-course/evidence/T012/002-no-refactor.json"
+    ],
+    "records": [
+      "specs/001-enroll-course/evidence/T013/001-red.json",
+      "specs/001-enroll-course/evidence/T014/001-green.json",
+      "specs/001-enroll-course/evidence/T014/002-no-refactor.json"
+    ],
+    "policies": [
+      "specs/001-enroll-course/evidence/T015/001-acceptance-red.json",
+      "specs/001-enroll-course/evidence/T015/002-red.json",
+      "specs/001-enroll-course/evidence/T016/001-green.json",
+      "specs/001-enroll-course/evidence/T016/002-no-refactor.json"
+    ],
+    "identity": [
+      "specs/001-enroll-course/evidence/T018/001-red.json",
+      "specs/001-enroll-course/evidence/T019/001-green.json",
+      "specs/001-enroll-course/evidence/T019/002-no-refactor.json"
+    ],
+    "prerequisites": [
+      "specs/001-enroll-course/evidence/T020/001-red.json",
+      "specs/001-enroll-course/evidence/T021/001-green.json",
+      "specs/001-enroll-course/evidence/T021/002-no-refactor.json"
+    ],
+    "flow": [
+      "specs/001-enroll-course/evidence/T022/001-red.json",
+      "specs/001-enroll-course/evidence/T023/001-green.json",
+      "specs/001-enroll-course/evidence/T023/002-no-refactor.json"
+    ],
+    "reads": [
+      "specs/001-enroll-course/evidence/T024/001-red.json",
+      "specs/001-enroll-course/evidence/T025/001-green.json",
+      "specs/001-enroll-course/evidence/T025/002-no-refactor.json"
+    ],
+    "transactions": [
+      "specs/001-enroll-course/evidence/T026/001-red.json",
+      "specs/001-enroll-course/evidence/T027/001-green.json",
+      "specs/001-enroll-course/evidence/T027/002-no-refactor.json"
+    ],
+    "provider": [
+      "specs/001-enroll-course/evidence/T028/001-red.json",
+      "specs/001-enroll-course/evidence/T029/001-green.json",
+      "specs/001-enroll-course/evidence/T029/002-no-refactor.json"
+    ],
+    "graphql": [
+      "specs/001-enroll-course/evidence/T030/001-red.json",
+      "specs/001-enroll-course/evidence/T031/001-green.json",
+      "specs/001-enroll-course/evidence/T031/002-no-refactor.json",
+      "specs/001-enroll-course/evidence/T031/003-green.json",
+      "specs/001-enroll-course/evidence/T031/004-no-refactor.json"
+    ],
+    "http": [
+      "specs/001-enroll-course/evidence/T032/001-red.json",
+      "specs/001-enroll-course/evidence/T033/001-green.json",
+      "specs/001-enroll-course/evidence/T033/002-no-refactor.json"
+    ],
+    "conflict": [
+      "specs/001-enroll-course/evidence/T037/001-red.json",
+      "specs/001-enroll-course/evidence/T037/002-green.json",
+      "specs/001-enroll-course/evidence/T037/003-no-refactor.json",
+      "specs/001-enroll-course/evidence/T037/004-refactor.json"
+    ],
+    "faults": [
+      "specs/001-enroll-course/evidence/T040/001-red.json",
+      "specs/001-enroll-course/evidence/T041/001-green.json",
+      "specs/001-enroll-course/evidence/T041/002-no-refactor.json"
+    ],
+    "server": [
+      "specs/001-enroll-course/evidence/T042/001-red.json",
+      "specs/001-enroll-course/evidence/T042/002-green.json",
+      "specs/001-enroll-course/evidence/T042/003-green.json",
+      "specs/001-enroll-course/evidence/T042/004-refactor.json"
+    ],
+    "gates": [
+      "specs/001-enroll-course/evidence/T045/001-red.json",
+      "specs/001-enroll-course/evidence/T045/002-green.json",
+      "specs/001-enroll-course/evidence/T045/003-no-refactor.json",
+      "specs/001-enroll-course/evidence/T045/004-refactor.json",
+      "specs/001-enroll-course/evidence/T045/005-tamper-red.json",
+      "specs/001-enroll-course/evidence/T045/006-tamper-green.json",
+      "specs/001-enroll-course/evidence/T045/007-protocol-red.json",
+      "specs/001-enroll-course/evidence/T045/008-protocol-green.json",
+      "specs/001-enroll-course/evidence/T045/009-final-refactor.json"
+    ],
+    "boundaries": [
+      "specs/001-enroll-course/evidence/T046/001-schema-red.json",
+      "specs/001-enroll-course/evidence/T046/002-schema-green.json",
+      "specs/001-enroll-course/evidence/T046/003-red.json",
+      "specs/001-enroll-course/evidence/T046/004-green.json",
+      "specs/001-enroll-course/evidence/T046/005-unique-red.json",
+      "specs/001-enroll-course/evidence/T046/006-unique-green.json",
+      "specs/001-enroll-course/evidence/T046/007-no-refactor.json",
+      "specs/001-enroll-course/evidence/T046/008-refactor.json"
+    ]
+  },
+  "artifacts": {
+    "specs/001-enroll-course/evidence/T011/001-red.json": "b8cc1ad2897b6839a7de96fc28062d4b9fa958b69ff9b966e47f24257b9d173c",
+    "specs/001-enroll-course/evidence/T012/001-green.json": "d519e988fef6169aa492f199f09087acf1d2afd4b4e52159625eaa40a9392f6e",
+    "specs/001-enroll-course/evidence/T012/002-no-refactor.json": "c0fe0ccbb2b944979e008984c3223329ecb828e9b6040810e848d73726133c8f",
+    "specs/001-enroll-course/evidence/T013/001-red.json": "7ce735a326b97cdc8babd772ad766ccbc25e9298b428b555c9ef107676c1a745",
+    "specs/001-enroll-course/evidence/T014/001-green.json": "cd5c6de84b541a02e9c49190aae6c5a9aac206b6877f0b18d09655824bc8692e",
+    "specs/001-enroll-course/evidence/T014/002-no-refactor.json": "d5f787c428997e85235ef42f316c4b711149a72bfff16e0bf73679e8b21f42ee",
+    "specs/001-enroll-course/evidence/T015/001-acceptance-red.json": "fc157468f0774696147a0629a859e97f7cbc0fb935fbaeee515437a14584597e",
+    "specs/001-enroll-course/evidence/T015/002-red.json": "1c188bac7e3e9cf9932dbb4510737022092da3479196609df1019f26aa07ed55",
+    "specs/001-enroll-course/evidence/T016/001-green.json": "61c9f2892f2a0af200f33fb14a6753d067c2195cb26ca147b7ee2f5fe2f1e4de",
+    "specs/001-enroll-course/evidence/T016/002-no-refactor.json": "8a289a86b43b0c751cf8439079dc73b922d486a647d8dacd5e8a4c963207069d",
+    "specs/001-enroll-course/evidence/T018/001-red.json": "ef5367eadbd94fa7fbb141f9f2c6f120f79cb1caaeaa17d6cacf510b86e2fe62",
+    "specs/001-enroll-course/evidence/T019/001-green.json": "bb8f62a8bfab2b2297d53f1bc96813417d37ef192cc25561cf603fb95246248b",
+    "specs/001-enroll-course/evidence/T019/002-no-refactor.json": "2a0c646de9163155fe218a7a89c21fa7fcd0239a291d4288fe616925ea90260f",
+    "specs/001-enroll-course/evidence/T020/001-red.json": "66da44cde33adb3adffdca070fcc75235f8b03c9df78fa2d3a470dc4b89afec3",
+    "specs/001-enroll-course/evidence/T021/001-green.json": "516d1da1800560728c881ae1ce5ecceae7845744131d8d468e392dc1eaaeac22",
+    "specs/001-enroll-course/evidence/T021/002-no-refactor.json": "8a03e08d99e3c2881ddb491314b9c6826486fc993ec8ff758630bfce0754dbe3",
+    "specs/001-enroll-course/evidence/T022/001-red.json": "445868be6594f6e81141e88e9799a9a98bca2bd624fb8f41b114de76562a774c",
+    "specs/001-enroll-course/evidence/T023/001-green.json": "45a5722b43824e9f6eae9c80af4a52d862e4a4b27e8314442084870ad9d7a7ef",
+    "specs/001-enroll-course/evidence/T023/002-no-refactor.json": "616bf8f2098fa118bba5232aa263e4d400c7021c91cebbf9928f0f5b9e0f4239",
+    "specs/001-enroll-course/evidence/T024/001-red.json": "edab2d9e8a136166c5cd38e490669e76f35230c93ef149b5f1659c389ccb544e",
+    "specs/001-enroll-course/evidence/T025/001-green.json": "21508164d2ecd9cca04306f013660ec6f5c97ea0a9cebe8f60717dbb40034b92",
+    "specs/001-enroll-course/evidence/T025/002-no-refactor.json": "f82a1d82fe97cf4ccdcbc2eb3e3fa5f7577daad148d4b6156b8df46a54b289fb",
+    "specs/001-enroll-course/evidence/T026/001-red.json": "cfe28084eaccbbe31fa05f6a3d2c680522a46af690622c434bd11b5c748a01c5",
+    "specs/001-enroll-course/evidence/T027/001-green.json": "e15f4c94fa9f8a09d5076215e6c109c24dc5429b601065279f854f78c55c1fd3",
+    "specs/001-enroll-course/evidence/T027/002-no-refactor.json": "6a6ba68a60e06763fe4dbb46f9e55cb79b78ff0236ab5c56421e166de8758a37",
+    "specs/001-enroll-course/evidence/T028/001-red.json": "e7ab9c2ac3f6842e43cce160a3cd4061e2b0b8e7de28516a178431f9eaa3f06c",
+    "specs/001-enroll-course/evidence/T029/001-green.json": "3e87ddafba3f0391d2c5ba2b7ef796ff2f93c99e25e118242b5c7bf942a8d80f",
+    "specs/001-enroll-course/evidence/T029/002-no-refactor.json": "2b6272b296e6d2cd2a74ee4297b0f54b0017d2348515e5374b7e04b9560bbcb1",
+    "specs/001-enroll-course/evidence/T030/001-red.json": "8a1817b577cbe65e850007bfe9d0057965e18b441180898c4d5bc92b11d44f78",
+    "specs/001-enroll-course/evidence/T031/001-green.json": "0a94718a7a2b6525278ac62e5b45a32aeb1c397ef953f73c569fd1ad4f9aedc6",
+    "specs/001-enroll-course/evidence/T031/002-no-refactor.json": "7e4878c5515197127e95f4e3167cd9a20673978021e51ed1c35b1fb609aedfe8",
+    "specs/001-enroll-course/evidence/T031/003-green.json": "de54909ce78a6fc109e8eb5cc1a40488393f2b8cbc8fb62abd5eae430e9cd75c",
+    "specs/001-enroll-course/evidence/T031/004-no-refactor.json": "7bd44a3883b6cb494248d32a308b5bee0341f371e9f1de993c1fec9421f0e8f6",
+    "specs/001-enroll-course/evidence/T032/001-red.json": "995bbafc1769a18e42c35f62ae11369467a0cf12b5b0d0128d0efb36659ec725",
+    "specs/001-enroll-course/evidence/T033/001-green.json": "dc4649a0c3b33e9f6f8cff76ea733998a4268ef6b8fd1e3f8d47ec07eb07f3a5",
+    "specs/001-enroll-course/evidence/T033/002-no-refactor.json": "711895cdb913fc83aeddf2ad22b5e68054d4525f910e1ae6724b447f43cbc913",
+    "specs/001-enroll-course/evidence/T034/001-acceptance-green.json": "be4d7909db8f0c903c34a51d44e81f3b4dc57d76eb767bc1ccc9a5843b0b1c35",
+    "specs/001-enroll-course/evidence/T035/001-no-change.json": "612b95ae7b7cbaef50b9899ba04e3ec35a79cb0ddedfa9f9426f063ca9657490",
+    "specs/001-enroll-course/evidence/T036/001-acceptance-green.json": "949c69d80eef73766c58300b8e74511abfa86e43fb71fb63b2245a079b326c3a",
+    "specs/001-enroll-course/evidence/T037/001-red.json": "62f104b04dfb3e3ea3e763fa9747e659c29f74a5f368c885c734f493b91909eb",
+    "specs/001-enroll-course/evidence/T037/002-green.json": "40c3dd880b6a5b3e2594d8c3976cd40eabe68e7a91b3349a550c33570e0b927e",
+    "specs/001-enroll-course/evidence/T037/003-no-refactor.json": "0da388dbdc3105315cb99d764e3d548d082fca6275e4a796215f8768e66f81b6",
+    "specs/001-enroll-course/evidence/T037/004-refactor.json": "60f0b15d4103d2024d218a7472457e381bdc93452b5f63b46fe530edc696faca",
+    "specs/001-enroll-course/evidence/T038/001-acceptance-green.json": "aed6ba775440df898f275496f4afa77bb151bcb584850cb1c2ad2e33b2ab41b5",
+    "specs/001-enroll-course/evidence/T039/001-no-change.json": "e21ffc21712affc04515b4207b7ab831c70523710974ac8ae673f8f7ee7857c8",
+    "specs/001-enroll-course/evidence/T040/001-red.json": "b150b98d6e3bb942f5dc864da1c37ecce64da8cef2d0ca5b21d2841b77a8465c",
+    "specs/001-enroll-course/evidence/T041/001-green.json": "d29f03bcb7bfaf8afc07a8ee199848ed40e05545e9e576978a4964d4cf0d1bbd",
+    "specs/001-enroll-course/evidence/T041/002-no-refactor.json": "f7fdc2f26ae2510c762bbea386ca1fc1b55ba7c2dd6152a54b0828b46ae8a441",
+    "specs/001-enroll-course/evidence/T042/001-red.json": "5bbf2f469214db2fde013aac16fb570370ef5e56824557e8f7d1895afa4d3c57",
+    "specs/001-enroll-course/evidence/T042/002-green.json": "b2c7d98891d215f1a0cd6546ebf97add1c12d61d9b9c2cf31758e12d0d343644",
+    "specs/001-enroll-course/evidence/T042/003-green.json": "c0770419c3ad0ce97594c2712b75f326486a6eef559021335dc4ad559f671d5f",
+    "specs/001-enroll-course/evidence/T042/004-refactor.json": "ee028f946b3e7dcda48311ea8fdab859a21f1730863885d814a6e7e5eff36032",
+    "specs/001-enroll-course/evidence/T043/001-green.json": "43f263516a8bea10b52485bf1932744ffeb3b398040dcf52957c8c7db006aec5",
+    "specs/001-enroll-course/evidence/T044/001-green.json": "4ff9daa0a0192d9570975fc98dd26753d5a80e5748676e8ba8d3478f2516da31",
+    "specs/001-enroll-course/evidence/T045/001-red.json": "85d8d758ffaf5252adf2d40f3abc75d3a0606f53ed2d4cf5ab55790b42ebb57e",
+    "specs/001-enroll-course/evidence/T045/002-green.json": "033cfcdede1cfce36bc335e2c463fc1ae5041c9a7ab723442e0ce3c2e2147318",
+    "specs/001-enroll-course/evidence/T045/003-no-refactor.json": "53ef0374e46eb2a88eb041d30a7e65ff375559989fb9e88a4158b923538e6cd9",
+    "specs/001-enroll-course/evidence/T045/004-refactor.json": "2d5f282a131f954a7dacc8d9aa1d0c5b8feba0e4416c12f34674defc152ae537",
+    "specs/001-enroll-course/evidence/T045/005-tamper-red.json": "adc134710e32464be21a8d890eac8b478e4ea1515d666059806675b68f89376e",
+    "specs/001-enroll-course/evidence/T045/006-tamper-green.json": "b03b82cdfb25141686d1378c929da40682ce29ad2f8af9b870fd2e427c4b97e5",
+    "specs/001-enroll-course/evidence/T045/007-protocol-red.json": "a0708b1d60cc3548bd9578811d0ce8d574c29174cdbe180b0ecccc76f8519210",
+    "specs/001-enroll-course/evidence/T045/008-protocol-green.json": "151cb203451e38c0ddcc4d23204384f5427c2afd3f945184a2eb7fc13142811d",
+    "specs/001-enroll-course/evidence/T045/009-final-refactor.json": "d49f5becb31c2969b69d50d0f8a602d4b054eddfacc5d94b0f4db0df1b5225a6",
+    "specs/001-enroll-course/evidence/T046/001-schema-red.json": "2fd7ea1dc355ced01cc65893569629449ca7719e9bc43dfb6d22e46243e7e1de",
+    "specs/001-enroll-course/evidence/T046/002-schema-green.json": "87229aa72ec8a55469ad82b1f2deaff453050db8636df63103eed244d539baa5",
+    "specs/001-enroll-course/evidence/T046/003-red.json": "e573542cd44b32a3d9a22b0e1dc8f6925813ac2cd81493fb59dcf7426c8938fb",
+    "specs/001-enroll-course/evidence/T046/004-green.json": "8bb7ea790caed62750e95253596fc344ed6882ff1a74c4b148cd626351715ebd",
+    "specs/001-enroll-course/evidence/T046/005-unique-red.json": "1b88980517335170a18b067f2d34034efc82c190009362fbc1b3f378c93227b1",
+    "specs/001-enroll-course/evidence/T046/006-unique-green.json": "06449fa816784c37e969ad32f0d766ece04a4f6fc113a52e99ced815f73868a1",
+    "specs/001-enroll-course/evidence/T046/007-no-refactor.json": "78e3830a8395453da784312a849c6857e9cad7cf3905ad0e6a1a52b62dd04672",
+    "specs/001-enroll-course/evidence/T046/008-refactor.json": "df63c300933980f6254d509a9127ad41ff87438a3f80575a03767fe2dc59a88f",
+    "specs/001-enroll-course/evidence/final/checks/architecture.json": "b455de3c26270969716a466184955c3b65b743530cb4769acc4b206d35b4597e",
+    "specs/001-enroll-course/evidence/final/checks/coverage-data.json": "248e364bad6f2848150b06692b1a690a9ea6a72d9e2faac0843507deebe3796e",
+    "specs/001-enroll-course/evidence/final/checks/coverage-report.json": "fb0e5293e6d3a2671fbd30aafc91fd25cda767588ef01f74850e595705281d7f",
+    "specs/001-enroll-course/evidence/final/checks/coverage.json": "d4bb6d076eb2b32481fcd7912832933e4f8a7db354270cbcbdffb5f701d596dd",
+    "specs/001-enroll-course/evidence/final/checks/format.json": "bb2a2f28524e057a4b7f92b6b1759b87b1771b915b9434cab54a77579c10dd79",
+    "specs/001-enroll-course/evidence/final/checks/imports.json": "2a82ffd46dc87d39aa3b0387aac450936cdb33db9fbf6be250110e4db8e8db86",
+    "specs/001-enroll-course/evidence/final/checks/lint.json": "f5773b5c16d69aeb0758a1e5be5e2c536a537d53219febea3ae5a21603651d48",
+    "specs/001-enroll-course/evidence/final/checks/tests.json": "297fbb226322b599a2eccff4748870a4ed6e0050862ea81ba732b6fefa4e550b",
+    "specs/001-enroll-course/evidence/final/checks/tests.xml": "14d5cca6ad6f1b23922a0f717aed3e60bc3f48fd47679e1e615578368b98cdf9",
+    "specs/001-enroll-course/evidence/final/checks/typing.json": "fce950b6de1d9e2cb6a901f155d0db114dc50884f5720c8dfa08bc41fc61c814"
+  },
+  "review": {
+    "passed": false,
+    "notes": "Functional review passed, but strict process compliance is not fully evidenced. Several early increments executed grouped behavioral Red suites, then implemented multiple independently testable branches together. Genuine Red and Green output is preserved, but it cannot establish the required individual per-behavior edit/execution ordering. Historical evidence cannot be recreated honestly by forcing correct behavior to fail. Final completion remains fail-closed pending resolution of this process limitation.",
+    "functional_review": {
+      "passed": true,
+      "ownership": "Application alone invokes IdentityVerifier and handles prerequisite absence; Domain owns ownership, duplicate and offering policies and validated immutable records. No Domain verification port or unverified model exists.",
+      "ordering": "Negative verification and ownership denial precede persistence. Student, Programme, Course, duplicate and eligibility are evaluated in order; duplicate avoids offering access.",
+      "boundaries": "Provider, SQL and GraphQL representations are explicitly converted. Flask is confined to HTTP/bootstrap. Import Linter and source/type fitness tests complement semantic review.",
+      "persistence": "BEGIN IMMEDIATE precedes reads; explicit SQL commit and rollback use Python 3.12 autocommit. Connections remain in their creating workers. Only the pair's specific uniqueness violation permits one bounded re-evaluation. Ambiguous/confirmed commit failures do not delete persisted state.",
+      "verification": "Complete Core statement/branch coverage, real concurrent requests, race ordering, pre/post-commit fault injection, installed-wheel resource loading and final quality gates are automated. Consult final raw results for their actual status."
+    },
+    "transcript_observations": [
+      "T010's substring selection also ran scenario 11 before its adapter existed; that import error is not behavioral Red. Scenarios 1 and 13 independently failed their HTTP-boundary assertions.",
+      "The original example GraphQL query selected differently typed reason fields without aliases. The query and documentation were corrected to alias the technical failure field without changing the SDL or business results. Initial failed Green attempts remain visible.",
+      "T042's sandbox socket PermissionError is environmental, not behavioral Red. The inert-server assertion is the actual Red; a later authorized socket execution passed.",
+      "Race, concurrency and response-loss behavior already passed after the transaction implementation. These tests were preserved; no production behavior was broken to manufacture Red.",
+      "The evidence validator recognizes coverage.py's standard ellipsis exclusion only in structurally declarative Protocol signatures. Business exclusions remain forbidden. A negative fixture rejects business bodies in ports.",
+      "The single mypy suppression is confined to Waitress's untyped library import at bootstrap; a typed Protocol and a real server test cover that boundary. No Core typing suppression is present."
+    ]
+  },
+  "observations": {
+    "T034": [
+      "specs/001-enroll-course/evidence/T034/001-acceptance-green.json"
+    ],
+    "T035": [
+      "specs/001-enroll-course/evidence/T035/001-no-change.json"
+    ],
+    "T036": [
+      "specs/001-enroll-course/evidence/T036/001-acceptance-green.json"
+    ],
+    "T038": [
+      "specs/001-enroll-course/evidence/T038/001-acceptance-green.json"
+    ],
+    "T039": [
+      "specs/001-enroll-course/evidence/T039/001-no-change.json"
+    ],
+    "T043": [
+      "specs/001-enroll-course/evidence/T043/001-green.json"
+    ],
+    "T044": [
+      "specs/001-enroll-course/evidence/T044/001-green.json"
+    ]
+  }
+}

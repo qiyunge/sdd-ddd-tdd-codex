@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from enrollment.application.contracts import IdentityUnavailable
+from enrollment.domain.outcomes import InvalidIdentifier
 from enrollment.domain.values import SubjectId, VerifiedIdentity
 
 
@@ -11,6 +12,11 @@ class Verifier:
     def verify(self, credential: str | None) -> VerifiedIdentity | None:
         try:
             subject = self.provider(credential)
-            return None if subject is None else VerifiedIdentity(SubjectId(subject))
-        except Exception as exc:
+        except (RuntimeError, OSError) as exc:
             raise IdentityUnavailable("Identity provider unavailable") from exc
+        if subject is None:
+            return None
+        parsed = SubjectId.create(subject)
+        if isinstance(parsed, InvalidIdentifier):
+            raise IdentityUnavailable("Invalid identity provider representation")
+        return VerifiedIdentity(parsed)

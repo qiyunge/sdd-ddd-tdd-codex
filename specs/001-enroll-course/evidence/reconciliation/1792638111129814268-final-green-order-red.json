@@ -1,0 +1,16 @@
+{
+  "increment": "final-green-order",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-k",
+    "consolidated_red",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________ test_consolidated_red_green_without_snapshots _________________\n\n    def test_consolidated_red_green_without_snapshots():\n        validator = module(\"check_evidence\")\n        assert hasattr(validator, \"validate_runs\"), \"lightweight validation unavailable\"\n        runs = [\n            dict(\n                increment=\"coherent\",\n                stage=\"red\",\n                exit_code=1,\n                stdout=\"AssertionError: required behavior\",\n                stderr=\"\",\n                command=[\"pytest\", \"test_behavior\"],\n                started_ns=1,\n                finished_ns=2,\n            ),\n            dict(\n                increment=\"coherent\",\n                stage=\"green\",\n                exit_code=0,\n                stdout=\"passed\",\n                stderr=\"\",\n                command=[\"pytest\", \"test_behavior\"],\n                started_ns=3,\n                finished_ns=4,\n            ),\n        ]\n        assert validator.validate_runs(runs) == []\n        assert validator.validate_runs(runs[1:])\n        assert validator.validate_runs([runs[0], dict(runs[1], exit_code=1)])\n        assert validator.validate_runs([dict(runs[0], stdout=\"ImportError\"), runs[1]])\n        assert validator.validate_runs(list(reversed(runs)))\n>       assert validator.validate_runs(runs + [dict(runs[0], started_ns=5, finished_ns=6)])\nE       AssertionError: assert []\nE        +  where [] = <function validate_runs at 0x7fafe06d7240>(([{'increment': 'coherent', 'stage': 'red', 'exit_code': 1, 'stdout': 'AssertionError: required behavior', ...}, {'increment': 'coherent', 'stage': 'green', 'exit_code': 0, 'stdout': 'passed', ...}] + [{'increment': 'coherent', 'stage': 'red', 'exit_code': 1, 'stdout': 'AssertionError: required behavior', ...}]))\nE        +    where <function validate_runs at 0x7fafe06d7240> = <module 'check_evidence' from '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/scripts/check_evidence.py'>.validate_runs\n\ntests/architecture/test_quality_gates.py:340: AssertionError\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_consolidated_red_green_without_snapshots\n1 failed, 6 deselected in 0.05s\n",
+  "stderr": "",
+  "started_ns": 1792638111129814268,
+  "finished_ns": 1792638111439063281
+}

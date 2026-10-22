@@ -94,9 +94,9 @@ Failed, skipped, blocked or missing mandatory checks prevent completion claims.
 
 ## Student details extension validation
 
-This section is a target validation guide for subsequent implementation; the current checkout does not yet implement the new operation/tests. Existing implementation evidence establishes only the earlier enrollment behavior. Use the pinned environment above; no dependency upgrade is planned. The host must provision valid required details in the new schema before serving. See [student integration contract](contracts/student-details.md) for command/result semantics and [data model](data-model.md) for stored constraints. No new web endpoint is used.
+This section validates the Student-detail operation and tests. Historical enrollment evidence alone does not establish the extension; use current results and the separate current review. Use the pinned environment above; no dependency upgrade is planned. The host must provision valid required details in the new schema before serving. See [student integration contract](contracts/student-details.md) for command/result semantics and [data model](data-model.md) for stored constraints. No new web endpoint is used.
 
-After the new tests/operation are implemented:
+Run the implemented host-integration tests:
 
 ```bash
 uv run pytest tests/acceptance/test_student_details.py -q
@@ -119,22 +119,23 @@ Add cases for Unicode whitespace such as NBSP and casefold expansion (`Straße@e
 
 Exercise SQL constraints on the production schema using configured connections: nonblank fields, duplicate casefold keys on insert/update and registration on every write path. A connection lacking required functions fails closed; no ASCII fallback or forged key is accepted. Verify restoring malformed legacy/corrupt rows produces StorageFailure/PERSISTENCE_FAILURE without leaking diagnostics. Initialization must refuse a pre-extension schema unchanged, accept a fresh schema and preserve data on compatible repeated initialization; no migration or fabricated defaults.
 
-Before production edits, retain relevant behavioral Red and subsequent Green for each
-cohesive increment. The current recorder and validator still enforce the previous
-prospective protocol; the new lightweight format is not implemented yet. Follow the
-[tooling migration design](plan.md#execution-evidence-and-tooling-migration) before
-using revised evidence as a completion gate. No new recorder command is asserted here.
+Before production edits for genuinely missing behavior, capture relevant behavioral
+Red with `.venv/bin/python -m scripts.record <increment> red <test-command...>`;
+after implementation use the same increment with `green`. Commands run directly,
+without shell interpretation. Records retain actual output, exit result and chronology.
+See [evidence guide](evidence/README.md). Consider refactoring and rerun relevant tests;
+no separate no-refactor artifact or intermediate snapshot is required.
 
-Missing imports or constructor signatures alone are not behavioral Red. Update
-fixtures for approved required fields while preserving existing behavioral assertions.
+Missing imports, constructor signatures or schema setup alone are not behavioral Red.
+Adapt fixtures alongside model/schema changes, preserving approved assertions.
 
-Before final completion, extend manifest assembly/validation to require all 15 enrollment and 7 student-detail scenario identities plus lightweight execution evidence covering changed behavior, consolidated across cohesive increments. Add negative tests showing a missing/skipped new scenario, absent relevant Red/Green evidence, stale final coverage or mismatched final evidence fails validation, plus positive tests accepting consolidated coherent increments without snapshots or no-refactor artifacts. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
+Final manifest assembly/validation requires all 15 enrollment and 7 student-detail scenario identities plus lightweight execution evidence covering changed behavior, consolidated across cohesive increments. Add negative tests showing a missing/skipped new scenario, absent relevant Red/Green evidence, stale final coverage or mismatched final evidence fails validation, plus positive tests accepting consolidated coherent increments without snapshots or no-refactor artifacts. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
 
 ## Failure-contract alignment validation (Constitution v2.0.0)
 
-This is planned verification; no implementation pass is claimed by this update.
+These are required verification scenarios; consult the latest captured results for their actual status.
 Use the existing acceptance, focused tests and final evidence commands above after
-implementing the revised contracts. Use cohesive Red/Green/Refactor increments covering these behaviors; related items MAY share a cycle:
+the revised contracts. Use cohesive Red/Green/Refactor increments covering these behaviors; related items MAY share a cycle:
 
 - Domain factories returning invalid-ID/invalid-text outcomes without raising; direct
   valid construction/restoration and internal misuse guards remain invariant-safe.
@@ -161,7 +162,7 @@ unexpected internal execution failures use the sanitized error envelope. Keep th
 
 ## StudentEmail equality and identity validation
 
-After implementation, use the focused Domain/Application and acceptance commands
+Use the focused Domain/Application and acceptance commands
 above with lightweight Red/Green evidence for cohesive increments covering these behaviors; consider refactoring and keep relevant tests passing:
 
 - Case variants across both address parts compare equal and have equal hashes.
@@ -181,7 +182,7 @@ above with lightweight Red/Green evidence for cohesive increments covering these
 - If Student is hashable, same-ID variants have equal hashes and email replacement
   cannot change its hash. Self-exclusion in uniqueness still compares StudentId.
 
-These are planned tests, not executed implementation results. Include equality and
+Consult retained execution records and final results; this guide itself is not execution evidence. Include equality and
 hash methods in complete Core coverage and retain the existing acceptance scenario
 families and final evidence gates.
 

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/.venv/bin/pytest",
+    "tests/architecture",
+    "-q"
+  ],
+  "stage": "architecture",
+  "exit_code": 0,
+  "stdout": ".......                                                                  [100%]\n7 passed in 0.40s\n",
+  "stderr": "",
+  "digest": "374f094a3a432f69f01dddb6d38d5b59bebe6cd15baad726fa090aaec8459618",
+  "digest_after": "374f094a3a432f69f01dddb6d38d5b59bebe6cd15baad726fa090aaec8459618",
+  "started_ns": 1792623607081735499,
+  "finished_ns": 1792623607727710272
+}

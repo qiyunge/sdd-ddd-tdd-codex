@@ -7,14 +7,36 @@ from enrollment.domain.models import (
     ProgrammeCourseOffering,
     Student,
 )
-from enrollment.domain.values import CourseId, ProgrammeId, StudentId
+from enrollment.domain.values import (
+    CourseId,
+    ProgrammeId,
+    StudentEmail,
+    StudentId,
+    StudentName,
+)
 
 
 @pytest.mark.parametrize(
     "kind,args",
     [
-        (Student, ("s", ProgrammeId("p"))),
-        (Student, (StudentId("s"), "p")),
+        (
+            Student,
+            (
+                "s",
+                ProgrammeId("p"),
+                StudentName("Alex"),
+                StudentEmail("alex@example.com"),
+            ),
+        ),
+        (
+            Student,
+            (
+                StudentId("s"),
+                "p",
+                StudentName("Alex"),
+                StudentEmail("alex@example.com"),
+            ),
+        ),
         (Programme, ("p",)),
         (Course, ("c",)),
         (ProgrammeCourseOffering, ("p", CourseId("c"))),
@@ -29,7 +51,12 @@ def test_invalid_reconstitution(kind, args):
 
 
 def test_valid_records():
-    s = Student(StudentId("s"), ProgrammeId("missing"))
+    s = Student(
+        StudentId("s"),
+        ProgrammeId("missing"),
+        StudentName("Alex"),
+        StudentEmail("alex@example.com"),
+    )
     assert s.programme_id.value == "missing"
     assert Programme(ProgrammeId("p")).programme_id.value == "p"
     assert Course(CourseId("c")).course_id.value == "c"

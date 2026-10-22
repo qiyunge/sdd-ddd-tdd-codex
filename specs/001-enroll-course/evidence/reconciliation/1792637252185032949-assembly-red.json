@@ -1,0 +1,16 @@
+{
+  "increment": "assembly",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-k",
+    "assembly_reads",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________ test_assembly_reads_consolidated_files_and_current_review ___________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-124/test_assembly_reads_consolidat0')\n\n    def test_assembly_reads_consolidated_files_and_current_review(tmp_path):\n        root, manifest = fixture(tmp_path)\n        evidence = root / \"specs/001-enroll-course/evidence\"\n        log = evidence / \"reconciliation\"\n        log.mkdir()\n        for stage in (\"red\", \"green\"):\n            raw = json.loads((root / f\"{stage}.json\").read_text())\n            raw.update(increment=\"coherent\", started_ns=1 if stage == \"red\" else 3, finished_ns=2 if stage == \"red\" else 4)\n            (log / f\"{stage}.json\").write_text(json.dumps(raw))\n        (log / \"review.json\").write_text(json.dumps({\"passed\": True, \"notes\": \"current review\"}))\n        (evidence / \"review.json\").write_text(json.dumps({\"passed\": False, \"notes\": \"historical\"}))\n        assembler = module(\"assemble_evidence\")\n>       assert \"root\" in __import__(\"inspect\").signature(assembler.assemble).parameters, \"assembly must accept current consolidated evidence\"\nE       AssertionError: assembly must accept current consolidated evidence\nE       assert 'root' in mappingproxy(OrderedDict())\nE        +  where mappingproxy(OrderedDict()) = <Signature () -> None>.parameters\nE        +    where <Signature () -> None> = <function signature at 0x71d0162eaca0>(<function assemble at 0x71d014e185e0>)\nE        +      where <function signature at 0x71d0162eaca0> = <module 'inspect' from '/usr/lib/python3.12/inspect.py'>.signature\nE        +        where <module 'inspect' from '/usr/lib/python3.12/inspect.py'> = __import__('inspect')\nE        +      and   <function assemble at 0x71d014e185e0> = <module 'assemble_evidence' from '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/scripts/assemble_evidence.py'>.assemble\n\ntests/architecture/test_quality_gates.py:298: AssertionError\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_assembly_reads_consolidated_files_and_current_review\n1 failed, 5 deselected in 0.05s\n",
+  "stderr": "",
+  "started_ns": 1792637252185032949,
+  "finished_ns": 1792637252515105498
+}

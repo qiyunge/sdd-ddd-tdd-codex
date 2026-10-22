@@ -1,15 +1,17 @@
 from enrollment.domain import policies
 from enrollment.domain.models import Enrollment
-from enrollment.domain.outcomes import Rejection
+from enrollment.domain.outcomes import InvalidIdentifier, Rejection
 from enrollment.domain.values import CourseId, StudentId
 
+from .cleanup import close_preserving_failure
 from .contracts import (
     Command,
     Failure,
     IdentityUnavailable,
+    PairConflict,
     Result,
     StorageFailure,
-    UniqueConflict,
+    WriteResult,
 )
 from .ports import IdentityVerifier, UnitOfWorkFactory
 
@@ -23,31 +25,29 @@ def enroll(
         return Failure.IDENTITY_UNAVAILABLE
     if identity is None:
         return Rejection.DENIED
-    try:
-        student_id = StudentId(command.student_id)
-    except ValueError:
+    student_id = StudentId.create(command.student_id)
+    if isinstance(student_id, InvalidIdentifier):
         return Failure.INVALID_REQUEST
     denial = policies.ownership(identity, student_id)
     if denial is not None:
         return denial
-    try:
-        course_id = CourseId(command.course_id)
-    except ValueError:
+    course_id = CourseId.create(command.course_id)
+    if isinstance(course_id, InvalidIdentifier):
         return Failure.INVALID_REQUEST
     try:
-        return _attempt(student_id, course_id, sessions)
-    except UniqueConflict:
-        try:
-            return _attempt(student_id, course_id, sessions)
-        except StorageFailure:
-            return Failure.PERSISTENCE_FAILURE
+        result = _attempt(student_id, course_id, sessions)
+        if result == PairConflict:
+            result = _attempt(student_id, course_id, sessions)
+        return (
+            Failure.PERSISTENCE_FAILURE if isinstance(result, WriteResult) else result
+        )
     except StorageFailure:
         return Failure.PERSISTENCE_FAILURE
 
 
 def _attempt(
     student_id: StudentId, course_id: CourseId, sessions: UnitOfWorkFactory
-) -> Result:
+) -> Result | WriteResult:
     session = sessions()
     try:
         student = session.student(student_id)
@@ -68,8 +68,9 @@ def _attempt(
         if rejection is not None:
             return rejection
         enrollment = Enrollment(student_id, course_id)
-        session.add(enrollment)
+        if session.add(enrollment) == PairConflict:
+            return PairConflict
         session.commit()
         return enrollment
     finally:
-        session.close()
+        close_preserving_failure(session)

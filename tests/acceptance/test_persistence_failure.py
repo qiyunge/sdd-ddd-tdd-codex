@@ -26,6 +26,9 @@ def test_faults(database, monkeypatch, point, committed):
         def __init__(self, real):
             self.real = real
 
+        def create_function(self, *args, **kwargs):
+            return self.real.create_function(*args, **kwargs)
+
         @property
         def in_transaction(self):
             return self.real.in_transaction

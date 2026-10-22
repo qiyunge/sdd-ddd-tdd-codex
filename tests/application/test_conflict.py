@@ -1,6 +1,6 @@
 import pytest
 
-from enrollment.application.contracts import Command, Failure, UniqueConflict
+from enrollment.application.contracts import Command, Failure, PairConflict
 from enrollment.application.enroll import enroll
 from enrollment.domain.outcomes import Rejection
 from tests.application.test_enrollment_flow import FlowSession
@@ -10,7 +10,7 @@ from tests.application.test_identity import Verifier
 class Conflicting(FlowSession):
     def add(self, e):
         self.calls.append("add")
-        raise UniqueConflict()
+        return PairConflict
 
 
 @pytest.mark.parametrize(

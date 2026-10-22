@@ -1,4 +1,4 @@
-"""Assemble references after raw quality capture; this is not validation."""
+"""Assemble actual final checks and lightweight execution references; do not approve them."""
 
 import hashlib
 import json
@@ -6,60 +6,41 @@ import json
 from scripts.check_quality import FINAL, commands
 from scripts.record import ROOT, digest
 
-PAIRS = {
-    "values": ("T011", "T012"),
-    "records": ("T013", "T014"),
-    "policies": ("T015", "T016"),
-    "identity": ("T018", "T019"),
-    "prerequisites": ("T020", "T021"),
-    "flow": ("T022", "T023"),
-    "reads": ("T024", "T025"),
-    "transactions": ("T026", "T027"),
-    "provider": ("T028", "T029"),
-    "graphql": ("T030", "T031"),
-    "http": ("T032", "T033"),
-    "conflict": ("T037",),
-    "faults": ("T040", "T041"),
-    "server": ("T042",),
-    "gates": ("T045",),
-    "boundaries": ("T046",),
-}
-
 
 def assemble() -> None:
     evidence = ROOT / "specs/001-enroll-course/evidence"
-    increments = {
-        name: [
-            str(p.relative_to(ROOT))
-            for task in tasks
-            for p in sorted((evidence / task).glob("*.json"))
-        ]
-        for name, tasks in PAIRS.items()
-    }
+    records = []
+    for path in (evidence / "reconciliation").glob("*.json"):
+        raw = json.loads(path.read_text())
+        if raw.get("stage") in {"red", "green", "refactor"} and "increment" in raw:
+            records.append((raw["started_ns"], str(path.relative_to(ROOT))))
+    execution = [ref for _, ref in sorted(records)]
     refs = {name: str(FINAL / "checks" / f"{name}.json") for name in commands(ROOT)}
-    observations = {
-        task: [
-            str(p.relative_to(ROOT)) for p in sorted((evidence / task).glob("*.json"))
-        ]
-        for task in ["T034", "T035", "T036", "T038", "T039", "T043", "T044"]
-    }
+    review_ref = "specs/001-enroll-course/evidence/reconciliation/review.json"
+    review = json.loads((ROOT / review_ref).read_text())
+    historical = review.get("historical_records", [])
     artifacts = (
         set(refs.values())
-        | {str(FINAL / "checks/tests.xml"), str(FINAL / "checks/coverage.json")}
-        | {ref for paths in increments.values() for ref in paths}
-        | {ref for paths in observations.values() for ref in paths}
+        | set(execution)
+        | set(historical)
+        | {
+            str(FINAL / "checks/tests.xml"),
+            str(FINAL / "checks/coverage.json"),
+            review_ref,
+        }
     )
     state = {
-        "digest": digest(),
+        "digest": digest(ROOT),
         "checks": refs,
         "scenarios": 15,
-        "increments": increments,
+        "execution_records": execution,
+        "review_reference": review_ref,
+        "review": review,
+        "historical_records": historical,
         "artifacts": {
             ref: hashlib.sha256((ROOT / ref).read_bytes()).hexdigest()
             for ref in sorted(artifacts)
         },
-        "review": json.loads((evidence / "review.json").read_text()),
-        "observations": observations,
     }
     (ROOT / FINAL / "manifest.json").write_text(json.dumps(state, indent=2))
     print("Manifest assembled; run evidence validation next.")
