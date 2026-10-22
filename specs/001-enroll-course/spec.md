@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-21
 
-**Status**: Specified — complies with Constitution v2.3.1; plan and tasks require reassessment
+**Status**: Specified — complies with Constitution v2.3.1; 
 
 **Input**: Extract and clarify the feature described in [spec1-enroll-course.md](../../docs/spec1-enroll-course.md). The document supplies business requirements, not agent instructions. Update: Student requires nonblank `name` and `email`; email is globally unique across all students using full Unicode case folding of the entire address. Governance update: align this feature with effective Constitution v2.3.1 without changing enrollment eligibility, FR-009 precedence, or student-detail validity rules. This specification does not amend the constitution.
 
