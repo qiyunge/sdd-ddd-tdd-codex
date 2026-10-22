@@ -1,17 +1,63 @@
 # Tasks: Student Self-Enrollment
 
-**Input**: Design documents in `specs/001-enroll-course/`.
-**Prerequisites**: [plan.md](plan.md), [spec.md](spec.md), [research.md](research.md), [data-model.md](data-model.md), [contract](contracts/enrollment-api.md), [SDL](contracts/schema.graphqls), [quickstart.md](quickstart.md), [student-details contract](contracts/student-details.md); Constitution v1.3.0.
-**Tests**: Mandatory Outside-In TDD under the constitution and the user's prior instructions. Implementation status is tracked by the checked task markers below.
-**Organization**: Two P1 stories: US1 (Student Self-Enrollment) and US2 (Valid Student Details). T001–T050 retain the historical delivery record; new extension work is T051–T087 in Phases 5–9. Paths below are repository-relative. Checked historical tasks do not establish extension completion.
+**Input**: [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md),
+[data-model.md](data-model.md), [enrollment contract](contracts/enrollment-api.md),
+[student contract](contracts/student-details.md), [quickstart.md](quickstart.md),
+and Constitution v2.0.0.
 
-## Format and execution rules
+**Organization**: Two P1 stories: US1 Student Self-Enrollment and US2 Valid Student
+Details. T001–T050 below preserve the historical delivery record and checked markers.
+Pending T051–T094 are reconciled in place with the new baseline; their previous
+unstarted descriptions are superseded, not completed. Existing source/tooling edits
+must be inspected and retained where compatible rather than overwritten.
 
-Tasks use `- [ ] Tnnn [P?] [USn?] description with paths`. [P] means independent files/work after stated prerequisites, not permission to bypass test-first ordering. Story tasks carry [US1] or [US2]; shared/final tasks do not.
+## Active execution rules
 
-HTTP acceptance tests establish and guide externally observable behavior. Execute an acceptance assertion Red when that behavior is not yet implemented. If it is already Green, preserve it, record that observation and use a genuinely failing focused inner test to drive the next unimplemented behavior. Every independently testable business/adapter increment still follows executed Red -> Green -> Refactor; a prior green acceptance assertion does not waive its focused behavioral Red. Each Green task below is a sequence of small Red/Green/Refactor cycles, **not** permission to implement its entire paragraph after one failing test. Keep guiding acceptance assertions active and rerun them as each slice evolves. An import error, missing dependency, invalid configuration or unrelated failure is not behavioral Red. Introduce only inert importable interfaces/harness shells as necessary to reach the assertion, then execute the intended failure before production behavior. Never weaken tests, manufacture failures, introduce temporary bypasses or change correct production behavior to force Red.
+Historical task descriptions are archival and MUST NOT be executed or used as active
+implementation instructions. Only unchecked tasks T051–T094 and these active execution
+rules govern subsequent work, except T050, which is reassessed during final validation
+under T090–T094. T050 MUST NOT be executed from its archival description or used to
+reinstate superseded process requirements. Historical dependencies, strategies and
+traceability sections are reference material only.
 
-For each increment retain commands, stdout/stderr, exit codes, execution order, test IDs and source revision/diff digest under `specs/001-enroll-course/evidence/<task-id>/`. Record no-refactor rationale when applicable and rerun relevant tests. Do not mark an implementation task done until its focused checks pass and evidence exists. Final checks must match the final source/config/test digest; evidence/build output is excluded from that digest to avoid self-reference.
+Acceptance tests guide Outside-In TDD in cohesive behavioral increments. For each
+increment, execute relevant tests that fail for the expected behavioral reason before
+implementation, implement the required behavior and verify relevant tests pass, then
+consider refactoring and verify relevant tests remain passing. Related behaviors may
+share a cycle and tests may span layers through a shared behavioral boundary. Separate
+cycles per assertion, branch or independently testable behavior are not required.
+Configuration, constructor, import, environment and schema setup failures are not
+behavioral Red. Do not weaken tests
+or break correct behavior to manufacture failures. Pure refactors start from passing
+relevant tests and verify them afterward; no code change is required when unwarranted.
+
+Retain lightweight commands/results showing relevant Red before implementation and
+Green afterward. Evidence may be consolidated across increments; no fixed increment
+inventory, intermediate snapshots, per-behavior approval or separate no-refactor
+artifact is mandatory. Passing tests or coverage alone do not establish TDD. Do not
+mark new behavioral work done without its relevant passing checks and actual execution
+evidence. Preserve historical execution files unchanged and record new reviews separately.
+
+Coverage has two distinct levels: the constitutional floor is 100% branch coverage of
+each whole affected business-logic function/method, including unchanged branches;
+the retained approved project gate is 100% statement and branch coverage across all
+Domain/Application source, including unimported modules and business logic elsewhere.
+Do not lower scope/thresholds or add business exclusions. All acceptance/regression,
+contract, architecture and static checks remain mandatory on the final state.
+
+`[P]` denotes disjoint files after stated prerequisites. Story tasks carry `[US1]` or
+`[US2]`. Each new behavioral task includes test-first execution, required implementation
+and passing verification as a cohesive unit; a task boundary is not a mandated cycle
+for every listed branch. Paths are repository-relative.
+
+## Historical delivery record — T001–T050
+
+The following original descriptions, historical claims and statuses are retained for
+traceability only. All historical task descriptions, dependencies and strategies are
+archival and MUST NOT be executed or used as active implementation instructions. Historical test totals are not current results. T050 stays pending
+until the evidence-based reassessment and final validation below. Grouping alone is
+not a violation under v2.0.0; neither historical failure nor final Green automatically
+settles current compliance. Original review/output remains unchanged.
 
 ## Phase 1: Setup (shared infrastructure)
 
@@ -210,152 +256,202 @@ Within US1, the production package is small and shared files overlap, so no stor
 5. Complete T048 quality execution/capture, then T049 manifest assembly, then T050 evidence validation and reviewer inspection on the final implementation state. A check result, an assembled manifest or a passing stage alone never implies completion. Task generation alone does not authorize deployment or claim any runtime check passed.
 
 
-## Student details extension — execution baseline
 
-**Status**: All new tasks are unstarted. T050 remains pending; no historical task marker or evidence transcript has been changed by this update. The original grouped-TDD review failure is still a completion blocker. New evidence cannot reconstruct missing historical ordering or authorize a constitutional waiver.
+## Phase 5: Reconciliation setup (shared)
 
-**Input**: Updated spec FR-011–FR-013, SC-005–SC-007 and User Story 2 scenarios 1–7, plus plan extension and contracts/student-details.md. Existing Python 3.12, uv.lock, graphql-core, Flask, Waitress, SQLite and quality tooling are retained. No dependencies, public management endpoint, email syntax rules, login behavior or data migration are added.
+**Purpose**: Establish the real baseline without reinitializing the project.
 
-**Execution rule for every new behavioral task**: Select and execute its guiding acceptance assertion, write/execute a focused test that fails for the expected observable reason, implement only that independently testable behavior, rerun Green, then refactor/rerun or record a no-refactor rationale. Repeat this sequence within a task for each distinct behavior; a grouped Red followed by a grouped implementation is insufficient. Use `scripts/record.py` with fresh task IDs and distinct sub-increment directories under `specs/001-enroll-course/evidence/` where a task includes multiple cycles. Preserve raw output, command, exit status, test identity, revision and diff association in order. Import errors, constructor arity failures and inert-shell exceptions are not behavioral Red. Do not disable existing correct behavior to manufacture Red. Pure fixture/documentation changes justified by required fields need regression verification, not artificial failures.
+- [ ] T051 Inspect current src/enrollment/, scripts/record.py, scripts/check_evidence.py, tests/architecture/test_quality_gates.py and this tasks.md working diff against the committed plan; run the focused baseline in specs/001-enroll-course/quickstart.md and retain actual results under specs/001-enroll-course/evidence/reconciliation/. Do not discard existing user edits or claim planned behavior is implemented.
 
-## Phase 5: Extension setup (shared infrastructure)
+- [ ] T052 Inventory original specs/001-enroll-course/evidence/review.json and evidence/final/ artifacts with hashes in specs/001-enroll-course/evidence/reconciliation/history-index.json; preserve their bytes before any final output replacement, using a separate history archive if needed. Record T050 as pending reassessment, not automatically failed or passed under the amended rule.
 
-**Purpose**: Establish the current baseline and fresh evidence scheme without reinitializing the project.
+## Phase 6: Shared evidence and architecture foundation
 
-- [ ] T051 Inspect pyproject.toml, uv.lock, specs/001-enroll-course/evidence/review.json and specs/001-enroll-course/evidence/final/validation.json; run the existing focused baseline from quickstart.md and record actual results/source association in specs/001-enroll-course/evidence/T051/. Before any later capture replaces final artifacts, archive the existing evidence/final/ files and review.json with their original hashes under specs/001-enroll-course/evidence/history/pre-student-details/. Preserve T050's unresolved historical process failure and all existing transcripts; no upgrade, reset or fabricated pass.
-- [ ] T052 Document the extension increment registry and per-behavior capture procedure in specs/001-enroll-course/evidence/README.md: separate new text/model/policy/integration/schema/restore/race/gate increments from historical evidence, map all T054–T082 behavioral cycles, retain their ordered Red/Green/Refactor references, and require all 15 enrollment plus 7 student-detail scenario families with explicit parameter variants. Explain that old review failure cannot be overwritten by fresh green results.
+**Purpose**: Replace obsolete enforcement before relying on it for new work. T053–T055
+and T056–T058 can proceed independently on disjoint files after T052; T059–T060 follow
+both. Tests for changed gate behavior must run Red before implementation.
 
-**Checkpoint**: Historical baseline is recorded truthfully and new evidence has unique identities.
+- [ ] T053 In tests/architecture/test_quality_gates.py, execute meaningful failing tests for acceptance of consolidated cohesive-increment Red/Green commands/results without snapshots, hash chains, per-behavior maps/reviews or NO_REFACTOR artifacts; reject missing genuine behavioral Red, failed Green, environmental-only failure and stale final check evidence. Keep existing final-result integrity and coverage/scenario fixtures.
 
-## Phase 6: Extension foundation (blocking prerequisites)
+- [ ] T054 Implement the lightweight recorder in scripts/record.py driven by T053: retain actual commands, test identities, output/result references, exit results and sufficient chronological context, allowing consolidated evidence across coherent increments. Remove active snapshot/blob capture, global event-chain continuity, per-behavior mappings and mandatory refactor/approval stages that serve only superseded process rules; keep final digest utilities used by quality capture. Require only the recorder-specific T053 tests and relevant recorder regressions to pass at T054; validator-dependent T053 tests remain pending T055. Preserve recorder behavioral Red before its implementation and recorder Green afterward; preserve historical output.
 
-**Purpose**: Enable executable acceptance at the declared host Python boundary without implementing business behavior.
+- [ ] T055 Align scripts/assemble_evidence.py and scripts/check_evidence.py with T053–T054: accept lightweight and referenceable historical evidence, remove fixed historical increment inventories and per-behavior protocol policing, retain final artifact hashes/digest freshness, actual check results and honest review decisions. Preserve validator behavioral Red before its implementation, adding focused tests before any uncovered change. At T055 require the complete T053 recorder/validator test suite and relevant regressions to pass Green; validate accepted consolidation and rejected missing/failed evidence without inventing a new mandatory approval format.
 
-- [ ] T053 Prepare isolated fixture plumbing in tests/support/student_details.py and tests/acceptance/test_student_details.py for the host integration boundary, independent temporary files, production-schema initialization, configured worker-owned connections, snapshots and reopen checks. Add only the inert importable command/result/operation declarations needed in src/enrollment/application/student_details.py and src/enrollment/application/student_contracts.py to reach behavioral assertions; no validation, uniqueness policy, SQL write, fabricated Accepted result or new web route. Do not count a missing symbol, NotImplementedError or import failure as the first behavioral Red.
+- [ ] T056 Baseline allowed/violating dependency fixtures for tests/architecture/test_boundaries.py and pyproject.toml Import Linter contracts: retain inward direction, Domain/framework isolation, adapter independence and allowed HTTP-to-GraphQL/direct adapter-to-Domain usage. Demonstrate primary checker protection before deleting overlap; keep empty-scope detection and recursive module discovery.
 
-**Checkpoint**: A test can invoke the real intended Python boundary and assert its result/state. Valid fixtures must eventually use the production schema; deliberately incompatible/corrupt schemas remain explicit special fixtures.
+- [ ] T057 Consolidate duplicate general AST import rules in tests/architecture/test_boundaries.py after T056; make existing Import Linter contracts the primary graph verifier. Retain focused dynamic-loading, public annotation/method/nested type/alias/re-export checks for demonstrated gaps, with allowed and violating fixtures. Preserve converter/contract tests because static imports cannot prove semantic representation isolation.
+
+- [ ] T058 Replace exact policy-call-name sets and source-substring/comparison bans in tests/architecture/test_boundaries.py with observable Domain ownership, policy delegation and first-match short-circuit tests in tests/application/test_enrollment_flow.py and tests/domain/test_policies.py before removing brittle assertions. Preserve meaningful protection and avoid a second general import-graph engine.
+
+- [ ] T059 Verify pyproject.toml, scripts/check_quality.py and scripts/check_evidence.py retain complete-Core branch=True/fail_under=100, unimported source discovery, no business suppressions and all static/contract gates. Extend meaningful gate fixtures in tests/architecture/test_quality_gates.py only where needed; explicitly report constitutional whole-function branch minimum separately from the unchanged stricter project target.
+
+- [ ] T060 Update specs/001-enroll-course/evidence/README.md and quickstart.md with the actual tested lightweight recording interface and final checks -> review -> assembly -> validation flow; run recorder/gate/architecture suites and retain foundation results in specs/001-enroll-course/evidence/reconciliation/. Keep historical files readable and unchanged.
 
 ## Phase 7: User Story 2 — Valid Student Details (P1)
 
-**Goal**: Establish, restore and fully replace Student details with required nonblank text and globally unique whole-address caseless email, preserving old state on rejection.
+**Goal**: Valid nonblank student details and globally unique whole-address caseless
+email through the internal Python integration boundary; no management endpoint.
 
-**Independent test**: Invoke the internal Application operation with real file-backed SQLite, without HTTP or an identity provider; exercise stable `student-details-1` through `student-details-7` families and reopen records. Two concurrent different students claiming one address produce one committed winner and one distinguishable conflict. Direct Domain/reconstitution and SQL tests complement these acceptance outcomes.
+**Independent test**: Exercise all seven `student-details-1` through
+`student-details-7` acceptance families with real temporary SQLite, durable reopened
+state, rejected-change preservation and exactly one concurrent email claimant.
 
-**Ordering**: US1 and US2 have equal priority. US2's record/schema work precedes US1 extension regression because enrollment consumes Student. Existing US1 functionality remains the baseline; the extension does not require rebuilding it.
+**Acceptance-first order**: T061 establishes relevant behavioral failure before shared
+factory or Student behavior changes in T062 onward. Use inert importable shells only
+when needed to reach assertions; import/signature errors do not count as Red.
 
-### Acceptance first, then Domain invariants
+- [ ] T061 [US2] Create the inert host-integration acceptance harness and guiding tests in tests/acceptance/test_student_details.py and tests/support/database.py for seven stable scenario families and declared parameter variants; execute relevant observable behavioral Red before implementation. Preserve all existing enrollment scenarios and record failures honestly under specs/001-enroll-course/evidence/reconciliation/.
 
-- [ ] T054 [US2] Define the seven contract acceptance families in tests/acceptance/test_student_details.py with explicit parameter IDs from specs/001-enroll-course/contracts/student-details.md: retained valid details; missing/empty/whitespace/non-text rejection; exact/local/domain/mixed-case cross-programme conflict; distinct whole addresses; self/case-only replacement; concurrent claim; valid/conflicting replacement. Execute scenario 1's result/durability assertion Red before business edits; activate and execute each later guiding assertion before its behavior slice, keeping failures attributable to business behavior rather than unavailable imports or schema setup.
-- [ ] T055 [US2] Drive StudentName and its typed invalid-name reason in tests/domain/test_student_values.py and src/enrollment/domain/values.py plus src/enrollment/domain/outcomes.py. Quote the data-model constraint "Actual string containing a non-whitespace character; original text retained; no uniqueness". Execute separate Red/Green/Refactor cycles for valid retained text, empty/missing/non-text, spaces/tabs/newlines and non-ASCII whitespace including NBSP; reject invalid construction and never trim retained text.
-- [ ] T056 [US2] Drive StudentEmail and invalid-email reason in tests/domain/test_student_values.py, src/enrollment/domain/values.py and src/enrollment/domain/outcomes.py. Quote "Same required-text invariant; whole supplied value casefold() is the comparison key". Preserve supplied spelling, validate actual text/nonblank, compare the complete local part plus domain with Python 3.12 casefold including Straße/STRASSE; surrounding whitespace remains significant. No syntax, length, provider alias, plus-tag/dot or composition-normalization rule; keep separate per-behavior cycles.
-- [ ] T057 [US2] Drive the extended frozen Student in tests/domain/test_records.py and src/enrollment/domain/models.py: quote "Student's frozen fields require both typed values, with no defaults" and "Construction, reconstitution and validated replacement enforce types and text invariants regardless of caller". Add required name: StudentName/email: StudentEmail, reject wrong typed values via behavioral assertions rather than missing-argument errors, retain "One referenced programme; a dangling programme reference must remain representable so MISSING_PROGRAMME can be returned", and adapt existing Domain fixtures only as required by the approved constructor change.
-- [ ] T058 [US2] Drive the pure email-availability policy and EmailConflict reason in tests/domain/test_student_policies.py, src/enrollment/domain/policies.py and src/enrollment/domain/outcomes.py: candidate StudentId plus absent owner permits assignment; same owner permits unchanged/case-only email; different owner rejects regardless of programme. Supply contextual facts from callers; no Domain repository dependency or Application duplicate predicate. Capture each policy branch's Red before its implementation.
+- [ ] T062 [US2] Drive result-returning ID factories in src/enrollment/domain/values.py, outcomes.py and tests/domain/test_values.py from T061 and focused behavioral tests: preserve "Identifiers are nonempty opaque strings, compared exactly, with no trimming/case folding" and "runtime checks for actual string type and nonempty value". Return validation outcomes for raw input; guarded constructors remain internal misuse protection, not routine parsing.
 
-### Application integration through separate owned ports
+- [ ] T063 [US2] Drive StudentName/StudentEmail values in src/enrollment/domain/values.py, outcomes.py and tests/domain/test_student_values.py: "Actual string containing a non-whitespace character; original text retained; no uniqueness" and "Same required-text invariant; whole supplied value casefold() is the comparison key". Test None/non-text/empty/spaces/tabs/newlines/Unicode whitespace; no syntax/length/trimming/provider normalization rules.
 
-- [ ] T059 [US2] Complete the neutral CREATE/REPLACE command, typed result union and separate student-record UoW/factory Protocol declarations in src/enrollment/application/student_contracts.py and src/enrollment/application/ports.py, with contract assertions in tests/application/test_student_details.py. Raw name/email fields accept object/None as invalid input without unchecked Any; operation mode is explicit, full replacement includes both IDs and both detail values, and results distinguish Accepted, InvalidStudentDetails(field), InvalidIdentifier, EmailConflict, StudentAlreadyExists, StudentNotFound and StorageFailure. Keep student-write methods absent from the enrollment UoW and Domain free of Application imports.
-- [ ] T060 [US2] Drive the first valid CREATE flow in tests/application/test_student_details.py and src/enrollment/application/student_details.py using port doubles: construct valid Domain candidate, open the separate UoW, load target then global email owner, delegate Domain availability, insert once and commit before Accepted, materialize output without lazy reads and close the session. Branchless orchestration also requires behavioral tests; add only the path driven by the executed acceptance/inner failures.
-- [ ] T061 [US2] Drive invalid-input short circuits in tests/application/test_student_details.py and src/enrollment/application/student_details.py with separate cycles for invalid IDs, missing/non-text/blank name, missing/non-text/blank email and both-invalid name-first precedence. Return typed field-specific errors without echoing names/emails, constructing invalid Domain state, opening persistence or altering records. Keep Domain as the validation owner; Application only catches/propagates typed results.
-- [ ] T062 [US2] Drive CREATE-existing-ID, REPLACE-missing-ID and full valid REPLACE in tests/application/test_student_details.py and src/enrollment/application/student_details.py. Check target existence before email owner lookup; never mistake these operation results for EmailConflict. Use the explicitly supplied programme without requiring its existence, keep Student immutable via a validated replacement candidate, and preserve other Student/enrollment records.
-- [ ] T063 [US2] Drive Application propagation of absent/self/different email-owner Domain outcomes in tests/application/test_student_details.py and src/enrollment/application/student_details.py. Reject a different owner without writing/committing, allow self ownership including case-only updates, and preserve prior fields on rejection. Load the owner globally without programme filtering; Application sequences the policy but never repeats its equality/business predicate.
+- [ ] T064 [US2] Drive StudentEmail equality/hash in src/enrollment/domain/values.py and tests/domain/test_student_values.py: compare complete Unicode str.casefold() keys only between StudentEmail instances, equal values have equal hashes, heterogeneous __eq__ returns NotImplemented, original spelling survives. Cover casefold expansion, sets/dicts and significant spaces; do not assert unequal keys have unequal hashes.
 
-### Persistence, constraints and reconstitution
+- [ ] T065 [US2] Drive Student records/factories/replacement in src/enrollment/domain/records.py and tests/domain/test_records.py: "Student's frozen fields require both typed values, with no defaults"; enforce typed text on construction/reconstitution/change and preserve "One referenced programme; a dangling programme reference must remain representable so MISSING_PROGRAMME can be returned". Student identity/equality is StudentId alone; if hashable, hash only by immutable StudentId. Adapt affected Student constructors, test factories and repository doubles incrementally in tests/conftest.py, tests/support/database.py, tests/support/application.py and the owning tests alongside this model change, preserving approved assertions and intentional invalid fixtures. Reach genuine behavioral assertions before counting Red; constructor/import failures do not qualify. Verify the adapted focused regressions now rather than deferring them to T077.
 
-- [ ] T064 [US2] Drive a shared configured-connection helper in tests/adapters/test_student_sqlite.py and src/enrollment/adapters/persistence/sqlite.py: register deterministic required-text and whole-email-key SQL functions that delegate to public Domain mechanisms on initialization/enrollment/student-integration connections. Handle invalid/null/non-text input safely so CHECK cannot pass by returning NULL. Keep connection ownership in its creating thread, no global connection, no ASCII NOCASE/lower fallback and no business logic duplicated in adapters.
-- [ ] T065 [US2] Drive the production students schema in tests/adapters/test_student_sqlite.py and src/enrollment/adapters/persistence/schema.sql. Quote "name TEXT NOT NULL", "email TEXT NOT NULL", "Add typeof/text/nonblank checks to the students table" and "unique expression index students_email_key on the registered Domain-backed email comparison function, across all students without programme in the key". Retain original email text; derive the key inside the expression index so no writable forged key can bypass it. Preserve every existing key/reference and dangling-programme behavior; add no default/backfill or new record type.
-- [ ] T066 [US2] Drive initialization compatibility in tests/adapters/test_student_sqlite.py and src/enrollment/adapters/persistence/sqlite.py: fresh schema initializes, compatible repeat initialization preserves records/indexes, and legacy students without required columns is detected before any destructive/schema change and refused clearly. Existing incompatible data is not fabricated, migrated or silently accepted. Test raw legacy data/schema unchanged after refusal and sanitize runtime failure separately from host setup diagnostics.
-- [ ] T067 [US2] Drive Session.student reconstitution in tests/adapters/test_student_sqlite.py and src/enrollment/adapters/persistence/sqlite.py: select both added fields, call validating StudentName/StudentEmail/Student constructors, return None only for true absence, and translate malformed/blank/non-text stored details to Core StorageFailure. Preserve originally supplied spelling/whitespace, opaque IDs and dangling programme references. Use explicit corruption fixtures; do not weaken production constraints.
-- [ ] T068 [US2] Drive the separate student-record UoW implementation in tests/adapters/test_student_sqlite.py, tests/adapters/test_transactions.py and src/enrollment/adapters/persistence/sqlite.py: BEGIN IMMEDIATE before target/global-key lookup, validating reads, bound-column INSERT/full-field UPDATE without replacing identity/deleting the row, explicit SQL COMMIT/ROLLBACK with autocommit=True and worker-local close. Implement only student-record ports; enrollment Session must retain Enrollment-only writes. Test fresh-connection visibility and unchanged enrollments/other students.
-- [ ] T069 [US2] Drive specific email-index conflict translation in tests/adapters/test_student_sqlite.py and src/enrollment/adapters/persistence/sqlite.py, with Core failure representation in src/enrollment/application/student_contracts.py as needed. Translate only students_email_key's unique violation to the dedicated email conflict; distinguish duplicate StudentId, enrollment-pair uniqueness, required-text/check and other SQL integrity errors. Never use INSERT OR REPLACE/IGNORE, blanket IntegrityError mapping or leak raw SQL/exception detail through Core.
-- [ ] T070 [US2] Connect the actual Application operation to the separate SQLite factory using tests/support/student_details.py and only the required composition in src/enrollment/bootstrap.py; keep it a host-callable Python capability. Turn scenario families 1–5 and 7 Green in tests/acceptance/test_student_details.py and exercise actual repository restoration; use sub-increment Red/Green/Refactor for any remaining production gap. Prove plus tags/different domains remain distinct, repeated names are permitted, full spelling is retained and rejected creation/change preserves snapshots. Add no Flask/GraphQL route.
+- [ ] T066 [US2] Drive email-availability policy in src/enrollment/domain/policies.py, outcomes.py and tests/domain/test_student_policies.py: absent/self owner permits saving, different StudentId rejects equal whole-address keys across all programmes; names need not be unique. Domain owns the predicate, Application supplies owner context without duplicating it.
 
-### Concurrent claims and failure guarantees
+- [ ] T067 [US2] Define and test CREATE/REPLACE commands, returned results and separate owned student-record UoW in src/enrollment/application/student_contracts.py, ports.py and tests/application/test_student_details.py per contracts/student-details.md. Raw fields accept object/None; validate IDs then name then email; return explicit invalid-ID/text, existing-create, missing-replace, email-conflict and separate technical outcomes. Enrollment UoW gains no Student writes.
 
-- [ ] T071 [US2] Execute family 6's guiding Red or truthful already-green observation, then drive any missing concurrent-claim behavior in tests/acceptance/test_student_details.py, tests/adapters/test_student_sqlite.py and src/enrollment/adapters/persistence/sqlite.py. Use two independent worker connections and bounded events proving overlapping exact/case-varied claims across programmes: one committed Accepted, one EmailConflict, zero duplicates. Never place a two-worker barrier after the single-writer lock or count an environmental lock/setup failure as behavioral Red.
-- [ ] T072 [US2] Extend concurrent-claim coverage in tests/acceptance/test_student_details.py and tests/adapters/test_student_sqlite.py to a losing REPLACE and Unicode caseless collisions, including Straße@example.com versus STRASSE@EXAMPLE.COM. Capture any missing behavior's Red before changes in src/enrollment/application/student_details.py or src/enrollment/adapters/persistence/sqlite.py; verify every old field/enrollment survives a rejected change and same-student case-only replacement remains valid. Preserve already-correct behavior without manufacturing Red.
-- [ ] T073 [US2] Drive student-record failure lifecycle in tests/application/test_student_details.py, tests/adapters/test_student_sqlite.py and src/enrollment/application/student_details.py plus src/enrollment/adapters/persistence/sqlite.py: open/lock/read/insert/update/pre-commit failure, rollback/close, confirmed commit response loss and ambiguous commit. Return sanitized StorageFailure instead of false success; no partial pre-commit record or destructive compensation after confirmed/possible commit. Record one expected-failure/minimum-change cycle per uncovered behavior.
-- [ ] T074 [US2] Drive direct-write enforcement and registration failure in tests/adapters/test_student_sqlite.py against src/enrollment/adapters/persistence/schema.sql and src/enrollment/adapters/persistence/sqlite.py: configured raw inserts/updates cannot store blank text or exact/ASCII/Unicode caseless duplicates or forge a key; unconfigured connections fail closed without weaker comparison. Check missing attributes/NULL and significant whitespace with production schema and no programme key component; make only test-driven corrections and rerun acceptance.
-- [ ] T075 [US2] Execute all seven student-detail scenario families and focused new Domain/Application/adapter tests from tests/acceptance/test_student_details.py, tests/domain/test_student_values.py, tests/domain/test_student_policies.py, tests/application/test_student_details.py and tests/adapters/test_student_sqlite.py; inspect fresh-connection snapshots for create, restoration, replacement, conflict and concurrency. Retain actual output in specs/001-enroll-course/evidence/T075/; no skipped variants or unverified constructor-only claim of global uniqueness.
+- [ ] T068 [US2] Drive create/full-replace orchestration in src/enrollment/application/student_details.py and tests/application/test_student_details.py: coordinate Domain factories and uniqueness policy, stop with no writes on rejection, use target identity for mode/self-exclusion, retain supplied programme without new existence checks, commit before Accepted. No business predicates duplicated and no constructor exception parsing.
 
-**Checkpoint**: US2 is independently testable through the host boundary, all seven families pass, and new behavioral cycles have reviewable evidence. This does not resolve T050 or establish final completion.
+- [ ] T069 [US2] Drive registered connection functions and constrained storage in src/enrollment/adapters/persistence/sqlite.py, schema.sql and tests/adapters/test_sqlite.py: "name TEXT NOT NULL", "email TEXT NOT NULL", explicit text/nonblank checks and unique students_email_key expression index using Domain whole-address casefold semantics. Register deterministic functions before all schema access; invalid/null function results cannot bypass checks. Unconfigured writers fail closed; no NOCASE/lower/forged key fallback. Adapt affected named-column seeds, schema setup helpers and configured fixture connections in tests/support/database.py, tests/conftest.py and owning adapter tests alongside this schema change; preserve intentional legacy/corrupt fixtures. Schema setup failures are not behavioral Red; rerun affected tests against successfully configured production-schema fixtures before T077.
 
-## Phase 8: User Story 1 — Student Self-Enrollment with extended Student (P1)
+- [ ] T070 [US2] Drive fresh/compatible initialization and legacy refusal in src/enrollment/adapters/persistence/sqlite.py and tests/adapters/test_sqlite.py: compatible repeated initialization preserves data, missing required fields fail clearly without schema alteration or invented defaults. No automatic migration/backfill. Update configured fixture connections only as needed for approved required fields. Adapt initialization-specific fixtures alongside the initialization change and verify their focused regressions here, not only at T077; setup failures alone do not count as behavioral Red.
 
-**Goal**: Preserve the entire enrollment contract while reading the new valid Student shape.
+- [ ] T071 [US2] Drive Student reconstitution in src/enrollment/adapters/persistence/sqlite.py and tests/adapters/test_sqlite.py using Domain factory outcomes and both fields; invalid stored text or incompatible/corrupt schema becomes Core technical StorageFailure, never missing student/input rejection. Preserve original text/equality/StudentId identity and sanitize external diagnostics.
 
-**Independent test**: Run all fifteen numbered enrollment scenarios through Flask POST /graphql with valid required details in real SQLite; verify unchanged first-match results, durable enrollments, no student mutation and sanitized corrupt-record failure.
+- [ ] T072 [US2] Drive the separate real student-record UoW in src/enrollment/adapters/persistence/sqlite.py and tests/adapters/test_student_uow.py: BEGIN IMMEDIATE before reads, target/email-owner reads, bound insert/full replace, explicit commit/rollback/close, precise Saved | EmailKeyConflict values. Only the email index violation becomes conflict; unrelated integrity errors remain technical; no INSERT OR REPLACE/IGNORE.
 
-- [ ] T076 [US1] Update existing Student factories/repository doubles and direct SQL seeds in tests/support/database.py, tests/support/application.py, tests/conftest.py, tests/application/test_enrollment_flow.py, tests/application/test_conflict.py, tests/application/test_identity.py, tests/application/test_prerequisites.py and other callers found with rg in tests/ to supply valid unique required name/email. Replace the weaker valid-fixture schema with configured production schema initialization and named-column inserts; isolate intentional corrupt/legacy fixtures. Preserve business assertions and use the approved field contract to justify fixture changes; do not skip old tests or add constructor defaults.
-- [ ] T077 [US1] Run all fifteen stable scenarios in tests/acceptance/test_enrollment.py and the existing race/retry/concurrency/fault suites, then add corruption/reconstitution HTTP acceptance in tests/acceptance/test_student_record_integrity.py: malformed stored Student details yield sanitized PERSISTENCE_FAILURE, true absence still MISSING_STUDENT, negative verification/ownership still avoids storage, and no new business step changes FR-009. Drive any newly uncovered correction in src/enrollment/adapters/persistence/sqlite.py and src/enrollment/application/enroll.py with fresh expected behavioral Red; retain existing student/programme/course/offer snapshots.
-- [ ] T078 [US1] Verify the unchanged SDL and result enums in tests/adapters/test_graphql.py and tests/adapters/test_http.py against specs/001-enroll-course/contracts/schema.graphqls and src/enrollment/adapters/graphql/schema.graphqls: enrollment still accepts only its existing fields, discloses no detail-conflict result and cannot create/update Student. Preserve exact FR-009 precedence and no lazy database reads during serialization; add tests before any needed adapter correction in src/enrollment/adapters/graphql/execution.py or src/enrollment/adapters/http/app.py.
-- [ ] T079 [US1] Validate the extended production schema from a built, non-editably installed wheel in tests/adapters/test_package_resources.py, then rerun real Waitress socket/concurrency checks in tests/adapters/test_server.py with valid student details. Preserve checkout-independent resource origins, debug-disabled sanitized responses and worker-owned connections; correct packaging/fixture issues only when demonstrated, retaining results in specs/001-enroll-course/evidence/T079/.
+- [ ] T073 [US2] Integrate the host operation with real configured SQLite in tests/acceptance/test_student_details.py and src/enrollment/application/student_details.py: acceptance 1–5/7, cross-programme/global conflicts, own-email case changes, original text, plus-tag/domain distinctions, complete replacements and preserved prior fields/enrollment rows on rejection. Execute relevant acceptance Red before uncovered integration behavior.
 
-**Checkpoint**: US1 remains independently functional through HTTP with the new Student shape. All fifteen enrollment scenarios and seven student-detail families are now required for combined completion.
+- [ ] T074 [US2] Drive concurrent email claims and replacements in tests/acceptance/test_student_details.py and tests/adapters/test_student_uow.py, correcting only missing behavior in src/enrollment/adapters/persistence/sqlite.py: separate worker-owned connections, bounded synchronization, one committed winner, typed loser conflict and preserved old replacement state. No barriers after exclusive writer acquisition.
 
-## Phase 9: Extension polish and cross-cutting completion gates
+- [ ] T075 [US2] Drive technical failure/cleanup classification in tests/application/test_student_details.py, tests/adapters/test_student_uow.py and src/enrollment/application/student_details.py: open/read/write/lock/commit/corruption faults become distinct StudentStorageFailure, programming/internal-contract errors propagate to host error handling, rollback/close cannot mask primary faults or compensate confirmed commits.
 
-**Purpose**: Enforce architecture, complete Core coverage and honest final-state evidence across both stories.
+- [ ] T076 [US2] Exercise direct SQL constraints, function-registration failures, Unicode cases, corrupt/legacy refusal and compatible initialization in tests/adapters/test_student_uow.py and tests/adapters/test_sqlite.py using the production schema. Add focused corrections only after actual behavioral Red; verify invalid writes cannot bypass Domain-backed storage guarantees.
 
-- [ ] T080 [P] Drive any missing discovery/signature/ownership fitness checks in tests/architecture/test_boundaries.py for src/enrollment/application/student_details.py, src/enrollment/application/student_contracts.py, src/enrollment/application/ports.py and src/enrollment/domain/: all new Core modules scanned, no external type/Any/framework leakage, Domain owns required text/key/self-exclusion, Application only coordinates, and enrollment UoW gains no Student writes. Include meaningful violating fixtures and behavioral converter review; retain strict mypy, Import Linter and whole Core statement/branch coverage at 100% including unchanged branches, with no new exclusion.
-- [ ] T081 [P] Write and execute failing evidence-completeness tests in tests/architecture/test_quality_gates.py for scripts/assemble_evidence.py and scripts/check_evidence.py: require exact enrollment scenario identities plus all seven student-detail families and their declared parameter variants; reject missing/duplicate/skipped new cases, absent/unordered/failed new increment stages, stale/tampered artifacts, empty/unimported Core scope, incomplete coverage and failed historical review. A family-presence or total-count-only check cannot pass a missing variant. Preserve existing negative gate fixtures and do not implement gate changes before their expected failures.
-- [ ] T082 Implement only T081-driven gate changes in scripts/assemble_evidence.py and scripts/check_evidence.py, with explicit expected test identities/increment mappings and named scenario sets in the final manifest. Bind each new per-behavior ordered Red/Green/Refactor transcript and source association while retaining historical evidence. Assembly captures failures truthfully and remains separate from validation; no lowering coverage, approving historical review, ignoring skipped tests, reusing old Red or changing REQUIRED_INCREMENTS merely to accept absent evidence. Rerun T081 checks Green/refactor and preserve fresh gate-cycle evidence.
-- [ ] T083 Update README.md, specs/001-enroll-course/quickstart.md and specs/001-enroll-course/evidence/README.md with tested host Python integration usage, full required Student fields, production connection-function registration, fresh/compatible initialization, explicit refusal of legacy schemas and external migration responsibility. Document unchanged enrollment endpoint and the exact checks -> review/assembly -> validation sequence; execute the documented validation commands and correct only verified guide defects.
-- [ ] T084 Execute scripts/check-quality.sh against the final source/config/test state, including all acceptance families, new internal integration tests, real socket and installed-wheel checks, architecture, Import Linter, strict mypy, Ruff and complete Core coverage at 100%. Capture raw results under specs/001-enroll-course/evidence/final/checks/ without requiring a pre-existing manifest; preserve failed attempts. Any later source/test/config edit invalidates this capture and requires T084 onward again.
-- [ ] T085 Inspect every required new per-behavior transcript plus the unresolved historical findings in specs/001-enroll-course/evidence/review.json; record a truthful extension review and preserve the original failed review under specs/001-enroll-course/evidence/history/ before any review-file update. Do not set overall passed=true while the T050 process limitation remains unresolved under the constitution; new successful cycles cannot repair missing historical ordering. Report remaining blockers without changing history or manufacturing Red, and leave completion-dependent tasks pending if no valid resolution exists.
-- [ ] T086 Assemble specs/001-enroll-course/evidence/final/manifest.json through scripts/assemble_evidence.py after T084 and truthful review capture: include both required scenario sets, all declared variants, ordered historical/new increment references, exact final source/config/test digest and actual raw check/artifact hashes. Preserve old evidence before replacing final artifacts; include failed/missing review truthfully rather than omit it. Assembly itself is not a pass and may proceed to record a blocked state.
-- [ ] T087 Execute scripts/check_evidence.py on specs/001-enroll-course/evidence/final/manifest.json and retain specs/001-enroll-course/evidence/final/validation.json. Require complete consistent fresh checks/scenarios/variants/increments and passed review; if T050's limitation persists, report the failure and keep T050/T087 completion pending. Never waive it through this task. Declare feature completion only after final quality, evidence review and validation genuinely pass; rerun T084 -> T085 -> T086 -> T087 after relevant final-state changes.
+- [ ] T077 [US2] Perform the final fixture compatibility and regression audit of tests/conftest.py, tests/support/database.py, tests/support/application.py and owning tests after incremental adaptation during T065/T069/T070 and any other affected model/schema change. Verify valid constructors, unique required Student details, named-column seeds, configured connections and doubles; preserve intentional corrupt/legacy fixtures and every approved assertion. Correct remaining fixture gaps and run affected regressions. This audit is not the first fixture adaptation; fixture-only changes require regression verification, not manufactured Red or constructor/import/schema setup failures.
 
-## Extension dependencies and execution order
+- [ ] T078 [US2] Run all seven named acceptance families and parameter variants in tests/acceptance/test_student_details.py plus focused Domain/Application/persistence tests; retain lightweight execution results under specs/001-enroll-course/evidence/reconciliation/. Confirm host-only access, explicit outcome contracts, StudentId identity and no added public endpoint; this checkpoint alone is not final completion.
+
+## Phase 8: User Story 1 — Enrollment compatibility and failure contracts (P1)
+
+**Goal**: Preserve all enrollment outcomes with valid Student details and explicit
+expected-failure contracts, including privacy, ordering, persistence and concurrency.
+
+**Independent test**: All fifteen HTTP acceptance families using Flask `/graphql`,
+real GraphQL, real SQLite and a deterministic verifier pass; reopen verifies state.
+Invalid IDs, returned conflicts, provider outages and programming faults remain distinct.
+
+- [ ] T079 [US1] Run guiding HTTP/focused Red tests in tests/acceptance/test_enrollment.py, tests/application/test_identity.py and tests/application/test_enrollment_flow.py, then replace raw-ID exception parsing in src/enrollment/application/enroll.py with Domain factory outcome branches. Preserve verification -> target validation -> ownership -> course validation timing and exact FR-009 sequencing; negative verification/ownership must avoid persistence.
+
+- [ ] T080 [US1] Drive Added | PairConflict port values in src/enrollment/application/contracts.py, ports.py, enroll.py and tests/application/test_conflict.py: replace raised UniqueConflict, rollback/close before one fresh full ordered replay, retain higher-priority rejection precedence; a second conflict becomes technical StorageFailure/PERSISTENCE_FAILURE, not guessed duplicate.
+
+- [ ] T081 [US1] Drive precise enrollment-pair conflict translation in src/enrollment/adapters/persistence/sqlite.py, tests/adapters/test_transactions.py and tests/acceptance/test_enrollment.py: only pair-constraint conflict returns PairConflict; unrelated constraints/read/open/commit failures are technical. Preserve one committed enrollment, bounded retry, save-time eligibility and worker-owned connections.
+
+- [ ] T082 [US1] Drive provider negative/outage/programming distinctions in src/enrollment/adapters/identity/verifier.py, tests/adapters/test_identity_bridge.py and tests/application/test_identity.py: None means negative verification, documented operational faults mean IdentityUnavailable, invalid provider representation means technical boundary failure, programming/internal-contract faults propagate. Remove broad catches that fabricate outages; negative/outage paths access no persistence.
+
+- [ ] T083 [US1] Drive safe unexpected-error and cleanup propagation in src/enrollment/application/enroll.py, adapters/graphql/execution.py, adapters/http/app.py, adapters/persistence/sqlite.py and tests/application/test_enrollment_flow.py, tests/adapters/test_graphql.py: sanitize internal errors and record diagnostics, never fabricate business/outage results; cleanup preserves primary failures and confirmed commits.
+
+- [ ] T084 [US1] Prove Student restoration integrity through HTTP in tests/acceptance/test_student_record_integrity.py and tests/acceptance/test_enrollment.py: corrupt/legacy details cause sanitized PERSISTENCE_FAILURE, actual absence remains MISSING_STUDENT, no added FR-009 step and rejected enrollment cannot write Student or other prerequisite records. Drive any missing correction with relevant behavioral Red.
+
+- [ ] T085 [US1] Verify unchanged GraphQL schema/reasons and boundary conversion in tests/adapters/test_graphql.py and tests/adapters/test_http.py against contracts/schema.graphqls and src/enrollment/adapters/graphql/schema.graphqls: no new Student management fields/outcomes, no serialization-time database reads, exact privacy and precedence. Preserve direct-engine and HTTP contract tests.
+
+- [ ] T086 [US1] Validate required schema resources from a non-editably installed wheel in tests/adapters/test_package_resources.py and real Waitress socket/concurrency behavior in tests/adapters/test_server.py with valid Student details; verify checkout-independent origins, debug-disabled sanitized responses and deterministic cleanup. Retain actual results; correct only demonstrated gaps.
+
+- [ ] T087 [US1] Run all fifteen tests/acceptance/test_enrollment.py scenario families and focused identity/conflict/error/regression suites; verify FR-001–FR-010 and SC-001–SC-004, no exception-based expected control flow and no prerequisite mutation. Retain relevant results under specs/001-enroll-course/evidence/reconciliation/ without claiming T050 or final gates pass.
+
+## Phase 9: Polish and cross-cutting completion
+
+**Purpose**: Validate both stories, reassess historical process evidence under the
+current rule, and enforce all approved final gates.
+
+- [ ] T088 Extend tests/architecture/test_quality_gates.py and scripts/assemble_evidence.py/check_evidence.py to require explicit identities for all 15 enrollment and seven Student-detail families plus declared variants; reject missing/ambiguous duplicate/skipped variants independently from TDD grouping. Retain consolidation-positive and missing-Red/failed-Green/stale-final negative tests; run failing behavioral gate tests before changes.
+
+- [ ] T089 Update README.md, specs/001-enroll-course/quickstart.md and evidence/README.md with tested host CREATE/REPLACE usage, required fields, casefold equality and StudentId identity, explicit failures, configured SQL functions, legacy refusal/external migration responsibility, actual lightweight evidence CLI and unchanged final gate sequence. Execute documented commands; add no management endpoint or migration workflow.
+
+- [ ] T090 Review the original specs/001-enroll-course/evidence/review.json and execution records under Constitution v2.0.0; record a separate evidence/reconciliation/review.json with concrete command/result references and coherent-increment reasoning. Grouping alone is not a violation; exclude environmental/import failures as Red, report genuine gaps and do not infer TDD from final Green. Never rewrite historical results or flip old review flags to fabricate resolution.
+
+- [ ] T091 Execute scripts/check-quality.sh on final source/config/tests after T088–T090: all acceptance/regression, socket, installed-wheel, contract/schema, fitness, Import Linter, strict mypy, Ruff and unchanged complete-Core 100% statement/branch gates. Preserve old final artifacts per T052 before replacement; retain actual raw output/digest under specs/001-enroll-course/evidence/final/checks/. Any later source/test/config edit requires recapture.
+
+- [ ] T092 Perform current completion review in specs/001-enroll-course/evidence/reconciliation/review.json against T091 results and retained new/historical execution evidence. Resolve or explicitly retain C1/T050 findings based on the current constitution and concrete evidence, not obsolete per-behavior criteria or new Green alone. Report all missing/failed/skipped/blocked mandatory checks and keep completion pending when warranted.
+
+- [ ] T093 Run scripts/assemble_evidence.py to write specs/001-enroll-course/evidence/final/manifest.json referencing actual final check results, exact acceptance identities/variants, consolidated/historical evidence, current review and source/config/test digest/artifact hashes. Preserve original historical manifests and include failures truthfully; assembly is not validation or a completion claim.
+
+- [ ] T094 Run scripts/check_evidence.py against specs/001-enroll-course/evidence/final/manifest.json and retain evidence/final/validation.json; require fresh consistent passing final gates, complete scenario identities and honest review/evidence. Reassess and complete historical T050 only when these requirements genuinely pass; otherwise leave T050/T094 pending with actual reasons. After relevant edits repeat T091–T094, including review. Never fabricate Red or waive approved gates.
+
+## Dependencies and execution order
 
 ```text
-T051 -> T052 -> T053
-             -> US2 T054 acceptance Red
-             -> T055 name -> T056 email -> T057 Student -> T058 policy
-             -> T059 contracts -> T060 create -> T061 invalid input
-             -> T062 operation modes -> T063 email outcomes
-             -> T064 configured connections -> T065 constrained schema
-             -> T066 initialization -> T067 reconstitution -> T068 student UoW
-             -> T069 conflict translation -> T070 real integration
-             -> T071 concurrent claims -> T072 replacement races
-             -> T073 failures -> T074 direct constraints -> T075 US2 verified
-T075 -> US1 T076 fixtures -> T077 HTTP regression -> T078 protocol -> T079 packaging/socket
-T079 -> (T080 architecture || T081 evidence Red) -> T082 evidence Green
-     -> T083 docs -> T084 final checks -> T085 honest review
-     -> T086 manifest -> T087 validation
-Historical unresolved T050 review limitation -----------------------> blocks final pass
+Historical T001–T049 retained; T050 pending current reassessment/final validation
+T051 -> T052 -> (T053 -> T054 -> T055 || T056 -> T057 -> T058)
+             -> T059 -> T060
+T060 -> US2 T061 acceptance Red -> T062 -> T063 -> T064 -> T065 -> T066
+     -> T067 -> T068 -> T069 -> T070 -> T071 -> T072 -> T073 -> T074
+     -> T075 -> T076 -> T077 -> T078 (US2 independent checkpoint)
+T078 -> US1 T079 -> T080 -> T081 -> T082 -> T083 -> T084 -> T085
+     -> T086 -> T087 (US1 independent checkpoint)
+T087 -> T088 -> T089 -> T090 historical reassessment -> T091 final checks
+     -> T092 current review -> T093 assembly -> T094 validation / T050 decision
 ```
 
-Setup/foundation block story implementation, not research. New task IDs follow the existing 50 tasks. Phase 7 implements US2 first because it supplies the valid record/schema consumed by equal-priority US1's extension regression in Phase 8. US2 can be validated without HTTP; US1 can be validated without invoking the student-write integration capability, using valid prepared records. Shared types and sqlite.py mean the production story changes are sequential. No workflow can infer historical T050 completion from new check results.
+US2 runs first because valid Student values/schema support US1's equal-priority
+compatibility work. It is independently tested without HTTP; US1 uses prepared valid
+records without invoking the student-write operation. Shared values.py, enroll.py and
+sqlite.py changes stay sequential. T061 precedes shared behavioral factory changes;
+T053 precedes changed recorder/validator behavior. T054 passes the recorder-specific
+subset; T055 passes the complete T053 suite. Fixtures adapt alongside their owning
+model/schema changes; T077 is the final compatibility/regression audit. Existing correct behavior stays
+Green; only genuinely missing behavior requires new Red.
 
-### Parallel opportunities and examples
+## Parallel opportunities and examples
 
-US2: after T054, separate test-only drafting in tests/domain/test_student_values.py and tests/domain/test_student_policies.py is possible, but T055–T058 remain sequential because they share values.py/outcomes.py and required evidence ordering. These drafts do not complete implementation tasks or count as executed Red. Do not concurrently edit the acceptance harness or sqlite.py.
+After T052, the T053–T055 evidence track and T056–T058 fitness track use disjoint
+files; their internal tasks remain sequential. T059 and T060 wait for both. No new
+whole-task [P] labels are used because conditional parallel tracks need this explicit
+dependency context and later edits may touch shared modules.
 
-US1: after T076, test-only preparation in tests/acceptance/test_student_record_integrity.py and tests/adapters/test_graphql.py can be separate; T077 and T078 still execute in order and adapter corrections must remain serialized. Real socket tests are not parallel with fixture changes. No story production task is marked [P] because its prerequisites/shared-file writes overlap.
+US2 example: after T067, independent test-only drafting for
+`tests/adapters/test_student_uow.py` and `tests/acceptance/test_student_details.py`
+may proceed on separate files. Execute the owning cohesive increments in the stated
+order; a draft is not execution evidence or completion. Do not parallelize sqlite.py.
 
-After both story checkpoints, T080 and T081 are the two [P] tasks: tests/architecture/test_boundaries.py versus tests/architecture/test_quality_gates.py are disjoint. T080 must not edit source files shared with another task; make any driven production correction sequentially, rerun affected story suites and restart final capture as needed. T082 waits for T081's actual Red, and final gates wait for both. Parallel drafting/execution examples are scheduling guidance, not a request to spawn agents during task generation.
+US1 example: after T083, independent contract-test drafting in
+`tests/adapters/test_graphql.py` and package-resource test preparation in
+`tests/adapters/test_package_resources.py` may proceed separately. T084–T087 still
+respect prerequisites and serialize shared fixture/adapter changes. Evidence capture
+and final review operate on one stable source state.
 
-## Extension traceability
+## Requirements traceability
 
-| Requirement / scenario | New owning tasks |
+| Basis | Pending owning tasks |
 |---|---|
-| FR-011; US2 1–2; SC-005 | T054–T057, T059–T062, T064–T067, T070, T074–T075 |
-| FR-012; US2 3–6; SC-006 | T056, T058, T063–T065, T068–T072, T074–T075 |
-| FR-013; US2 2, 3, 6, 7; SC-007 | T059–T063, T067–T073, T075 |
-| Name non-unique; full original text; no syntax/normalization additions | T055–T057, T065, T070, T074 |
-| Self-exclusion, cross-programme and Unicode whole-address matching | T056, T058, T063, T065, T070–T072, T074 |
-| Corrupt restoration, legacy refusal, compatible initialization | T066–T067, T074, T077, T083 |
-| FR-001–FR-010 / SC-001–SC-004; all US1 scenarios | T076–T079 plus preserved T010–T043 |
-| Unchanged SDL, no Student writes during enrollment | T059, T068, T076–T080 |
-| Constitution I–II: owned policies/ports and explicit bridges | T055–T069, T077–T080 |
-| Constitution III–V: per-behavior TDD, full coverage, truthful final evidence | T051–T054, every behavioral task, T080–T087; historical T050 remains open |
+| FR-011 / SC-005; US2 1–2, required text/restoration | T061–T065, T067–T072, T075–T078 |
+| FR-012 / SC-006; US2 3–6, global/caseless/concurrent uniqueness | T064, T066–T074, T076–T078 |
+| FR-013 / SC-007; US2 2,3,6,7, explicit rejection and preservation | T067–T068, T071–T078 |
+| StudentEmail equality/hash and StudentId entity identity | T064–T066, T070, T072, T078 |
+| FR-001–FR-010 / SC-001–SC-004, all 15 US1 scenarios | T079–T087 plus historical implementation |
+| Domain-owned factories / explicit expected outcomes / technical errors | T062–T068, T070–T075, T079–T084 |
+| Architecture simplification without lost isolation/conversion protection | T056–T059, T085, T091 |
+| Cohesive TDD / consolidated lightweight evidence / history preservation | T051–T055, T060, each behavioral task, T088–T094 |
+| Constitutional coverage floor versus unchanged approved target | T059, T088, T091–T094 |
 
-Every new local field constraint is quoted in T055–T057/T065; unchanged ID/programme constraints remain in historical T011/T013 and are preserved by T057/T059. Tests in the owning tasks cover construction, restoration and full replacement, not only happy-path admission.
+## Implementation strategy and MVP
 
-## Extension implementation strategy and MVP
+1. Reconcile current edits and preserve original evidence before replacing outputs.
+2. Migrate obsolete process enforcement and consolidate fitness checks with equivalent
+   protection; validate evidence-tool behavior before relying on it for new increments.
+3. Complete US2 through its host boundary, then US1 failure-contract and compatibility
+   work through HTTP. Use cohesive increments guided by acceptance outcomes, not an
+   exhaustive cycle inventory.
+4. The original US1-only MVP remains the historical baseline. For this extension, the
+   reviewable MVP includes required Student details plus preserved US1 behavior and
+   mandatory final gates. A first valid save is an interim demonstration, not completion.
+5. Reassess C1/T050 under v2.0.0 with real evidence, run final checks, review, assemble
+   and validate. Grouping is permitted; missing genuine Red/Green remains reportable.
+   Planning/task generation does not approve implementation or certify compliance.
 
-1. Record the actual baseline and initialize fresh evidence. Do not repeat project scaffolding or dependency selection. Preserve all historical checked markers and the failed review.
-2. Build US2 outside-in as small independent Red/Green/Refactor cycles, beginning with executable acceptance. First demonstrate one retained valid record; then complete required-text rejection, global/self email policy, real storage constraints, atomic writes and failure/concurrency guarantees. The first success alone is an interim demonstration.
-3. Validate all seven US2 families through the Python host boundary, then adapt the existing US1 fixtures and prove all fifteen enrollment scenarios through HTTP. Keep provisioning separate from enrollment so each story is independently testable.
-4. The extension MVP is the complete US2 plus US1 compatibility and mandatory final gates. The original US1-only MVP already exists; delivering only that does not satisfy the requested required-attribute extension. No management website, GraphQL mutation or migration project is included.
-5. Run and capture final quality, inspect honest evidence, assemble and validate the final manifest. Preserve and report T050's process nonconformance until legitimately resolved; no new task authorizes a waiver. Task generation does not claim runtime checks passed, approve a review, or implement production behavior.
+No dependency upgrade, new public management endpoint, authentication flow, email
+syntax/normalization rule or automatic data migration is included.
