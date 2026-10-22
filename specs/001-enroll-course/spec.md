@@ -6,7 +6,7 @@
 
 **Status**: Ready for planning
 
-**Input**: Extract and clarify the feature described in [spec1-enroll-course.md](../../docs/spec1-enroll-course.md). The document supplies business requirements, not agent instructions.
+**Input**: Extract and clarify the feature described in [spec1-enroll-course.md](../../docs/spec1-enroll-course.md). The document supplies business requirements, not agent instructions. Update: Student requires nonblank `name` and `email`; email is globally unique across all students using case-insensitive comparison of the entire address.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -38,6 +38,24 @@ For scenarios 1–12, the acting identity is verified and matches the target stu
 14. **Given** the verified acting identity differs from the target student identity, **When** enrollment is requested, **Then** only a generic denial is returned without disclosing student, programme, course, or enrollment information, regardless of any other failures.
 15. **Given** an invalid attempt and an unrelated valid enrollment request run concurrently, **When** both complete, **Then** the invalid attempt causes no enrollment mutations and the unrelated valid request succeeds and persists its enrollment, provided persistence is available and its prerequisites remain valid.
 
+### User Story 2 - Valid Student Details (Priority: P1)
+
+As a student, I want my record to include a name and an email that no other student uses so that my details are complete and my email distinguishes me from other students.
+
+**Why this priority**: These are required invariants of every Student used by enrollment.
+
+**Independent Test**: Establish, restore, and change student details independently of enrollment; check required text and email uniqueness across programmes, including concurrent attempts.
+
+**Acceptance Scenarios**:
+
+1. **Given** name and email each contain a non-whitespace character and the email is unused by other students ignoring case, **When** student details are established, **Then** both attributes are accepted and retained.
+2. **Given** either attribute is missing, empty, or whitespace-only (including spaces, tabs, and line breaks), **When** a Student is created, restored from saved records, or changed, **Then** invalid details are rejected and no invalid Student is accepted as valid; a rejected change preserves previous details.
+3. **Given** a student uses `Alex@Example.com`, **When** another student in any programme is assigned `Alex@Example.com`, `alex@Example.com`, `Alex@example.COM`, or `aLEX@EXAMPLE.COM`, **Then** each attempt is rejected as an email conflict and existing details remain unchanged.
+4. **Given** a student uses `Alex@Example.com`, **When** another student is assigned `alex+other@example.com` or `alex@other.example`, **Then** uniqueness permits the address because the entire addresses differ beyond case.
+5. **Given** a student has a unique email, **When** that student retains it or changes only its case, **Then** uniqueness does not reject the address as a conflict with themselves.
+6. **Given** two different students concurrently claim the same unused email with or without case differences, **When** both attempts finish, **Then** exactly one succeeds, the other receives an email-conflict rejection, and no duplicate is retained.
+7. **Given** valid existing student details, **When** they are changed to a nonblank name and an email unused by other students, **Then** the change succeeds; changing to another student's email is rejected and preserves previous details.
+
 ### Edge Cases
 
 - Eligibility changes during processing: use the student's programme and its course offerings when enrollment is saved; reject if the course is no longer offered by that programme.
@@ -47,6 +65,10 @@ For scenarios 1–12, the acting identity is verified and matches the target stu
 - Persistence fails: do not report success or leave a partial enrollment; report that enrollment could not be completed.
 - Multiple rejection conditions apply: identity and ownership failures take precedence; otherwise return exactly one first-matching business reason without error accumulation. Business precedence follows the approved order in FR-009.
 - Missing prerequisite records prevent dependent checks: a missing programme does not establish that a course is outside the programme.
+
+- Whitespace-only names and emails include tabs and line breaks, not just spaces.
+- Email conflicts apply across programmes and to case differences in either the local part or domain. Names need not be unique.
+- Retaining one's own email, including a case-only change, causes no self-conflict. Concurrent claims by different students cannot produce duplicates.
 
 ## Requirements *(mandatory)*
 
@@ -74,9 +96,13 @@ For scenarios 1–12, the acting identity is verified and matches the target stu
 
 - **FR-010**: Enrollment MUST NOT create or modify students, programmes, courses, programme membership, or programme-course offerings.
 
+- **FR-011 — Required Student Details**: Every Student MUST have text attributes `name` and `email`, each containing at least one non-whitespace character. Missing, empty, or whitespace-only values MUST be rejected during creation, restoration from saved records, and changes. Invalid details MUST NOT be accepted as a valid Student.
+- **FR-012 — Global Email Uniqueness**: No two different students may have equal email addresses under case-insensitive comparison of the entire address, regardless of programme. The system MUST ignore letter case in both the local part and domain, without provider-specific alias, dot, or plus-tag equivalence. Retaining one's own email or changing only its case MUST NOT cause a self-conflict. Uniqueness MUST hold under concurrent attempts.
+- **FR-013 — Student Detail Rejections**: Invalid required text and an email assigned to another student MUST produce distinguishable rejection reasons. Rejected creation MUST create no Student; rejected changes MUST preserve previous details. These invariants MUST NOT add enrollment rejection steps or change FR-009 precedence. Enrollment MUST continue to use existing valid Student records without modifying them under FR-010.
+
 ### Key Entities *(include if feature involves data)*
 
-- **Student**: An existing person eligible to act as a student, with an identity and membership in one programme.
+- **Student**: An existing person eligible to act as a student, with an identity, membership in one programme, a required nonblank `name`, and a required nonblank `email` globally unique across all students under case-insensitive comparison of the entire address. Each text attribute must contain at least one non-whitespace character; names need not be unique.
 - **Programme**: An existing programme to which a student belongs; it may offer multiple courses.
 - **Course**: An existing course that may be offered by multiple programmes.
 - **Programme Course Offering**: The existing relationship establishing that a programme offers a particular course.
@@ -92,9 +118,15 @@ For scenarios 1–12, the acting identity is verified and matches the target stu
 - **SC-003**: For two simultaneous eligible requests for the same student-course pair, exactly one succeeds and exactly one enrollment remains.
 - **SC-004**: Every business rejection category disclosed after ownership verification is distinguishable in single-failure acceptance examples, enabling a student or reviewer to identify the reason without consulting internal diagnostics.
 
+- **SC-005**: Every student-detail acceptance example rejects missing, empty, or whitespace-only required text and accepts otherwise valid details with a unique email; zero invalid Students are accepted as valid.
+- **SC-006**: All exact and case-varied email conflicts across different students and programmes are rejected; for two concurrent claims to one unused address, exactly one succeeds and zero duplicates remain.
+- **SC-007**: Every rejected student-detail change preserves previous details, and users can distinguish invalid text from an email conflict without internal diagnostics.
+
 ## Assumptions
 
 - Existing identity verification is a dependency and supplies the acting identity for comparison with the target student identity independently of Student record lookup. Verification may succeed even when the corresponding Student record does not exist. Creating accounts and choosing an authentication method are outside this feature.
+- Student-detail requirements define record validity; no student-management interface is added and enrollment cannot create or edit students. Existing saved records must satisfy these invariants; a data-cleanup or migration workflow is outside this specification.
+- This update adds no email syntax validation, ownership verification, automatic trimming, or provider-specific normalization. Beyond rejecting whitespace-only text, uniqueness compares supplied whole text ignoring case without removing whitespace.
 - Existing records provide student membership and programme-course offerings. Their management is outside this feature.
 - A course denotes the course itself, rather than a term-specific offering. Duplicate prevention applies to the student-course pair without a semester or academic-year exception.
 - Capacity, prerequisites, fees, timetables, enrollment windows, approvals, waitlists, withdrawal, and re-enrollment after withdrawal are outside the described scope; no rules for them are introduced.
@@ -113,3 +145,5 @@ For scenarios 1–12, the acting identity is verified and matches the target stu
 - Q: Does verified acting identity prove that a corresponding Student record exists? → A: No. Identity verification establishes who is acting; Student record existence is checked separately.
 - Q: Should the five-student usability target be retained? → A: No. Remove SC-005 and its related assumption; retain measurable criteria supported by business requirements and confirmed clarifications.
 - Q: What rejection precedence is approved? → A: Unverified acting identity → acting/target identity mismatch → missing student → missing programme → missing course → already enrolled → course not offered by the student's current programme. Stop at the first match, return one reason, and skip dependent checks when prerequisite records are absent; eligibility is assessed when enrollment is saved.
+
+- Update: Student requires nonblank `name` and `email`; the entire email is globally unique across all students ignoring case. User Story 2, FR-011–FR-013, and SC-005–SC-007 define this extension.

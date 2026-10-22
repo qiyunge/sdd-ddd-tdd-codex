@@ -7,7 +7,7 @@ Identifiers are nonempty opaque strings, compared exactly, with no trimming/case
 | Type | Fields / key | Relationships and invariants |
 |---|---|---|
 | VerifiedIdentity | subject_id | Created only from successful IdentityVerifier output; verification does not imply a Student exists |
-| Student | student_id (key), programme_id | One referenced programme; a dangling programme reference must remain representable so MISSING_PROGRAMME can be returned |
+| Student | student_id (key), programme_id, name: StudentName, email: StudentEmail | One referenced programme; a dangling programme reference must remain representable so MISSING_PROGRAMME can be returned |
 | Programme | programme_id (key) | May offer zero or more courses |
 | Course | course_id (key) | May be offered by zero or more programmes |
 | ProgrammeCourseOffering | programme_id + course_id (key) | Existing many-to-many relationship; both IDs required |
@@ -17,7 +17,7 @@ Application handles negative identity-verification results before Domain invocat
 
 ## Persistence representation
 
-Planned tables: `students(student_id PRIMARY KEY, programme_id NOT NULL)`, `programmes(programme_id PRIMARY KEY)`, `courses(course_id PRIMARY KEY)`, `programme_course_offerings(programme_id, course_id, PRIMARY KEY(programme_id, course_id))`, `enrollments(student_id, course_id, PRIMARY KEY(student_id, course_id))`. All IDs are NOT NULL TEXT with nonempty checks. Offering and enrollment references can use restrictive foreign keys; no cascading deletes into enrollments. Do not impose a student-to-programme foreign key that prevents the explicitly required dangling-programme scenario. Enrollment must not write prerequisite tables. Fixture/setup tooling owns their creation and population.
+Planned tables: `students(student_id PRIMARY KEY, programme_id NOT NULL, name NOT NULL, email NOT NULL)`, `programmes(programme_id PRIMARY KEY)`, `courses(course_id PRIMARY KEY)`, `programme_course_offerings(programme_id, course_id, PRIMARY KEY(programme_id, course_id))`, `enrollments(student_id, course_id, PRIMARY KEY(student_id, course_id))`. All IDs are NOT NULL TEXT with nonempty checks. Offering and enrollment references can use restrictive foreign keys; no cascading deletes into enrollments. Do not impose a student-to-programme foreign key that prevents the explicitly required dangling-programme scenario. Enrollment must not write prerequisite tables. Fixture/setup tooling owns their creation and population.
 
 The adapter explicitly maps each row to a validated Domain record. Corrupt stored representation maps to a technical failure rather than a valid Domain object or a misleading missing-record rejection. sqlite3.Row, Connection, Cursor and sqlite3 exceptions never escape to Core; the adapter translates them into validated Domain records and Core-owned storage failure types.
 
@@ -73,3 +73,19 @@ Names identify conceptual typed results, not new entities or persisted records. 
 IdentityVerifier is an Application-owned Protocol returning VerifiedIdentity or None for a negative verification result. VerifiedIdentity is a trusted Domain value containing validated SubjectId, with no Student record existence implication. Domain ownership accepts VerifiedIdentity and StudentId and owns their self-enrollment identity comparison. Domain has no identity-verification port, verifier invocation, verification-failure decision or UnverifiedIdentity type. None remains an Application port result; it must never reach ownership policy as a fabricated Domain identity.
 
 Application returns the existing Core DENIED on negative verification before constructing target IDs or invoking Domain ownership. After verification succeeds it constructs the target StudentId through its validating constructor, then invokes ownership; invalid representations remain INVALID_REQUEST without persistence. This clarifies structural-input timing, not FR-009 for well-formed IDs. The existing identity-provider outage technical failure is not a negative identity assertion and also stops before ownership/persistence. CourseId validation follows successful ownership as before.
+
+
+## Required Student details (extension)
+
+| Value | Stored representation | Domain invariant |
+|---|---|---|
+| StudentName | name TEXT NOT NULL | Actual string containing a non-whitespace character; original text retained; no uniqueness |
+| StudentEmail | email TEXT NOT NULL | Same required-text invariant; whole supplied value casefold() is the comparison key |
+
+Student's frozen fields require both typed values, with no defaults. Construction, reconstitution and validated replacement enforce types and text invariants regardless of caller. The comparison key is derived, not an independent mutable field or client input. No email syntax or length rule is introduced. A Student alone establishes local validity; global email availability additionally requires the Domain uniqueness policy and atomic storage context.
+
+Add typeof/text/nonblank checks to the students table and unique expression index students_email_key on the registered Domain-backed email comparison function, across all students without programme in the key. Register deterministic functions in every persistence connection before schema access; delegate predicates/key conversion to Domain rather than duplicate them in SQL. An unconfigured writer fails closed. Keep original email spelling and do not strip whitespace before indexing. SQL functions must handle invalid/non-text/null values without accidentally making CHECK evaluate to an accepted NULL; explicit NOT NULL/type checks remain required.
+
+Internal student-record operation transitions: raw details -> validated candidate -> locked owner lookup -> Domain email-availability decision -> insert or replacement -> commit -> accepted; invalid details or conflict -> no write/rollback -> typed rejection. For replace, select target by StudentId, use the explicitly supplied programme in the full replacement candidate, and exclude only the same StudentId from conflict. No programme existence rule is added. A missing target or duplicate create ID has its own result. Keep the enrollment UoW unable to write Student. A concurrent claim has exactly one committed winner; a losing replacement retains all previous fields. No save is reported before commit, and success response loss cannot compensate a committed record.
+
+Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core StorageFailure and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.

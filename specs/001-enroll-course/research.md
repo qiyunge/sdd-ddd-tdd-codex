@@ -91,4 +91,31 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## Resolution
 
-All applicable planning questions have decisions in [plan.md](plan.md). Python is selected by explicit owner requirement, not as a provisional alternative. No new business feature, constitutional waiver, additional service or production implementation is introduced. Runtime dependencies and test gates are planned, not executed by this documentation workflow.
+All applicable planning questions have decisions in [plan.md](plan.md). Python is selected by explicit owner requirement, not as a provisional alternative. The Student detail extension below adds the newly specified behavior within the current feature; no constitutional waiver, additional service or production implementation is introduced. Runtime dependencies and test gates are planned, not executed by this documentation workflow.
+
+
+## 7. Required Student text and case-insensitive email (extension)
+
+**Decision**: Add immutable StudentName and StudentEmail values; reject non-string, empty and whitespace-only input using Python whitespace semantics, without mutating supplied text. Student requires both values at construction and restoration. Compare the full email using str.casefold(), preserving the original value separately.
+
+**Rationale**: Local text validity belongs to Domain and must survive direct constructor calls and persistence adaptation. Casefold supports Unicode caseless matching, including expansions; lower() or SQLite NOCASE would not implement the same semantics for unrestricted text. See [Python string methods](https://docs.python.org/3.12/library/stdtypes.html#str.casefold) and [SQLite collations](https://www.sqlite.org/datatype3.html#collating_sequences). Domain defines a pure email-availability policy taking candidate owner and any conflicting owner; Application coordinates lookup, avoiding Domain dependencies on infrastructure.
+
+**Alternatives considered**: Bare strings spread validation; annotations alone do not enforce runtime invariants. Trimming, syntax validation, Unicode composition normalization and provider alias matching introduce unrequested rules. ASCII-only matching silently narrows unrestricted text.
+
+## 8. Atomic global uniqueness and persistence
+
+**Decision**: Keep SQLite and current runtime dependencies. Register deterministic functions backed by Domain text validation/comparison on every adapter-managed connection. Add nonblank name/email constraints and a unique expression index students_email_key on the casefold function result. Use one immediate transaction for owner lookup, Domain decision and create/replace. Only the email index's unique failure translates to EmailConflict; rollback preserves old values and existing enrollments.
+
+**Rationale**: A database index arbitrates concurrent claims and protects direct writes on configured connections. A function-derived expression index cannot contain a forged independent email key. Python exposes deterministic connection-local SQL functions: [sqlite3 create_function](https://docs.python.org/3.12/library/sqlite3.html#sqlite3.Connection.create_function). The connection factory must register functions before use; unconfigured writers fail rather than silently applying different rules. Freeze the Python 3.12 comparison contract; future Unicode/runtime changes require index compatibility review and rebuild before upgrade.
+
+**Alternatives considered**: A preflight lookup alone races. A process lock misses other processes. NOCASE is ASCII limited. A writable normalized column can drift unless constrained. A custom collation is viable but still requires per-connection registration; deterministic functions additionally reuse the nonblank predicate. No new database/server or ICU dependency is needed.
+
+## 9. Integration boundary, compatibility and proof
+
+**Decision**: Expose a small internal Python Application operation for host student-record create/replace, with a separate UoW port and typed results documented in contracts/student-details.md. Keep GraphQL SDL unchanged. User Story 2 acceptance calls this integration boundary using real SQLite; User Story 1 continues through Flask HTTP. Existing legacy schema is detected and refused without automatic migration or invented values.
+
+**Rationale**: The new scenarios need an observable transactional operation, while the specification excludes a management interface. A host-only Python integration contract exercises orchestration and persistence without adding a web product flow. Global uniqueness cannot be established by a standalone Student constructor. Domain construction still enforces all locally decidable invariants; contextual uniqueness is checked by Domain policy plus atomic persistence.
+
+**Alternatives considered**: New GraphQL mutations or CLI management commands expand scope; testing only Student constructors cannot prove concurrency or persistence; direct SQL acceptance alone would bypass the Core policy and integration results. Nullable/default names/emails would weaken required attributes. Automatic legacy backfill cannot derive real values.
+
+**Evidence impact**: Existing scripts count only 15 enrollment scenarios and fixed historical increments. Extend manifest assembly/validation and negative fixtures to require all seven additional named scenario families and new increment evidence; historical passes do not validate the new spec. No unresolved research question or constitutional exception remains.

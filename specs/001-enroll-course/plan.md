@@ -6,13 +6,13 @@
 
 ## Summary
 
-Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchronous HTTP Transport Adapter, Waitress WSGI serving and embedded sqlite3 persistence. Framework-free Domain owns self-enrollment authorization, duplicate-enrollment and offering-eligibility policies and Enrollment invariants; Application handles failed identity verification and repository misses and orchestrates FR-009 through owned ports; adapters perform explicit boundary conversions. The owner selects Python, graphql-core and Flask directly. Preserve FR-001–FR-010, SC-001–SC-004, all fifteen acceptance scenarios and Constitution v1.3.0.
+Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchronous HTTP Transport Adapter, Waitress WSGI serving and embedded sqlite3 persistence. Framework-free Domain owns self-enrollment authorization, duplicate-enrollment and offering-eligibility policies and Enrollment invariants; Application handles failed identity verification and repository misses and orchestrates FR-009 through owned ports; adapters perform explicit boundary conversions. The owner selects Python, graphql-core and Flask directly. Preserve FR-001–FR-010 and all fifteen enrollment acceptance scenarios; extend Student for FR-011–FR-013, User Story 2 scenarios 1–7, and SC-005–SC-007 alongside SC-001–SC-004 and Constitution v1.3.0.
 
 ## Technical Context
 
 **Language/Version**: Python 3.12; declare >=3.12,<3.13 for the initial supported/tested runtime. No Java build/runtime dependency.
 
-**Primary Dependencies**: graphql-core (>=3.3,<3.4; import package `graphql`) with Flask (>=3.1,<3.2) and Waitress at runtime plus Python standard library (`sqlite3`, `dataclasses`, `typing`). Development: pytest, HTTPX for real socket tests, coverage.py, mypy, Ruff and Import Linter. Resolve compatible stable versions into committed uv.lock during implementation; do not treat documentation examples as pins.
+**Primary Dependencies**: graphql-core (>=3.3,<3.4; import package `graphql`) with Flask (>=3.1,<3.2) and Waitress at runtime plus Python standard library (`sqlite3`, `dataclasses`, `typing`). Development: pytest, HTTPX for real socket tests, coverage.py, mypy, Ruff and Import Linter. Retain existing pyproject.toml and committed uv.lock for this extension; no dependency upgrade is required.
 
 **Storage**: Local file-backed SQLite, five persisted record types, one immediate transaction/connection per enrollment. No ORM or database server.
 
@@ -20,13 +20,13 @@ Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchro
 
 **Target Platform**: Python 3.12 on Linux, one threaded WSGI process and local database. Each request creates/uses/closes its connection in the same worker; no global connection or async offload needed.
 
-**Project Type**: One Python package with GraphQL HTTP transport and one enrollment use case.
+**Project Type**: One Python package with GraphQL HTTP enrollment and an internal host student-record integration operation.
 
 **Performance Goals**: No latency, throughput or volume targets specified. SQLite serializes writers; no distributed deployment or performance guarantee is introduced.
 
-**Constraints**: Exact FR-009 precedence, generic identity denial before persistence, save-time eligibility, pair uniqueness, commit before success, no mutation caused by rejection. Five-second bounded lock wait maps to technical failure. Production identity verification and prerequisite management remain externally supplied.
+**Constraints**: Exact FR-009 precedence, generic identity denial before persistence, save-time eligibility, pair uniqueness, commit before success, no mutation caused by rejection. Five-second bounded lock wait maps to technical failure. Production identity verification and prerequisite-management interfaces remain externally supplied; internal student-record integration enforces the new invariants.
 
-**Scale/Scope**: Five persisted record types, one mutation; query-root placeholder is schema scaffolding. No UI, management operations, capacity, terms, fees, withdrawal, federation, subscriptions, broker, containers or extra services.
+**Scale/Scope**: Five persisted record types, one GraphQL mutation, and an internal student-record integration operation; query-root placeholder is schema scaffolding. No UI, management operations, capacity, terms, fees, withdrawal, federation, subscriptions, broker, containers or extra services.
 
 ## Constitution Check
 
@@ -54,7 +54,7 @@ No deviations or constitutional exceptions. No implementation checks are claimed
 - **Application frameworks**: Choose no framework dependencies in Core for this feature. This does not amend the constitution's general permission for appropriate Application frameworks. Dataclasses, enums and typing are standard-library mechanisms; Flask/graphql-core/Waitress/HTTP and database modules remain adapters/bootstrap.
 - **Fitness scope**: Import Linter layers order bootstrap -> adapters -> application -> domain, explicitly permitting adapters to use public Domain types. Forbid outward dependencies, cycles, unrelated sibling adapter coupling and external framework/persistence/provider imports in Core, including re-exports and annotation imports. Include external-package graphs for forbidden-import contracts. AST/signature tests inspect public contracts, resolve aliases and reject external types/unchecked Any; forbid dynamic-import escape hatches in Core. Fail empty scope/scans. Violating fixtures prove detection. Semantic leakage through data containers requires converter tests and review, beyond import rules.
 - **TDD scope**: Every independently testable business/adapter behavior begins with an executed expected behavioral failure. Acceptance guides inner tests; broad tests may drive multiple layers if their failures demonstrate each changed responsibility. Configuration/documentation validation does not require artificial Red. Pure refactors begin green and rerun relevant checks. Import/configuration errors are not behavioral Red. Do not weaken tests merely to make code pass.
-- **Approval**: Project Owner remains specification/change and future exclusion approval authority. The existing ready-for-planning spec is the baseline. Python selection is explicitly authorized; business requirements and ratified constitution are unchanged.
+- **Approval**: Project Owner remains specification/change and future exclusion approval authority. The existing ready-for-planning spec is the baseline. Python selection is explicitly authorized; the updated spec authorizes the Student detail extension; the ratified constitution is unchanged.
 - **Evidence**: Retain commands, stdout/stderr, exit codes, execution order, test identity and source revision plus working-tree diff digest under `specs/001-enroll-course/evidence/<increment>/`. Preserve Red before production change, Green after minimum behavior, Refactor passing tests or no-refactor rationale. Final manifest binds mandatory checks to source/config/test digest excluding evidence/build output. Later edits invalidate affected results and final gates rerun. Reviewer inspects transcripts, not summaries alone.
 - **Coverage scope**: Entire `src/enrollment/domain/` and `src/enrollment/application/`, including constructors, reconstitution, Domain invariant/authorization/duplicate/eligibility policies, Application identity-verification and repository absence branches, result decisions and orchestration. coverage.py branch=True and fail_under=100 across complete source directories is stronger than the whole-function branch minimum and covers unchanged branches too. Audit discovery of unimported files and default/custom exclusions; no business omissions or no-cover/no-branch suppressions. Include any business behavior introduced elsewhere. No-branch functions require behavior tests. Technical wiring/tooling may remain outside the business threshold only while free of business decisions; all adapter responsibilities still require tests.
 - **Static configuration**: mypy targets Python 3.12, strict mode, warn_unused_ignores, warn_unreachable and disallow_any_unimported; reject broad ignored imports and unexplained casts/Any/suppressions. Isolate justified library typing gaps to checked adapter bridges. Ruff targets py312 with E4/E7/E9, F, I, B and UP rules plus format --check. Import Linter and architecture tests above are mandatory. Pin all configurations/versions in pyproject.toml and uv.lock. None is only an editor recommendation.
@@ -72,7 +72,8 @@ specs/001-enroll-course/
 ├── quickstart.md
 ├── contracts/
 │   ├── enrollment-api.md
-│   └── schema.graphqls
+│   ├── schema.graphqls
+│   └── student-details.md
 └── evidence/                 # created during implementation
 ```
 
@@ -101,7 +102,7 @@ tests/
 scripts/check-quality.sh
 ```
 
-**Structure Decision**: One package, process and database preserve a small deployment. The HTTP adapter may depend on the GraphQL execution adapter as an explicit composed inbound pipeline; other sibling adapters remain independent. Core still depends on neither. The runtime packaged SDL must equal the design contract after normalization. No application paths above exist yet; they are implementation deliverables.
+**Structure Decision**: One package, process and database preserve a small deployment. The HTTP adapter may depend on the GraphQL execution adapter as an explicit composed inbound pipeline; other sibling adapters remain independent. Core still depends on neither. The runtime packaged SDL must equal the design contract after normalization. These application paths already exist. Extend them without replacing the implemented enrollment flow.
 
 ## Phase 0: Research Outcome
 
@@ -110,6 +111,37 @@ scripts/check-quality.sh
 ## Phase 1: Design Outcome
 
 [data-model.md](data-model.md), [contracts/enrollment-api.md](contracts/enrollment-api.md) and [quickstart.md](quickstart.md) use Python with Application-owned repository existence checks and Domain-owned policies. [contracts/schema.graphqls](contracts/schema.graphqls) is unchanged because the public GraphQL contract is language independent. Post-design gates pass at design level. Stop before task generation or implementation.
+
+## Student Details Extension — 2026-10-21
+
+### Scope and existing implementation
+
+The current Student dataclass and students table contain only student_id/programme_id; Session.student reconstitutes that shape. Add required name/email without defaults. Existing constructors, repository doubles, direct SQL, seeds, README host guidance and installed schema-resource tests must be adapted. Existing tasks/evidence describe the earlier implementation; they do not establish completion of this extension. Task generation must append new work rather than mark historical tasks incomplete or reuse old Red evidence.
+
+### Responsibilities and acceptance boundaries
+
+- Domain: add frozen StudentName and StudentEmail values in domain/values.py, validating actual string type and at least one non-whitespace character. Preserve supplied text. Student requires these values and rejects wrong types during construction/reconstitution/replacement. StudentEmail exposes the whole-text casefold comparison key. Domain owns the email-availability policy, including self-exclusion, and typed invalid-detail/email-conflict reasons.
+- Application: add an internal student-record integration operation in application/student_details.py with separate Application-owned student-record UoW Protocols. It accepts raw ID/programme/name/email input for create or replace, constructs valid Domain values, loads a conflicting owner by email key, invokes the Domain uniqueness policy, saves and commits. Missing replacement target yields a typed missing-student result; create for an existing ID yields a separate existing-student result. Neither is an email conflict. No programme existence prerequisite is added; dangling programme references remain representable. This operation is a host integration boundary, with no new HTTP/GraphQL management interface or authentication flow.
+- Persistence: extend schema.sql and row conversion; implement the separate student-record UoW in the existing persistence adapter. Keep enrollment UoW write capabilities limited to Enrollment. Use BEGIN IMMEDIATE before conflict lookup and save, explicit rollback/commit, and specific error translation. No adapter selects Domain email policy or orchestrates the whole operation.
+- Acceptance: preserve Flask POST /graphql for User Story 1. For User Story 2, call the public Python integration operation with real temporary SQLite and observe returned result plus reopened stored state; no HTTP management route is invented. Each new behavior begins with an executed failing acceptance test, followed by layer tests as needed. Reconstitution also has direct Domain/adapter tests; corrupted persisted Student data remains PERSISTENCE_FAILURE during enrollment, never MISSING_STUDENT or a new FR-009 business step.
+
+### Email comparison and storage integrity
+
+Use Python 3.12 Unicode str.casefold() on the complete supplied address. Preserve original spelling; do not trim, parse, validate email syntax, normalize Unicode composition, or apply provider alias rules. Nonblank uses Python whitespace semantics (value.strip() only as a validity predicate); names need not be unique. Casefold expansions are included, e.g. Straße@example.com conflicts with STRASSE@EXAMPLE.COM. Leading/trailing spaces remain significant under the specification's existing assumption.
+
+Register deterministic SQL functions for required-text validity and email comparison through one adapter connection setup helper, delegating to public Domain mechanisms. Add NOT NULL/TEXT/nonblank constraints to name/email and a unique expression index `students_email_key` on the Domain-derived email key. All enrollment, initialization, integration and fixture connections must register the functions before accessing the schema. Missing registration must fail closed; no fallback to SQLite NOCASE or lower(). An expression index prevents a caller from supplying a forged separate key. Concurrent writers serialize and the unique index remains the final guard. Recognize only that index's unique conflict as EmailConflict; other constraints and SQL errors remain distinct technical failures. No INSERT OR REPLACE/IGNORE.
+
+### Compatibility and delivery sequence
+
+No automatic migration/backfill is included: there are no trustworthy names/emails to invent for old rows. Initialization must detect an existing legacy students shape and fail clearly without altering it; runtime read failure is sanitized. Hosts provision a new schema with valid records or perform their own audited migration before upgrade. Re-running initialization on the compatible new schema remains idempotent and preserves rows. Test both paths. Centralize production schema use for valid fixtures; isolate intentionally corrupt/legacy schemas to explicit tests. Use named INSERT columns.
+
+Sequence for subsequent tasks: acceptance Red for required details -> Domain text values/Student invariants -> schema, connection registration and reconstitution -> internal integration and uniqueness policy with concurrent-claim Red -> fixture/regression updates -> evidence-gate extension -> final checks. Every production behavior increment still requires its own behavioral Red before implementation; a broad initial failure does not replace inner-layer TDD. Missing constructor parameters/import failures alone do not count as behavioral Red. No tasks or implementation are produced by this planning command.
+
+### Constitutional gates for the extension
+
+Pre-research and post-design assessment: PASS at design level for Principles I–V, with no deviations. Domain contains text validation, comparison and uniqueness policy; Application coordinates a separate owned port; SQL constraints implement storage defense using Domain comparison. HTTP/GraphQL signatures and enrollment result enums remain unchanged. Existing import/type fitness tests must scan new modules and reject framework leakage. Entire Domain/Application scope, including unchanged branches of affected constructors/orchestration and new student-detail operation, remains at 100% statement and branch coverage; no new exclusions. Business logic introduced elsewhere joins measured scope.
+
+Extend scripts/assemble_evidence.py and scripts/check_evidence.py to require both named scenario sets (15 enrollment, 7 student-details, including parameter variants) and new text/reconstitution/uniqueness/integration increments, while retaining historical enrollment evidence. Replace hard-coded enrollment-only completeness claims with explicit required test identities and reject missing/skipped/duplicate new scenarios. Add negative gate tests. Record actual Red/Green/Refactor transcripts under fresh increment IDs. Run all mandatory final checks after final source/test/config edits and inspect review notes anew; existing green evidence is historical for this extension. Planning only validates documents, not implementation gates.
 
 ## Complexity Tracking
 

@@ -36,3 +36,6 @@
 - FR-009 uses first-match rejection in a defined order, with identity and ownership checks first; error accumulation is excluded.
 - FR-006 prohibits enrollment record creation, modification, or deletion caused by a rejected attempt, while permitting unrelated concurrent requests to modify records.
 - No unresolved clarification markers remain. Ready for `$speckit-plan`.
+
+- Revalidated on 2026-10-21 after the Student attribute update: all 16 criteria pass. User Story 2 covers FR-011–FR-013 and SC-005–SC-007, including required text, whole-address case-insensitive uniqueness across programmes, self-exclusion, concurrent claims, and preservation on rejection.
+- No student-management interface, email-format rules, or changes to enrollment rejection precedence are introduced.

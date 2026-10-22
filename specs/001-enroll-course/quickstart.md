@@ -12,7 +12,7 @@ uv run python --version
 uv run pytest tests/acceptance -q
 ```
 
-Expected: Python 3.12 and all fifteen specification scenarios exercised through HTTP POST `/graphql`, using pytest, Flask app.test_client(), real graphql-core schema execution, credential headers, a deterministic verifier double and file-backed SQLite. Fixtures create existing records directly; no production record-management API is added. Fresh connections verify durable state. See [contract](contracts/enrollment-api.md), [SDL](contracts/schema.graphqls) and [data model](data-model.md).
+Expected after implementing the extension: Python 3.12 and all fifteen enrollment specification scenarios exercised through HTTP POST `/graphql`, using pytest, Flask app.test_client(), real graphql-core schema execution, credential headers, a deterministic verifier double and file-backed SQLite. Fixtures create existing records directly; no production record-management API is added. Fresh connections verify durable state. See [contract](contracts/enrollment-api.md), [SDL](contracts/schema.graphqls) and [data model](data-model.md).
 
 An app-factory fixture creates an isolated Flask app with injected dependencies and a client. Use client.post with JSON and credential headers; a bare request_context does not exercise full dispatch. Each concurrent worker gets its own client/context. A separate fixture starts Waitress on a local ephemeral port for server smoke/concurrency tests and shuts it down afterward. Flask test-client dispatch proves HTTP application behavior but does not by itself prove socket handling or worker scheduling. Pure Core tests do not start a server.
 
@@ -77,3 +77,43 @@ Configure Python 3.12/static rules, coverage branch=True/fail_under=100 and Impo
 The quality script executes and captures checks tied to the same source/config/test digest. The later evidence validator rejects missing/stale coverage data, empty source/test discovery, skipped mandatory scenarios, unjustified exclusions and missing evidence. Negative fixtures prove detection of a missed business branch, forbidden import/external public type, schema mismatch and skipped required scenario. Server threads remain in the instrumented test process; any future subprocess execution needs explicit coverage collection/combination.
 
 Keep per-increment evidence under `specs/001-enroll-course/evidence/<increment>/`, including commands, output/exit codes, execution order, test identity, source revision and working-tree diff digest. Final manifest binds complete results to a source/config/test digest excluding evidence/build output. Later edits invalidate affected results and require final reruns. Reviewer inspects actual transcripts. Failed, skipped, blocked or missing mandatory checks prevent a feature-completion claim.
+
+
+## Student details extension validation
+
+This section is a target validation guide for subsequent implementation; the current checkout does not yet implement the new operation/tests. Existing implementation evidence establishes only the earlier enrollment behavior. Use the pinned environment above; no dependency upgrade is planned. The host must provision valid required details in the new schema before serving. See [student integration contract](contracts/student-details.md) for command/result semantics and [data model](data-model.md) for stored constraints. No new web endpoint is used.
+
+After the new tests/operation are implemented:
+
+```bash
+uv run pytest tests/acceptance/test_student_details.py -q
+uv run pytest tests/domain tests/application tests/adapters -q
+uv run pytest tests/acceptance -q
+uv run pytest tests/architecture -q
+```
+
+| User Story 2 | Observable result |
+|---|---|
+| 1 | Valid nonblank name/email accepted and retained exactly after reopen |
+| 2 | Each missing, non-text, empty or whitespace-only field rejected on construction/restoration/replacement; no invalid valid-state object or persisted change |
+| 3 | Identical and local/domain/mixed-case variants rejected for another student, including another programme |
+| 4 | Whole addresses differing beyond case remain distinct, including plus tags and different domains |
+| 5 | Same student's unchanged/case-only email accepted; original submitted case retained |
+| 6 | Two workers claim one unused caseless address: one committed success, one typed EmailConflict, no duplicate |
+| 7 | Valid replacement succeeds; conflicting replacement preserves every old field |
+
+Add cases for Unicode whitespace such as NBSP and casefold expansion (`Straße@example.com` versus `STRASSE@EXAMPLE.COM`), repeated names, retained surrounding whitespace, invalid ID/detail result distinctions, missing replacement target and duplicate-create ID. No syntax-validation assumptions belong in these tests. Use bounded events and worker-owned connections, with no two-party barrier after the exclusive writer acquisition. Verify unrelated enrollment rows remain unchanged by provisioning.
+
+Exercise SQL constraints on the production schema using configured connections: nonblank fields, duplicate casefold keys on insert/update and registration on every write path. A connection lacking required functions fails closed; no ASCII fallback or forged key is accepted. Verify restoring malformed legacy/corrupt rows produces StorageFailure/PERSISTENCE_FAILURE without leaking diagnostics. Initialization must refuse a pre-extension schema unchanged, accept a fresh schema and preserve data on compatible repeated initialization; no migration or fabricated defaults.
+
+Before production edits for each increment, capture the selected acceptance command through the existing recorder, using fresh task IDs assigned by the next tasks workflow:
+
+```text
+uv run python -m scripts.record <new-increment> red .venv/bin/python -m pytest <selected-test> -q
+uv run python -m scripts.record <new-increment> green .venv/bin/python -m pytest <selected-test> -q
+uv run python -m scripts.record <new-increment> refactor .venv/bin/python -m pytest <relevant-tests> -q
+```
+
+These are command patterns with placeholders, not commands to execute verbatim. Red must fail for the expected behavior, not a missing import or constructor signature. Retain real output/order and source/diff associations. Record no-refactor rationale when applicable. Update fixture constructors/seeds to valid name/email for existing tests; this is justified by the newly approved required-field contract, not permission to remove existing assertions.
+
+Before final completion, extend manifest assembly/validation to require all 15 enrollment and 7 student-detail scenario identities plus the new TDD increments. Add negative tests showing a missing/skipped new scenario, absent new increment, stale coverage or mismatched evidence fails validation. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
