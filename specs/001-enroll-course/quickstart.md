@@ -47,7 +47,7 @@ mandatory final checks.
 | 4–6 | Application handles Student/Programme/Course repository misses -> corresponding Core-defined rejection; no dependent lookup or trivial Domain existence guard |
 | 7 | Domain offering policy rejects an existing course not offered by the existing programme -> COURSE_NOT_OFFERED |
 | 8–9 | Existing pair or lost response after confirmed commit -> ALREADY_ENROLLED unless a higher-priority reason applies; saved pair unchanged |
-| 10 | Two overlapping HTTP requests, separate connections -> one success, one ALREADY_ENROLLED, one pair |
+| 10 | Two overlapping HTTP requests, separate connections -> one success, one ALREADY_ENROLLED when the saved pair is visible, one pair. When a conflict is detected and one full re-evaluation still cannot observe that pair, the loser is PERSISTENCE_FAILURE and the saved pair remains |
 | 11 | Inject failure during insert/before commit with actual rollback -> PERSISTENCE_FAILURE; no partial row |
 | 12 | Existing enrollment and absent offering -> ALREADY_ENROLLED; offering port not invoked |
 | 13 | Negative verification -> Application returns Core DENIED; ownership and persistence spies fail on any invocation |
@@ -114,6 +114,9 @@ uv run pytest tests/architecture -q
 | 5 | Same student's unchanged/case-only email accepted; original submitted case retained |
 | 6 | Two workers claim one unused caseless address: one committed success, one typed EmailConflict, no duplicate |
 | 7 | Valid replacement succeeds; conflicting replacement preserves every old field |
+| 8 | Create for an existing student identity returns the existing-student result, leaves the record unchanged, and is not an email conflict (`student-details-8`) |
+| 9 | Replace for a missing student identity returns the missing-student result, creates nothing, and is not an email conflict (`student-details-9`) |
+| 10 | A command with more than one defect returns only the first, in the order student identity, programme identity, name, then email (`student-details-10`) |
 
 Add cases for Unicode whitespace such as NBSP and casefold expansion (`Straße@example.com` versus `STRASSE@EXAMPLE.COM`), repeated names, retained surrounding whitespace, invalid ID/detail result distinctions, missing replacement target and duplicate-create ID. No syntax-validation assumptions belong in these tests. Use bounded events and worker-owned connections, with no two-party barrier after the exclusive writer acquisition. Verify unrelated enrollment rows remain unchanged by provisioning.
 
@@ -190,31 +193,29 @@ families and final evidence gates.
 ## Verification after tooling simplification
 
 Use the acceptance and final-check commands above after implementing the
-[state/activity evidence migration](plan.md#execution-evidence-and-tooling-migration) and
-[fitness verification alignment](plan.md#architecture-fitness-simplification). Positive and
+[evidence capture](plan.md#evidence-capture) and
+[architecture fitness](plan.md#architecture-fitness) rules. Positive and
 negative cases must establish that consolidated evidence is accepted, genuine
 Red/Green remains required, and dependency, isolation and boundary protections remain
 effective. Preserve historical execution records unchanged.
 
-Report the [constitutional coverage minimum and approved project target](plan.md#coverage-minimum-versus-approved-target)
+Report the [coverage scope](plan.md#coverage-scope)
 separately. Retain the configured complete-Core 100% statement-and-branch gate,
 source scope and exclusion policy. This guide authorizes no relaxation.
 
-## Proposed v2.1.0 alignment validation
+## Constitution v2.3.1 alignment validation
 
-This guide targets the revised spec's requested delivery constraints. Constitution
-v2.1.0 remains Proposed; v2.0.0 is the last historically recorded ratified version.
-Read shared [D1–D5](../../.specify/memory/architecture-decisions.md) and the
+Constitution v2.3.1 is effective. Read [plan.md](plan.md) and the
 [construction contract](contracts/domain-construction.md) before migration. No dependency
-upgrade, new endpoint or schema/reason change is planned.
+upgrade, new endpoint, or schema/reason change is planned.
 
 The source-inspected lightweight recorder currently retains output/order but not
 implementation-state or acceptance/inner associations. The positional commands above
 remain runnable; their current output alone does not satisfy the new chronology contract.
-Implement and verify the shared D4 additions before using new runs as proof of alignment.
-Do not invent new CLI flags, rewrite historical records or manufacture Red for behavior
-that already passes. Historical C1/T050 and T100 outcomes remain results under their
-original baseline, not automatic proof of the new contract.
+Implement and verify the evidence-capture additions in the plan before using new runs as proof of alignment.
+Do not invent new CLI flags, rewrite historical records, or manufacture Red for behavior
+that already passes. Historical C1/T050 and Unicode-verification outcomes remain results under their
+original baseline. They are not proof of Constitution v2.3.1 compliance.
 
 Validate the migration through the existing focused/acceptance commands and final pipeline:
 
@@ -234,8 +235,10 @@ Validate the migration through the existing focused/acceptance commands and fina
   final results fail review/validation. No per-cycle commits, snapshots or refactor
   artifacts become mandatory.
 
-Preserve all 15 enrollment and 23 parameterized Student acceptance identities across seven
+Preserve all 15 enrollment scenarios and the 23 parameterized Student acceptance identities across seven
 Student scenario families, including Unicode expansion and composition/non-equivalence.
+Also require `student-details-8`, `student-details-9`, and `student-details-10`, plus HTTP
+coverage of FR-014 unusable student and course identities as `INVALID_REQUEST`.
 Then execute quality capture, current review, manifest assembly and evidence validation
 on the final migrated state. Until those pass, report the migration as pending. This
-planning guide does not change source, task markers, captured evidence or completion status.
+planning guide does not change source, task markers, captured evidence, or completion status.

@@ -41,7 +41,7 @@ Legacy schemas without required fields are unsupported and must be detected with
 
 ## Acceptance identities
 
-New `tests/acceptance/test_student_details.py` must define stable scenario IDs `student-details-1` through `student-details-7` corresponding to User Story 2; parameter variants retain their parent identity. Exercise real file-backed SQLite, reopen to verify persisted outcomes, and use separate worker-owned connections for races. Test restoration through the repository as well as creation/change. Preserve all existing enrollment acceptance identities. Manifest validation must require both complete sets, not just total test counts.
+`tests/acceptance/test_student_details.py` keeps stable scenario IDs `student-details-1` through `student-details-7` for the original User Story 2 families; parameter variants retain their parent identity. Add `student-details-8` (create an identity that already exists: existing-student rejection, record unchanged, not an email conflict), `student-details-9` (replace an identity that does not exist: missing-student rejection, no student created, not an email conflict), and `student-details-10` (several defects return only the first, in the order student identity, programme identity, name, email). Exercise real file-backed SQLite, reopen to verify persisted outcomes, and use separate worker-owned connections for races. Test restoration through the repository as well as creation/change. Preserve all existing enrollment acceptance identities. Manifest validation must require the complete enrollment set and the complete Student set, including the original twenty-three parameterized cases and scenarios 8–10, not just a total count.
 
 Supplement with Unicode case expansion, non-ASCII whitespace, non-string values, unchanged spelling, significant surrounding whitespace, direct-constraint enforcement, function registration failure, invalid-row conversion, old-schema refusal, compatible initialization, and unrelated constraint failures. No latency or throughput promise is added.
 
@@ -86,8 +86,8 @@ self by StudentId; separate student records remain subject to global email uniqu
 
 ## Construction and integrity alignment
 
-Apply the [Domain construction contract](domain-construction.md) and shared
-[D2/D3](../../../.specify/memory/architecture-decisions.md). Normal creation uses factories
+Apply the [Domain construction contract](domain-construction.md) and
+[plan.md](../plan.md). Normal creation uses factories
 with validated Entity component types; persisted rows use explicit controlled reconstitution
 called directly by Persistence Adapters. Internal constructors are not public alternatives.
 Data-integrity failure remains internally distinguishable from availability faults, while

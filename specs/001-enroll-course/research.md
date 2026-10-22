@@ -1,14 +1,17 @@
 # Research: Python 3.12 Student Self-Enrollment
 
 **Date**: 2026-10-22 | **Spec**: [spec.md](spec.md)
-**Baseline**: historically ratified v2.0.0; proposed v2.1.0 contracts are requested feature
-constraints. Shared conventions live in [architecture-decisions.md](../../.specify/memory/architecture-decisions.md).
+
+**Current baseline**: Constitution v2.3.1 is effective. [plan.md](plan.md) is the source
+for feature decisions. Sections 1–14 record decisions that still apply. Where they
+call v2.1.0 a proposal or point at `.specify/memory/architecture-decisions.md`,
+section 15 supersedes that framing. The shared decisions file is not in this
+workspace. No dependency upgrade is required.
 
 Existing dependency selections and earlier completed migrations below remain context.
-Sections 12–14 describe the current source-inspected migration; earlier descriptions
-of constructor-exception/prospective-evidence machinery are historical findings, not
-claims about the current working tree. No external dependency selection or upgrade
-is needed for this alignment.
+Sections 12–14 describe the source-inspected migration. Earlier descriptions of
+constructor-exception and prospective-evidence machinery are historical findings,
+not claims about the current working tree.
 
 ## 1. Implementation language
 
@@ -89,9 +92,9 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## 6. Outside-In TDD, coverage and evidence
 
-**Decision**: Acceptance tests guide cohesive Outside-In Red/Green/Refactor increments. Use the existing deterministic identity double, real temporary SQLite and port spies. Tests MAY exercise several layers through a shared behavioral boundary. Retain lightweight commands/results associated with identifiable implementation states and execution order, distinguishing acceptance-first and inner TDD activity under shared D4; evidence MAY be consolidated across cohesive increments. Refactoring consideration need not produce code changes or separate no-refactor artifacts. Import/configuration failures are not behavioral Red.
+**Decision**: Acceptance tests guide cohesive Outside-In Red/Green/Refactor increments. Use the existing deterministic identity double, real temporary SQLite and port spies. Tests MAY exercise several layers through a shared behavioral boundary. Retain lightweight commands/results associated with identifiable implementation states and execution order, distinguishing acceptance-first and inner TDD activity as specified in [plan.md](plan.md); evidence MAY be consolidated across cohesive increments. Refactoring consideration need not produce code changes or separate no-refactor artifacts. Import/configuration failures are not behavioral Red.
 
-**Rationale**: Constitution v2.0.0 explicitly permits coherent grouping and rejects exhaustive per-behavior histories and intermediate snapshots as mandatory proof. Final acceptance/regression, coverage, architecture, static analysis and contract checks remain mandatory. Passing tests and coverage alone do not establish TDD.
+**Rationale**: Constitution v2.3.1 Principle III permits cohesive increments and consolidated evidence, and it does not require exhaustive per-behavior histories or intermediate snapshots. Final acceptance, regression, coverage, architecture, static analysis, and contract checks remain mandatory. Passing tests and coverage alone do not establish TDD.
 
 **Alternatives considered**: Restoring the former prospective snapshot/per-behavior protocol as a mandatory gate would contradict the revised evidence rules. Discarding execution evidence and relying on final Green would also violate them. Keep richer historical records as optional support and migrate tooling to accept valid lightweight evidence. Preserve the recorded C1/T050 reconciliation under v2.0.0; reassess only claims dependent on the new evidence contracts, without manufacturing historical chronology.
 
@@ -101,7 +104,7 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## Resolution
 
-Applicable common conventions have shared D1–D5 decisions; [plan.md](plan.md) applies them to this feature. Python is selected by explicit owner requirement, not as a provisional alternative. The Student detail extension below adds the newly specified behavior within the current feature; no constitutional waiver, additional service or production implementation is introduced. Runtime dependencies and test gates are planned, not executed by this documentation workflow.
+Feature decisions for ports, factories, integrity, evidence, and fitness are recorded in [plan.md](plan.md). Python is selected by explicit owner requirement. The Student detail extension below adds the specified behavior within the current feature. No constitutional waiver, additional service, or production implementation is introduced by this research. Runtime dependencies and test gates are planned, not executed by this documentation workflow.
 
 
 ## 7. Required Student text and case-insensitive email (extension)
@@ -130,7 +133,7 @@ Applicable common conventions have shared D1–D5 decisions; [plan.md](plan.md) 
 
 **Evidence impact**: The current inventory already includes all 15 enrollment identities and 23 parameterized Student cases across seven scenario families. Preserve it. Extend state/chronology verification as described below; historical passes do not validate the new contracts.
 
-## 10. Expected failure contracts (v2.0.0 amendment)
+## 10. Expected failure contracts
 
 **Decision**: Use Domain result-returning validation factories, existing typed policy
 rejections, repository absence values, and explicit PairConflict/EmailKeyConflict
@@ -180,7 +183,7 @@ Persisted Python hashes are unsuitable; persistence continues using the comparis
 
 ## 12. Source-inspected evidence compatibility (2026-10-22)
 
-**Decision**: Apply shared D4, retaining current lightweight capture and final-digest
+**Decision**: Apply the evidence rules in [plan.md](plan.md), retaining current lightweight capture and final-digest
 verification while implementing state and activity association. The recorder already
 accepts lowercase `red`, `green`, `refactor` and `verification`; no EVIDENCE_REQUEST,
 snapshots, global hash chain, per-behavior approvals or no-refactor records are required.
@@ -205,7 +208,7 @@ TDD; historical behavior already passing needs no manufactured Red.
 
 ## 13. Structural and semantic verification responsibilities
 
-**Decision**: Apply shared D1/D5 and preserve configured quality/coverage gates. Import
+**Decision**: Apply the port and fitness rules in [plan.md](plan.md) and preserve configured quality/coverage gates. Import
 Linter is the primary static dependency checker. Targeted architecture tests cover
 public annotations and dynamic imports; the new gap is model factory/caller coverage.
 Semantic conversions, data-integrity classification, business decisions and short circuits
@@ -224,7 +227,7 @@ whole-affected-function branch minimum; no exclusion, scope or target relaxation
 
 ## 14. Uniform construction and data-integrity contracts
 
-**Decision**: Shared D2/D3 define `.create` and `.reconstitute` and Domain
+**Decision**: [plan.md](plan.md) defines `.create` and `.reconstitute` and Domain
 InvalidPersistedState -> Core DataIntegrityFailure(StorageFailure) -> existing sanitized
 public technical outcome. Feature signatures and per-model invariants are in
 [domain-construction.md](contracts/domain-construction.md).
@@ -244,7 +247,37 @@ historical rejections. Mapping corruption to INVALID_REQUEST or missing records
 confuses saved-state integrity with caller input. No new enrollment rule, schema change,
 management endpoint, dependency or language-level privacy mechanism is needed.
 
-**Resolution**: Applicable decisions are recorded at shared project level and applied
-by the feature documents. No technical clarification remains unresolved for planning.
-The implementation, evidence and final-check migrations remain pending; proposed
-v2.1.0 is not ratified by this research or plan.
+## 15. Constitution v2.3.1 reassessment
+
+**Decision**: Treat Constitution v2.3.1 as the binding policy for this feature.
+Record ports, factories, reconstitution, evidence, and fitness in [plan.md](plan.md).
+Do not add `.specify/memory/architecture-decisions.md`. Keep the selected stack:
+Python 3.12, Flask, graphql-core 3.3, Waitress, file SQLite, pytest, strict mypy,
+Ruff, Import Linter, and coverage.py at 100% statement and branch coverage over
+the whole Domain and Application source trees.
+
+**Rationale**: The constitution file is version 2.3.1, effective 2026-10-22, and
+the specification says this feature complies with it without changing enrollment
+eligibility, FR-009, or student-detail validity. Source inspection on 2026-10-22
+confirms the migration described in sections 12–14 is still open: entity factories
+still parse raw scalars, several models have no factory, reconstitution and
+`InvalidPersistedState` are absent, `enroll` constructs `Enrollment` directly,
+SQLite decode uses `.create` and raises a generic storage failure, and
+`scripts/record.py` stores output and times without the implementation digest or
+an acceptance-versus-inner role. `digest()` already exists and is unused by
+capture. Those are implementation gaps, not unresolved design questions.
+
+User Story 2 scenarios 8–10 and FR-014 are specified. Application tests cover
+existing-student create, missing-student replace, and empty identifiers.
+`scripts/acceptance_inventory.py` still requires exactly the original twenty-three
+Student cases, and HTTP acceptance does not yet identify FR-014. The plan adds
+those identities without a new GraphQL reason or eligibility rule.
+
+**Alternatives considered**: Leaving the plan on “proposed v2.1.0” contradicts the
+ratified constitution. Recreating a shared decisions file would duplicate the
+constitution and the feature plan. Treating historical C1/T050 evidence as v2.3.1
+proof would invent chronology the records do not contain.
+
+**Resolution**: No technical clarification remains open. Implementation, evidence
+migration, and final-state checks remain pending. This research does not certify
+implementation compliance.

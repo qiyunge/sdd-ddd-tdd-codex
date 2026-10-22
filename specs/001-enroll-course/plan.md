@@ -1,143 +1,219 @@
 # Implementation Plan: Student Self-Enrollment
 
-**Branch:** `001-enroll-course` | **Date:** 2026-10-22 | **Spec:** [spec.md](spec.md)
+**Branch**: `001-enroll-course` | **Date**: 2026-10-22 | **Spec**: [spec.md](spec.md)
 
-**Baseline:** Specification at `e74543e`. Constitution v2.0.0 is the last historically recorded ratified version. Proposed v2.1.0 requirements apply as explicitly requested *feature delivery constraints*, not ratified project policy. This plan neither ratifies them nor certifies implementation compliance.
+**Input**: Feature specification from `specs/001-enroll-course/spec.md`
+
+**Governance**: Constitution v2.3.1 is effective (ratified 2026-10-21, amended 2026-10-22). This plan complies with it and does not amend it. Enrollment eligibility, FR-009 precedence, and student-detail validity stay as specified. Historical C1/T050 and Unicode-verification records remain historical. They are not proof of v2.3.1 compliance, and this plan does not manufacture missing chronology.
 
 ## Summary
 
-Complete the remaining migration of Domain factories, controlled reconstitution, persisted-state integrity classification, and TDD/architecture evidence. Preserve implemented enrollment and Student-detail behavior, public contracts, dependencies and quality gates. Apply shared [architecture decisions D1–D5](../../.specify/memory/architecture-decisions.md) rather than restating their mechanisms.
+Preserve the implemented enrollment and Student-detail behavior, public GraphQL contract, dependencies, and quality gates. Finish the constitution migration that source inspection still shows as open: typed Entity factories, controlled reconstitution, persisted-state integrity classification, caller migration, acceptance coverage for FR-014 and User Story 2 scenarios 8–10, and state-associated TDD evidence.
 
-Existing enrollment, Student details, expected failure results, bounded conflict replay and basic evidence capture are implemented. Reconcile tasks against actual source before making changes; do not redo completed behavior or fabricate historical TDD evidence.
+Feature-specific decisions are recorded in this plan. `.specify/memory/architecture-decisions.md` is not present; this plan does not depend on it.
 
 ## Technical Context
 
-| Area | Decision |
-|---|---|
-| Runtime | Python 3.12 (`>=3.12,<3.13`), Linux, single threaded WSGI process |
-| HTTP / GraphQL | Flask `>=3.1,<3.2` handles HTTP; graphql-core `>=3.3,<3.4` executes SDL-first GraphQL; Waitress serves WSGI |
-| Persistence | File-backed SQLite (`sqlite3`), five persisted record types, worker-owned connections; no ORM |
-| Public boundaries | Existing POST `/graphql` enrollment mutation; internal trusted Python Student create/replace operation |
-| Tests | pytest, Flask test client, real temporary SQLite, injected identity verifier, port spies, real Waitress socket and installed-wheel checks |
-| Quality | Strict mypy, Ruff lint/format, Import Linter, coverage.py, architecture/contract tests, final evidence validation |
-| Constraints | Retain `pyproject.toml` and `uv.lock` without dependency upgrades; no new API, service, business eligibility, deployment topology or performance promise |
+**Language/Version**: Python 3.12 (`>=3.12,<3.13`)
 
-Retain the five-second bounded SQLite lock wait, classified as a technical failure.
+**Primary Dependencies**: Flask `>=3.1,<3.2` (HTTP), graphql-core `>=3.3,<3.4` (SDL-first GraphQL), Waitress `>=3,<4` (WSGI). Development: pytest, httpx, coverage.py, strict mypy, Ruff, Import Linter. Locked in `uv.lock`.
+
+**Storage**: File-backed SQLite through the standard library `sqlite3`. Five persisted record types. No ORM. Worker-owned connections.
+
+**Testing**: pytest. Enrollment acceptance uses Flask’s test client, real temporary SQLite, and an injected identity verifier. Student-detail acceptance calls the internal host operation against real SQLite. Architecture tests, port spies, a real Waitress socket, and an installed-wheel check remain mandatory.
+
+**Target Platform**: Linux. One process; Waitress worker threads; one SQLite connection per operation.
+
+**Project Type**: HTTP GraphQL service plus one internal trusted Python host operation for Student create/replace.
+
+**Performance Goals**: No throughput or latency target. A SQLite lock wait longer than five seconds is a technical failure.
+
+**Constraints**: Keep `pyproject.toml` and `uv.lock` without dependency upgrades. No new public API, eligibility rule, deployment topology, or performance promise. Identity-provider calls stay outside the write transaction.
+
+**Scale/Scope**: Single local database. Fifteen enrollment acceptance scenarios, the existing twenty-three parameterized Student-detail cases, and three additional host-acceptance identities for User Story 2 scenarios 8–10.
 
 ## Constitution Check
 
-**Design-level PASS only:** no waiver requested. Actual migration, execution evidence and final-state quality checks remain outstanding.
+*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
 
-| Principle | Design disposition / remaining implementation obligation |
+**Pre-design result: PASS.** No waiver is requested. No technical choice remains marked for clarification. The stack, transaction boundary, and failure vocabulary are already fixed by the specification and the current codebase. Remaining work is migration and evidence, specified below, and does not relax a principle.
+
+| Principle | Design disposition |
 |---|---|
-| I. Inward dependencies | Keep Application-owned Ports and adapter isolation; D1/D5 govern supported adapter construction/reconstitution |
-| II. Domain integrity / Full Bridge | D2/D3 and [construction contract](contracts/domain-construction.md) specify missing factories, typed Entity inputs and restoration/error mapping |
-| III. Outside-In TDD | D4 specifies state-associated Red/Green and acceptance/inner activity evidence; recorder/validator migration pending |
-| IV. Fitness / coverage | Add factory/caller verification; separate structural checks from semantic behavioral verification; retain coverage gates |
-| V. Evidence / quality | Preserve existing final checks, then rerun and review against final implementation state |
+| I. Hexagonal Architecture and inward dependencies | Application owns use-case orchestration and ports. Domain owns business decisions. Adapters translate boundaries and may call supported Domain factories and reconstitution directly. Application is not a mandatory gateway for that adaptation. Core stays free of Flask, Werkzeug, graphql-core, sqlite3, Waitress, and httpx. |
+| II. Domain ownership and boundary contracts | Every Value Object and Entity exposes `.create`. Entity factories accept validated Domain Types. Reconstitution is a separate API. Expected failures are explicit results. Invalid persisted state is a data-integrity failure. See [Domain construction](contracts/domain-construction.md). |
+| III. Outside-In TDD | Public boundaries and evidence rules are declared under [Evidence capture](#evidence-capture). Cohesive behavioral increments. Historical records stay unmodified. |
+| IV. Architecture and coverage | Structural checks and semantic checks are separate. Coverage scope is declared under [Coverage scope](#coverage-scope). The project gate is stricter than the constitutional branch floor. |
+| V. Evidence-based completion | Final quality, assembly, and evidence validation run against the final implementation state. A design pass is not a completion claim. |
 
-## Design References and Structure
+## Project Structure
 
-| Source of truth | Scope |
-|---|---|
-| [spec.md](spec.md) | FR-001–FR-013, FR-009 order, scenarios and success criteria |
-| [Shared decisions D1–D5](../../.specify/memory/architecture-decisions.md) | Ports, factories, error mapping, evidence and fitness conventions |
-| [research.md](research.md) | Alternatives and inspected migration gaps |
-| [data-model.md](data-model.md) | Model relationships, text/equality semantics and lifecycle |
-| [Domain construction contract](contracts/domain-construction.md) | Typed factories and controlled reconstitution per model |
-| [Enrollment contract](contracts/enrollment-api.md) and [SDL](contracts/schema.graphqls) | Existing GraphQL/API behavior and result mapping |
-| [Student details contract](contracts/student-details.md) | Internal host operation and uniqueness behavior |
-| [quickstart.md](quickstart.md) | Validation and final-check instructions |
+### Documentation (this feature)
+
+```text
+specs/001-enroll-course/
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+│   ├── domain-construction.md
+│   ├── enrollment-api.md
+│   ├── schema.graphqls
+│   └── student-details.md
+├── tasks.md             # reassessment belongs to speckit-tasks
+└── evidence/
+```
+
+### Source Code (repository root)
 
 ```text
 src/enrollment/
   domain/{values,models,policies,outcomes}.py
-  application/{enroll,student_details,contracts,ports,student_ports}.py
+  application/{enroll,student_details,contracts,ports,student_ports,student_contracts,cleanup}.py
   adapters/{graphql,http,persistence,identity}/
   bootstrap.py
 tests/{acceptance,domain,application,adapters,architecture}/
-scripts/{record,assemble_evidence,check_evidence,check_quality}.py
-specs/001-enroll-course/evidence/{reconciliation,final,history}/
+scripts/{record,assemble_evidence,check_evidence,check_quality,acceptance_inventory}.py
 ```
 
-Extend existing modules. HTTP-to-GraphQL adapter composition is permitted; other sibling adapters remain independent. Bootstrap owns dependency injection and schema wiring; Core remains framework-free.
+**Structure Decision**: Extend these modules. Bootstrap is the composition root and may depend on adapters. The HTTP adapter may call the GraphQL execution adapter. Identity, persistence, and GraphQL adapters stay independent of one another. Domain imports neither Application nor adapters.
 
-## Architecture and Enrollment Flow
+## Feature decisions
 
-**Ownership:** Domain owns business authorization predicates, duplicate/offering policies, invariants and state transitions. Application owns identity-verification coordination, Repository absence handling, transaction orchestration and **exact FR-009 sequencing**. It may short-circuit on typed Domain outcomes but must not reproduce Domain business predicates. No Domain Service is required merely to move Application orchestration into Domain.
+### Ports and adapter adaptation
 
-IdentityVerifier and enrollment/Student UoW Protocols belong to Application. Domain imports neither Application contracts nor verifier ports. Adapters may translate external values through supported Domain factories and reconstitution without owning business decisions. Do not introduce redundant DTOs or duplicate validation.
+Application owns `IdentityVerifier`, the enrollment unit of work, and the separate Student unit of work. Domain does not import those ports.
 
-**Ordered enrollment checks:**
+Adapters may parse external representations and call supported Domain factories or reconstitution while implementing a port. That call is technical adaptation. Adapters do not sequence FR-009, compare ownership, decide duplicates, decide offerings, or decide email availability. Application uses Domain types directly. No DTO is added solely to separate Application from Domain.
 
-1. Verify credential; negative verification yields generic `DENIED` before Domain ownership or persistence. Provider outage is a separate technical failure.
-2. Validate target `StudentId`; apply Domain ownership policy to `VerifiedIdentity` and target; reject non-owner before persistence.
-3. Validate `CourseId`.
-4. Within the transaction, load Student, Programme and Course in order; Application returns their distinct missing-record outcomes.
-5. Invoke Domain duplicate policy, then Domain offering-eligibility policy; stop at first rejection.
-6. Create Enrollment through its supported Domain factory; add, commit, then report success.
+### Factories
 
-Missing prerequisite records are not interpreted as eligibility failures. Verified identity does not establish Student existence. Preserve the exact rejection precedence, GraphQL reasons and identity timing in the contracts.
+| Model | `.create` inputs | Expected failure |
+|---|---|---|
+| StudentId, ProgrammeId, CourseId, SubjectId | raw value | `InvalidIdentifier` when the value is missing, empty, or not text |
+| StudentName, StudentEmail | raw value | `InvalidStudentDetails(field)` when missing, empty, or whitespace-only, including Unicode whitespace |
+| VerifiedIdentity | validated `SubjectId`, only after trusted verification | none for a validated subject; no Student-existence claim |
+| Student | `StudentId`, `ProgrammeId`, `StudentName`, `StudentEmail` | typed components only; no programme lookup and no email-availability lookup |
+| Programme, Course | the matching identifier | factory required with no extra invariant |
+| ProgrammeCourseOffering | `ProgrammeId`, `CourseId` | both typed identifiers |
+| Enrollment | `StudentId`, `CourseId` | typed pair; reached only after duplicate and offering policies pass |
 
-**Transaction:** Use a request/worker-owned SQLite connection, `autocommit=True`, explicit `BEGIN IMMEDIATE` before prerequisite reads, then SQL `COMMIT`/`ROLLBACK` and close. No network call occurs within the transaction. Preserve save-time eligibility, pair uniqueness, no mutation on rejection, and no compensating deletion after confirmed commit/response loss. Flask teardown must not own transaction completion.
+Value-object factories accept raw representations and return the value or an explicit validation failure. Entity factories accept validated Domain Types and enforce entity invariants. `Programme`, `Course`, and `ProgrammeCourseOffering` still have factories. Internal constructors may exist and may raise on misuse. They are not a supported creation API. Absolute constructor privacy is not required. Architecture tests enforce supported API use, including aliases.
 
-Port results remain `Added | PairConflict` for enrollment and `Saved | EmailKeyConflict` for Student writes. A precise `PairConflict` triggers rollback/close and at most one fresh, full ordered attempt; a second conflict becomes technical `StorageFailure`, never a guessed duplicate. Only the named email unique-index conflict maps to `EmailKeyConflict`; driver exceptions remain inside adapters.
+`InvalidIdentifier` stays fieldless. First-defect order is observable by pairing an earlier defect with a later one: an unusable student identity together with a whitespace-only name returns `InvalidIdentifier`, and a valid identity with an invalid name and a conflicting email returns `InvalidStudentDetails("name")`.
 
-**Transport:** Keep POST-only Flask routing, disabled automatic OPTIONS/static route, sanitized errors with correct HTTP status/Allow headers, stable SDL/union mappings and one reusable GraphQL schema. Framework/WSGI/SQLite/provider types never enter Core public contracts.
+### Reconstitution and integrity
 
-## Student Details and Data Integrity
+Persisted values expose `.reconstitute(raw)`. Persisted records expose `.reconstitute` on validated components. Both enforce persisted-state invariants and return `InvalidPersistedState` when those invariants fail. Reconstitution does not replay current offering eligibility or contextual email availability. A valid historical enrollment remains restorable after the course is no longer offered. A Student remains restorable when another student would now conflict on email; the unique index still governs new writes.
 
-Retain required nonblank Student name/email, original spelling, full-string Unicode `str.casefold()` equality (including expansions), significant whitespace and composition non-equivalence. Do not trim, validate email syntax, apply provider aliases, or add a Programme-existence prerequisite. `StudentEmail` equality/hash derive from its comparison key; Student identity/equality/hash derive from `StudentId` alone.
+Persistence adapters call reconstitution directly. `InvalidPersistedState` maps to Application `DataIntegrityFailure`, a `StorageFailure` category, and then the existing sanitized `PERSISTENCE_FAILURE` or `StudentStorageFailure`. It is not absence, `INVALID_REQUEST`, invalid details, an email conflict, or a new FR-009 reason. Unexpected programming errors propagate to the outer error boundary.
 
-The existing internal host create/replace operation validates IDs, name and email in that order; Application obtains the email-key owner, invokes Domain email-availability policy and saves atomically. Preserve distinct invalid-field, existing-create, missing-replace and email-conflict outcomes. Enrollment UoW does not gain Student write methods.
+### Transaction coordination
 
-Keep Domain-backed deterministic SQL functions registered on every relevant connection, required-text constraints and unique `students_email_key` expression index. Missing registration fails closed; no forged separate stored key, `REPLACE`/`IGNORE`, automatic legacy backfill or silent legacy-schema migration. Compatible initialization is idempotent; incompatible legacy schemas fail without mutation. Detailed rules remain in [data-model.md](data-model.md) and [Student contract](contracts/student-details.md).
+Use a fresh SQLite connection per operation with Python 3.12 `autocommit=True`, a five-second timeout, SQL `BEGIN IMMEDIATE` before prerequisite reads, and SQL `COMMIT` or `ROLLBACK`. Close the connection in the same worker. `connection.commit()` and `connection.rollback()` are not substitutes in autocommit mode. Flask teardown does not complete the transaction. No network call runs inside the transaction.
 
-## Remaining Migration
+Enrollment port writes return `Added | PairConflict`. A `PairConflict` rolls back and runs one fresh full ordered attempt. A second conflict, including one whose re-evaluation still cannot observe the saved enrollment, becomes technical `StorageFailure` and public `PERSISTENCE_FAILURE`. It is not reported as already enrolled and does not delete the saved row. Only the enrollment-pair unique constraint maps to `PairConflict`.
+
+Student port writes return `Saved | EmailKeyConflict`. Only the `students_email_key` unique failure maps to `EmailKeyConflict`, then to the email-conflict result. Other driver errors stay technical.
+
+## Architecture and enrollment flow
+
+Domain owns ownership comparison, duplicate policy, offering eligibility, email availability, and invariants. Application owns verifier invocation, repository absence, exact FR-009 sequencing, and transaction orchestration. Application may branch on a Domain outcome. It does not recompute the predicate.
+
+Ordered enrollment handling:
+
+1. Verify the credential. Negative verification returns generic `DENIED` before ownership and persistence. Provider outage is `IDENTITY_UNAVAILABLE`, also before persistence.
+2. Validate the target student identity. An unusable value (missing, empty, or not text) is `INVALID_REQUEST` before ownership, with no student, programme, course, or enrollment disclosure (FR-014). This is not an FR-009 reason and not a generic denial.
+3. Apply Domain ownership to `VerifiedIdentity` and the target `StudentId`. The subject identifier and the student identity are compared exactly, with no trimming or case folding. A mismatch returns the same generic `DENIED`.
+4. Validate `CourseId`. An unusable course identity is `INVALID_REQUEST` before the missing-course check (FR-014).
+5. Inside the immediate transaction, load Student, Programme, and Course in that order. Application returns the matching missing-record outcome and stops. A missing programme is not “course not offered.”
+6. Invoke Domain duplicate policy, then Domain offering policy. Stop at the first rejection.
+7. Create `Enrollment` through its factory, add, commit, then report success.
+
+Enrollment does not create or modify students, programmes, courses, memberships, or offerings (FR-010).
+
+## Student details and data integrity
+
+`name` and `email` are required text. Each must contain a non-whitespace character under Python `str.strip`, so tabs, line breaks, and non-breaking spaces are rejected. The supplied spelling is stored. Email equality and hashing use the full `str.casefold()` key, including expansions such as `ß` to `ss`. Leading and trailing whitespace on a nonblank value remains significant. Unicode composition forms are not equated. No syntax check, trimming, or provider alias rule is added. Student equality and hashing use `StudentId` alone.
+
+The host operation validates student identity, programme identity, name, then email, and stops at the first defect. It then distinguishes create-of-existing (`StudentAlreadyExists`) from replace-of-missing (`StudentNotFound`) before the email-availability policy. Neither existence result is an email conflict. Programme existence is not required. The enrollment unit of work gains no Student write methods.
+
+SQL functions backed by Domain predicates are registered on every persistence connection. The unique expression index is `students_email_key`. A connection without those functions fails closed. Compatible initialization is idempotent. An incompatible legacy schema is refused without writes or backfill.
+
+## Remaining migration
+
+Inspected against current source on 2026-10-22. Behavior that already matches the specification stays in place.
 
 | Location | Required change |
 |---|---|
-| `domain/values.py` | Retain existing identifier/text factories; add `VerifiedIdentity.create(SubjectId)` after trusted verification |
-| `domain/models.py` | Make Student/Enrollment factories accept validated Domain components; add Programme/Course/ProgrammeCourseOffering factories |
-| Persisted Domain models | Add separate controlled `.reconstitute` APIs and Domain `InvalidPersistedState` outcomes (D2/D3) |
-| `application/student_details.py` | Convert raw fields through Value Object factories before typed Student creation; retain first-invalid-field ordering |
-| `application/enroll.py`, identity adapter | Replace normal direct Entity/VerifiedIdentity constructors with supported factories at existing decision points |
-| Persistence row loaders | Reconstitute values then records; map invalid stored state to Application `DataIntegrityFailure(StorageFailure)` |
-| Tests, callers, fixtures | Update ordinary constructor callers; add non-vacuous model inventory and alias-aware factory/caller checks, plus behavioral restoration tests |
-| Recorder, assembler, validator | Add implementation-state and acceptance/inner associations per D4; preserve historical evidence bytes |
+| `domain/outcomes.py`, `application/contracts.py` | Add `InvalidPersistedState` and `DataIntegrityFailure(StorageFailure)` |
+| `domain/values.py` | Add `VerifiedIdentity.create(SubjectId)` and `.reconstitute` for identifiers and required text. Keep raw `.create` results |
+| `domain/models.py` | Typed factories for Student, Programme, Course, ProgrammeCourseOffering, and Enrollment. Separate `.reconstitute` for each persisted record. Stop parsing raw scalars inside `Student.create` and `Enrollment.create` |
+| `application/student_details.py` | Convert raw fields through value-object factories in spec order, then call typed `Student.create` |
+| `application/enroll.py`, identity adapter | Replace direct `Enrollment` and `VerifiedIdentity` construction with supported factories at the current decision points |
+| `adapters/persistence/sqlite.py` | Reconstitute values, then records. Map `InvalidPersistedState` to `DataIntegrityFailure`. Keep `None` for absence |
+| Tests and fixtures | Ordinary callers use factories or reconstitution. Add inventory checks, alias checks, restoration tests, FR-014 HTTP cases, and User Story 2 scenarios 8–10 |
+| `scripts/record.py`, `scripts/check_evidence.py` | Associate runs with implementation state, test identity, and acceptance-versus-inner role. `digest()` exists and is not yet stored. `validate_runs` currently checks AssertionError Red before Green only |
 
-Value Object factories accept raw representations; Entity factories accept validated Domain Types. Factories are required even when no extra cross-field constraint exists. Guarded internal constructors remain implementation details; do not require absolute Python privacy. Keep intentional internal-misuse negative tests.
+## Verification and TDD evidence
 
-Reconstitution enforces persisted-state invariants but does **not** rerun current offering eligibility or contextual email availability. Domain `InvalidPersistedState` maps through Core `DataIntegrityFailure(StorageFailure)` to the existing sanitized technical result, never absence, invalid request, business conflict or an added FR-009 step. Unexpected programming/contract failures must not be converted into business rejections. Cleanup preserves the primary failure and confirmed commits.
+### Evidence capture
 
-## Verification and TDD Evidence
+Acceptance boundaries:
 
-Apply shared D4/D5 without duplicating tooling specifications here.
+- Enrollment: HTTP POST `/graphql` through Flask’s test client, real graphql-core execution, credential headers, an injected verifier, and file-backed SQLite. Waitress covers sockets and worker scheduling on a local ephemeral port.
+- Student details: the host operation `enrollment.application.student_details.save_student` against real SQLite. It is not an HTTP route.
 
-- Use acceptance-guided **cohesive behavioral increments**: relevant expected behavioral Red before new behavior, then Green; consider Refactor and retain Green. Shared tests may cover multiple layers. Pure refactors begin Green. Import/configuration/signature failures alone are not behavioral Red.
-- Associate Red/Green runs with identifiable implementation states, execution order, increment/test identity and reviewable changes; distinguish acceptance-first from inner activity. Consolidated records are allowed. No per-cycle commit, exhaustive snapshots, fixed increment inventory or mandatory refactor artifact.
-- Reject unrelated Red/Green, missing or defaulted chronology, failing Green, changed-during-run state and stale final evidence. Preserve historical records without inventing unsupported chronology.
-- Use Import Linter for inward dependencies and adapter isolation; focused checks for public framework types, dynamic escapes, supported factory usage and reconstitution. Behavioral tests and explicit review verify semantic conversion, error classification and Domain policy ownership; static imports alone cannot prove these.
-- Retain **100% statement and branch coverage for the complete Domain/Application Core**, including unimported modules and business behavior elsewhere. The constitutional minimum also covers every entire changed/new business-logic function, including unchanged branches. Preserve strict static, architecture, contract, acceptance and regression gates; no exclusions hiding business logic.
+Each new or changed behavior uses a cohesive increment: a relevant behavioral test fails for the expected reason, implementation makes the relevant tests pass, and refactoring is considered with those tests still passing. Shared tests may cross layers. Import, signature, and configuration failures are not behavioral Red. Passing behavior is recorded as verification. Do not invent a failing run for it.
 
-Preserve all **15 enrollment acceptance scenarios** and **23 parameterized Student acceptance identities** spanning seven Student scenario families, including Unicode expansion/composition. Keep real SQLite concurrency/rollback, Waitress socket and installed-package checks. A historical Green or coverage percentage alone does not certify TDD or current completion.
+The recorder keeps lowercase `red`, `green`, `refactor`, and `verification` stages and the positional command form. Each new record stores the command, output, exit code, start and finish times, the `digest()` of `src`, `tests`, `scripts`, `pyproject.toml`, and `uv.lock`, the increment and test identity, and whether the activity is acceptance-first or inner-layer. Consolidated records are valid when that chronology stays reviewable. The validator rejects a missing or defaulted state, an unrelated test, a missing role, reversed or overlapping order, a tree that changes during the run, a failing Green, and stale final evidence. Historical files are preserved byte for byte. Where they lack state or role, the review says so.
 
-## Delivery and Completion
+### Architecture fitness
 
-1. Reconcile `tasks.md` with current source and previously completed work; retain C1/T050 and T095–T100 historical records.
-2. Extend/verify evidence capture and validator before making new TDD chronology claims; test both valid consolidated records and invalid/missing associations.
-3. Implement remaining factory, reconstitution, caller and integrity migrations using appropriate acceptance-guided increments; extend structural and behavioral architecture checks.
-4. Run all mandatory final-state tests, contracts, coverage, static checks and evidence review. Re-run after any source/test/config change.
+Import Linter enforces inward layers, the Core framework ban, outbound-adapter independence, a Flask-free GraphQL adapter, and an HTTP adapter that does not import identity or persistence. Focused tests cover public annotations, dynamic imports, supported factory usage, and direct adapter reconstitution, with allowed and violating fixtures.
+
+Behavioral tests and an explicit review cover conversion semantics, error classification, and which layer owns each decision. A passing import graph is not that proof. The review names the two kinds of evidence separately.
+
+### Coverage scope
+
+Tooling is coverage.py with `branch = true` and `fail_under = 100`. Source scope is `src/enrollment/domain` and `src/enrollment/application`, including unimported modules. That complete-Core statement-and-branch gate includes every branch of each affected business function, which satisfies the constitutional whole-function branch minimum.
+
+Justified exclusion: coverage’s default omission of a function body that is only `...` is accepted only for a module whose contents are `Protocol` method signatures and imports. `scripts/check_evidence.py` already checks that shape. No business-logic function is excluded. A branchless function still needs a behavioral test. No changed-lines gate and no `pragma: no cover` on business logic.
+
+Preserve strict mypy, Ruff lint and format, architecture tests, contract tests, the fifteen enrollment scenarios, and the Student-detail inventory below.
+
+## Delivery and completion
+
+1. Reassess `tasks.md` from this plan. Keep C1/T050 and the Unicode-verification history. Do not execute completed behavior again.
+2. Extend evidence capture and the validator, with tests for a valid consolidated record and for invalid or missing associations, before any new chronology claim.
+3. Migrate factories, reconstitution, callers, and integrity mapping in acceptance-guided increments. Extend structural and behavioral architecture checks.
+4. Add host acceptance identities `student-details-8`, `student-details-9`, and `student-details-10` for existing-student create, missing-student replace, and first-defect order. Extend `STUDENT_CASES` so the exact-set check includes them and still fails if one of the original twenty-three cases is missing.
+5. Add HTTP acceptance for FR-014: unusable student identity after verification, and unusable course identity after ownership. Both return `INVALID_REQUEST` with no record disclosure. Keep the fifteen scenario identities.
+6. Run the final checks below on the stable tree. Re-run after any source, test, or config change.
 
 ```bash
 bash scripts/check-quality.sh
-# Review raw execution and quality results; update evidence/reconciliation/review.json.
+# Review raw results and update evidence/reconciliation/review.json.
 .venv/bin/python -m scripts.assemble_evidence
 .venv/bin/python -m scripts.check_evidence
 ```
 
-Any missing, failed, skipped, blocked or stale mandatory gate prevents a completion claim. This plan changes no source, tasks, evidence or constitutional approval. **Next workflow:** `$speckit-tasks`.
+Any missing, failed, skipped, blocked, or stale mandatory gate prevents a completion claim. This planning revision changes design documents only.
+
+**Next workflow:** `$speckit-tasks`.
+
+## Constitution Check — Post-Design
+
+**Post-design result: PASS.** Research, the data model, and the contracts resolve the technical context without an open clarification. They specify transaction coordination, boundary conversions, acceptance boundaries, factory and reconstitution contracts, creation-only rules that reconstitution does not replay, invalid persisted-state outcomes, coverage scope, and the one justified exclusion. No principle is waived. Implementation of the migration and fresh v2.3.1 evidence remain outstanding; this gate does not certify them.
+
+| Artifact | Constitutional coverage |
+|---|---|
+| [research.md](research.md) | Stack, transaction, failure, and evidence decisions, including the v2.3.1 reassessment |
+| [data-model.md](data-model.md) | Entities, invariants, lifecycle, and restoration rules |
+| [contracts/](contracts/) | GraphQL boundary, host Student boundary, and Domain construction |
+| [quickstart.md](quickstart.md) | Runnable validation for the specified scenarios and final gates |
 
 ## Complexity Tracking
 
-No constitutional waiver, additional infrastructure or new service is introduced. Detailed cross-feature conventions remain in D1–D5 and linked contracts.
+No constitutional violation requires a justification. No additional service or infrastructure is introduced.

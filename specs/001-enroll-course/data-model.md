@@ -90,7 +90,7 @@ Internal student-record operation transitions: raw details -> validated candidat
 
 Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core DataIntegrityFailure(StorageFailure) and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.
 
-## Validation and failure representation (proposed v2.1.0 feature constraints)
+## Validation and failure representation
 
 Domain values retain their invariants. Raw-input factories return `ValidValue |
 ValidationFailure` and never expose a partially valid Domain value. Guarded internal
@@ -127,7 +127,7 @@ used for SQL uniqueness must be identical to the value's equality key.
 
 ## Supported construction and restoration inventory
 
-Apply shared [D2/D3](../../.specify/memory/architecture-decisions.md) and the
+Apply [plan.md](plan.md) and the
 [Domain construction contract](contracts/domain-construction.md). All listed business
 models use `.create` for normal creation, even where validated component types already
 establish every current invariant. Entity factories do not parse raw scalar fields.

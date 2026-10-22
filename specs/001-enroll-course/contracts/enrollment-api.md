@@ -43,8 +43,8 @@ Enum values are the stable machine-readable reasons; presentation text can map t
 For a structurally executable mutation:
 
 1. Application calls its Application-owned IdentityVerifier port. If the result is None (verification does not establish a trusted identity), Application immediately returns Core DENIED. Do not invoke Domain ownership, construct an UnverifiedIdentity, open a UoW or access persistence.
-2. On successful verification, Application constructs the validated target StudentId and passes it with trusted VerifiedIdentity to Domain ownership policy. Domain compares ownership and returns the same Core DENIED on mismatch. Domain never calls IdentityVerifier or any identity-verification port. No database session or lookup is allowed for either denial. Invalid target-ID representation is INVALID_REQUEST after verification and before ownership; well-formed IDs follow exact FR-009 ordering.
-3. After ownership passes, convert the remaining raw CourseId through validating Domain mechanisms; malformed value representation is INVALID_REQUEST, not a missing-record or offering inference.
+2. On successful verification, Application constructs the validated target StudentId and passes it with trusted VerifiedIdentity to Domain ownership policy. Domain compares the subject identifier with the student identity exactly, without trimming or case folding, and returns the same Core DENIED on mismatch. Domain never calls IdentityVerifier or any identity-verification port. No database session or lookup is allowed for either denial. An unusable target student identity—missing, empty, or not text—is INVALID_REQUEST after verification and before ownership (FR-014). It is not a generic denial, not a missing student, and not an FR-009 reason. Well-formed IDs follow exact FR-009 ordering.
+3. After ownership passes, convert the remaining raw CourseId through validating Domain mechanisms. An unusable course identity is INVALID_REQUEST before the missing-course check (FR-014), not a missing-record or offering inference.
 4. Open an atomic session and load Student. Application handles an absent result by returning the Core-defined MissingStudent rejection (MISSING_STUDENT); do not call a Domain existence guard or request Programme.
 5. Load that student's Programme. Application handles absence by returning Core-defined MissingProgramme (MISSING_PROGRAMME); do not call a Domain existence guard or request Course.
 6. Load Course. Application handles absence by returning Core-defined MissingCourse (MISSING_COURSE); do not call a Domain existence guard or request enrollment/offerings.
@@ -141,7 +141,7 @@ a Core technical StorageFailure mapped to PERSISTENCE_FAILURE, without inventing
 business conclusion. Only the precise enrollment-pair constraint maps to PairConflict.
 
 IdentityVerifier returns VerifiedIdentity or None for ordinary verification. Known
-provider operational exceptions translate to Core IdentityUnavailable; known operational storage faults translate to Core StorageFailure; invalid persisted state translates to its DataIntegrityFailure subtype under shared D3. These documented
+provider operational exceptions translate to Core IdentityUnavailable; known operational storage faults translate to Core StorageFailure; invalid persisted state translates to its DataIntegrityFailure subtype as specified in [plan.md](../plan.md). These documented
 technical exceptions may be raised by ports, then translated by Application to
 IDENTITY_UNAVAILABLE or PERSISTENCE_FAILURE. They never become business rejection,
 negative verification, repository absence or INVALID_REQUEST. No sqlite3/provider
@@ -156,8 +156,8 @@ commit. The host-only Student operation follows its separate failure contract.
 
 ## Construction and integrity alignment
 
-Apply the [Domain construction contract](domain-construction.md) and shared
-[D2/D3](../../../.specify/memory/architecture-decisions.md). Normal creation uses factories
+Apply the [Domain construction contract](domain-construction.md) and
+[plan.md](../plan.md). Normal creation uses factories
 with validated Entity component types; persisted rows use explicit controlled reconstitution
 called directly by Persistence Adapters. Internal constructors are not public alternatives.
 Data-integrity failure remains internally distinguishable from availability faults, while

@@ -1,9 +1,9 @@
 # Domain Construction and Reconstitution Contract
 
-**Baseline**: revised feature spec; proposed Constitution v2.1.0 delivery constraints.
-Common API/error conventions are shared [D2/D3](../../../.specify/memory/architecture-decisions.md),
-not independently defined by this feature. This is a planned internal contract;
-current implementation migration is pending.
+**Baseline**: [spec.md](../spec.md) under Constitution v2.3.1. Factory and
+reconstitution rules are specified in [plan.md](../plan.md). This is an internal
+contract. Source inspection on 2026-10-22 shows the implementation migration is
+still pending.
 
 ## Normal creation
 
