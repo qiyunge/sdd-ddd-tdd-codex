@@ -34,7 +34,7 @@ Variables: `{"input":{"studentId":"student-1","courseId":"course-1"}}`. GraphQL 
 | Ineligible course | EnrollCourseRejected / COURSE_NOT_OFFERED | No enrollment mutation |
 | Persistence failure | EnrollCourseFailure / PERSISTENCE_FAILURE | Generic technical reason, no SQL or exception details |
 | Identity dependency unavailable | EnrollCourseFailure / IDENTITY_UNAVAILABLE | No record detail and no persistence access; not proof that identity is unverified |
-| Invalid target StudentId after verification, or CourseId after ownership | EnrollCourseFailure / INVALID_REQUEST | No prerequisite data; Domain constructors still enforce invariants |
+| Invalid target StudentId after verification, or CourseId after ownership | EnrollCourseFailure / INVALID_REQUEST | No prerequisite data; supported Domain factories still enforce invariants |
 
 Enum values are the stable machine-readable reasons; presentation text can map them to clear messages. Returning a rejection never returns a success object or multiple rejection reasons. Union resolution and output conversion are explicit adapter responsibilities. Expected business outcomes use the data union with no GraphQL errors. Well-formed execution returns HTTP 200 for these outcomes; HTTP status alone is never proof of enrollment success. Malformed HTTP/GraphQL requests are protocol failures; tests assert error responses, no data disclosure and zero mutations rather than reinterpret them as missing-record business reasons. Unexpected resolver/serialization errors must be sanitized and must not undo a committed enrollment.
 
@@ -58,7 +58,7 @@ Concurrent HTTP requests have independent transaction sessions; GraphQL's serial
 
 ## Core-owned Python contracts and bridges
 
-Application exposes a plain Python enrollment use case receiving a neutral command with raw target IDs and opaque credentials and returning a closed Core-owned outcome. Commands can contain incomplete input; they must not label it as valid Domain state. No Flask/Werkzeug request, Response or context proxy, graphql-core context or GraphQLResolveInfo, WSGI environ, HTTP object, sqlite3 type or SDK type appears in Core signatures. Application-owned Protocols describe ports; annotations are enforced by static checks, while Domain constructors enforce runtime invariants.
+Application exposes a plain Python enrollment use case receiving a neutral command with raw target IDs and opaque credentials and returning a closed Core-owned outcome. Commands can contain incomplete input; they must not label it as valid Domain state. No Flask/Werkzeug request, Response or context proxy, graphql-core context or GraphQLResolveInfo, WSGI environ, HTTP object, sqlite3 type or SDK type appears in Core signatures. Application-owned Protocols describe ports; annotations are enforced by static checks, while supported Domain factories/reconstitution enforce runtime invariants.
 
 - **IdentityVerifier**: is Application-owned, verifies neutral credentials and returns trusted Domain VerifiedIdentity or None for negative verification; provider failure translates into a Core-owned technical failure. Verification does not query or infer Student existence. The trusted adapter implements verification; caller-supplied `verified=true` is not supported.
 - **EnrollmentUnitOfWorkFactory**: opens one atomic session after identity and ownership checks. The immediate write lock precedes all prerequisite reads. Application owns commit coordination; adapter owns sqlite3 mechanics.
@@ -66,7 +66,7 @@ Application exposes a plain Python enrollment use case receiving a neutral comma
 - **Session writes**: add validated Enrollment, commit, rollback/close. No prerequisite mutation methods. SQL parameters are bound; no string-concatenated identifiers from request data. One connection per invocation, closed after success/rejection/failure.
 - **Port failures**: row corruption and sqlite3 errors become Core-owned storage failures, never sqlite3 exceptions or a fake missing-record result. A detected pair uniqueness conflict permits at most one fresh full ordered evaluation after rollback, preserving higher-priority reasons. Other integrity failures must not be labeled ALREADY_ENROLLED. The immediate-transaction design should normally let the second valid request observe the first pair before insert.
 
-Explicit bridges are GraphQL DTO/context -> Application command; provider result -> Core verification; sqlite3 columns -> Domain constructors; Core outcome -> GraphQL DTO. Domain invariants apply during construction and reconstitution. Direct adapter use of public Domain mechanisms is permitted. No extra mapping layer is required between Application and Domain when their representation is already the same.
+Explicit bridges are GraphQL DTO/context -> Application command; provider result -> Core verification; sqlite3 columns -> controlled Domain value/record reconstitution; Core outcome -> GraphQL DTO. Domain invariants apply during construction and reconstitution. Direct adapter use of public Domain mechanisms is permitted. No extra mapping layer is required between Application and Domain when their representation is already the same.
 
 ## Verification obligations
 
@@ -121,9 +121,9 @@ Core Denied is reusable from Domain by Application, so both negative verificatio
 
 ## Student detail extension compatibility
 
-Student reads now return records containing required Domain-validated name and email. Enrollment input/output SDL and FR-009 sequencing remain unchanged: no new detail arguments or email-conflict rejection is added here. Enrollment never creates/edits Student records. Corrupt or incompatible persisted details are StorageFailure and map to the existing sanitized PERSISTENCE_FAILURE, rather than MISSING_STUDENT or a new eligibility rule. Host-only record establishment and replacement use the separate [student-details contract](student-details.md); its outcomes are not GraphQL enum additions.
+Student reads now return records containing required Domain-validated name and email. Enrollment input/output SDL and FR-009 sequencing remain unchanged: no new detail arguments or email-conflict rejection is added here. Enrollment never creates/edits Student records. Corrupt persisted details are DataIntegrityFailure(StorageFailure), while incompatible schema faults retain technical storage classification; both map to the existing sanitized PERSISTENCE_FAILURE, rather than MISSING_STUDENT or a new eligibility rule. Host-only record establishment and replacement use the separate [student-details contract](student-details.md); its outcomes are not GraphQL enum additions.
 
-## Expected outcomes and unexpected failures (Constitution v2.0.0)
+## Expected outcomes and unexpected failures (current feature alignment)
 
 The existing SDL is unchanged. DENIED, missing-record, ALREADY_ENROLLED,
 COURSE_NOT_OFFERED and structural INVALID_REQUEST are expected returned outcomes.
@@ -141,8 +141,7 @@ a Core technical StorageFailure mapped to PERSISTENCE_FAILURE, without inventing
 business conclusion. Only the precise enrollment-pair constraint maps to PairConflict.
 
 IdentityVerifier returns VerifiedIdentity or None for ordinary verification. Known
-provider operational exceptions translate to Core IdentityUnavailable; known storage
-and stored-row corruption faults translate to Core StorageFailure. These documented
+provider operational exceptions translate to Core IdentityUnavailable; known operational storage faults translate to Core StorageFailure; invalid persisted state translates to its DataIntegrityFailure subtype under shared D3. These documented
 technical exceptions may be raised by ports, then translated by Application to
 IDENTITY_UNAVAILABLE or PERSISTENCE_FAILURE. They never become business rejection,
 negative verification, repository absence or INVALID_REQUEST. No sqlite3/provider
@@ -154,3 +153,15 @@ errors, with diagnostics retained outside public responses. Do not catch Excepti
 in the verifier/use case to fabricate DENIED, business rejection, or a provider outage.
 GraphQL errors retain null propagation and cannot imply rollback after confirmed
 commit. The host-only Student operation follows its separate failure contract.
+
+## Construction and integrity alignment
+
+Apply the [Domain construction contract](domain-construction.md) and shared
+[D2/D3](../../../.specify/memory/architecture-decisions.md). Normal creation uses factories
+with validated Entity component types; persisted rows use explicit controlled reconstitution
+called directly by Persistence Adapters. Internal constructors are not public alternatives.
+Data-integrity failure remains internally distinguishable from availability faults, while
+existing sanitized public technical outcomes are preserved. This alignment changes no
+GraphQL fields/reasons, public request shape, email rules or FR-009 order. Behavioral tests
+and explicit semantic review complement structural dependency checks; imports alone do not
+prove correct conversion or failure classification.

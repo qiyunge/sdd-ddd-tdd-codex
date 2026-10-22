@@ -108,7 +108,7 @@ uv run pytest tests/architecture -q
 | User Story 2 | Observable result |
 |---|---|
 | 1 | Valid nonblank name/email accepted and retained exactly after reopen |
-| 2 | Each missing, non-text, empty or whitespace-only field rejected on construction/restoration/replacement; no invalid valid-state object or persisted change |
+| 2 | Invalid normal creation/replacement returns input rejection; corrupt saved details fail reconstitution as data-integrity faults; no invalid Domain object or persisted change |
 | 3 | Identical and local/domain/mixed-case variants rejected for another student, including another programme |
 | 4 | Whole addresses differing beyond case remain distinct, including plus tags and different domains |
 | 5 | Same student's unchanged/case-only email accepted; original submitted case retained |
@@ -117,7 +117,7 @@ uv run pytest tests/architecture -q
 
 Add cases for Unicode whitespace such as NBSP and casefold expansion (`Straße@example.com` versus `STRASSE@EXAMPLE.COM`), repeated names, retained surrounding whitespace, invalid ID/detail result distinctions, missing replacement target and duplicate-create ID. No syntax-validation assumptions belong in these tests. Use bounded events and worker-owned connections, with no two-party barrier after the exclusive writer acquisition. Verify unrelated enrollment rows remain unchanged by provisioning.
 
-Exercise SQL constraints on the production schema using configured connections: nonblank fields, duplicate casefold keys on insert/update and registration on every write path. A connection lacking required functions fails closed; no ASCII fallback or forged key is accepted. Verify restoring malformed legacy/corrupt rows produces StorageFailure/PERSISTENCE_FAILURE without leaking diagnostics. Initialization must refuse a pre-extension schema unchanged, accept a fresh schema and preserve data on compatible repeated initialization; no migration or fabricated defaults.
+Exercise SQL constraints on the production schema using configured connections: nonblank fields, duplicate casefold keys on insert/update and registration on every write path. A connection lacking required functions fails closed; no ASCII fallback or forged key is accepted. Verify restoring malformed/corrupt rows produces DataIntegrityFailure(StorageFailure)/PERSISTENCE_FAILURE, while incompatible schemas retain documented technical storage handling without leaking diagnostics. Initialization must refuse a pre-extension schema unchanged, accept a fresh schema and preserve data on compatible repeated initialization; no migration or fabricated defaults.
 
 Before production edits for genuinely missing behavior, capture relevant behavioral
 Red with `.venv/bin/python -m scripts.record <increment> red <test-command...>`;
@@ -131,14 +131,15 @@ Adapt fixtures alongside model/schema changes, preserving approved assertions.
 
 Final manifest assembly/validation requires all 15 enrollment and 7 student-detail scenario identities plus lightweight execution evidence covering changed behavior, consolidated across cohesive increments. Add negative tests showing a missing/skipped new scenario, absent relevant Red/Green evidence, stale final coverage or mismatched final evidence fails validation, plus positive tests accepting consolidated coherent increments without snapshots or no-refactor artifacts. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
 
-## Failure-contract alignment validation (Constitution v2.0.0)
+## Failure-contract alignment validation (current feature constraints)
 
 These are required verification scenarios; consult the latest captured results for their actual status.
 Use the existing acceptance, focused tests and final evidence commands above after
 the revised contracts. Use cohesive Red/Green/Refactor increments covering these behaviors; related items MAY share a cycle:
 
-- Domain factories returning invalid-ID/invalid-text outcomes without raising; direct
-  valid construction/restoration and internal misuse guards remain invariant-safe.
+- Domain Value Object factories return invalid-ID/invalid-text outcomes without raising;
+  Entity factories accept validated Domain Types. Ordinary callers use factories and
+  separate reconstitution; only explicit internal-misuse tests invoke constructors.
 - Application returning INVALID_REQUEST/InvalidStudentDetails via result branches,
   with existing verification/ownership timing and name-before-email ordering.
 - Enrollment port PairConflict returned rather than raised; rollback and one complete
@@ -189,8 +190,8 @@ families and final evidence gates.
 ## Verification after tooling simplification
 
 Use the acceptance and final-check commands above after implementing the
-[evidence migration](plan.md#execution-evidence-and-tooling-migration) and
-[fitness simplification](plan.md#architecture-fitness-simplification). Positive and
+[state/activity evidence migration](plan.md#execution-evidence-and-tooling-migration) and
+[fitness verification alignment](plan.md#architecture-fitness-simplification). Positive and
 negative cases must establish that consolidated evidence is accepted, genuine
 Red/Green remains required, and dependency, isolation and boundary protections remain
 effective. Preserve historical execution records unchanged.
@@ -198,3 +199,43 @@ effective. Preserve historical execution records unchanged.
 Report the [constitutional coverage minimum and approved project target](plan.md#coverage-minimum-versus-approved-target)
 separately. Retain the configured complete-Core 100% statement-and-branch gate,
 source scope and exclusion policy. This guide authorizes no relaxation.
+
+## Proposed v2.1.0 alignment validation
+
+This guide targets the revised spec's requested delivery constraints. Constitution
+v2.1.0 remains Proposed; v2.0.0 is the last historically recorded ratified version.
+Read shared [D1–D5](../../.specify/memory/architecture-decisions.md) and the
+[construction contract](contracts/domain-construction.md) before migration. No dependency
+upgrade, new endpoint or schema/reason change is planned.
+
+The source-inspected lightweight recorder currently retains output/order but not
+implementation-state or acceptance/inner associations. The positional commands above
+remain runnable; their current output alone does not satisfy the new chronology contract.
+Implement and verify the shared D4 additions before using new runs as proof of alignment.
+Do not invent new CLI flags, rewrite historical records or manufacture Red for behavior
+that already passes. Historical C1/T050 and T100 outcomes remain results under their
+original baseline, not automatic proof of the new contract.
+
+Validate the migration through the existing focused/acceptance commands and final pipeline:
+
+- Every identifier/text value, VerifiedIdentity and Entity has its supported factory;
+  Programme/Course/offering factories remain required even without extra invariants.
+  Entity inputs are validated Domain Types; ordinary fixtures/callers avoid constructors.
+- Value/record restoration is distinct from normal creation. Invalid persisted state
+  yields the internal integrity category and the existing sanitized storage failure,
+  never user-input validation, absence or a new business rejection. Restore valid
+  enrollment after eligibility changes without replaying creation-only rules.
+- Alias-aware allowed/violating construction fixtures establish structural check scope;
+  factory/restoration outcomes, converters and ownership are tested behaviorally and
+  reviewed semantically. Dependency passes do not establish semantic isolation.
+- Positive consolidated/shared-suite evidence has identifiable implementation states,
+  actual order, relevant increment/test identities, and acceptance versus inner activity.
+  Negative missing associations, unrelated Red/Green, changed-during-run state and stale
+  final results fail review/validation. No per-cycle commits, snapshots or refactor
+  artifacts become mandatory.
+
+Preserve all 15 enrollment and 23 parameterized Student acceptance identities across seven
+Student scenario families, including Unicode expansion and composition/non-equivalence.
+Then execute quality capture, current review, manifest assembly and evidence validation
+on the final migrated state. Until those pass, report the migration as pending. This
+planning guide does not change source, task markers, captured evidence or completion status.

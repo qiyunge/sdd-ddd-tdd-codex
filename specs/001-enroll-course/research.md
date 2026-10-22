@@ -1,6 +1,14 @@
 # Research: Python 3.12 Student Self-Enrollment
 
-**Date**: 2026-10-21 | **Spec**: [spec.md](spec.md) | **Constitution**: v2.0.0
+**Date**: 2026-10-22 | **Spec**: [spec.md](spec.md)
+**Baseline**: historically ratified v2.0.0; proposed v2.1.0 contracts are requested feature
+constraints. Shared conventions live in [architecture-decisions.md](../../.specify/memory/architecture-decisions.md).
+
+Existing dependency selections and earlier completed migrations below remain context.
+Sections 12–14 describe the current source-inspected migration; earlier descriptions
+of constructor-exception/prospective-evidence machinery are historical findings, not
+claims about the current working tree. No external dependency selection or upgrade
+is needed for this alignment.
 
 ## 1. Implementation language
 
@@ -35,7 +43,7 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 **Decision**: Domain owns self-enrollment ownership for trusted identities, duplicate-enrollment rules, course-offering eligibility and Enrollment invariants. Application owns identity-verification invocation/failure handling, Student/Programme/Course repository absence handling, exact FR-009 first-match sequencing and IdentityVerifier/EnrollmentUnitOfWork Protocol ports. Flask/Werkzeug/graphql-core objects, provider output and sqlite3 rows/exceptions are translated explicitly in adapters. Domain and Application are framework-free for this feature, without imposing a project-wide ban on Application frameworks.
 
-**Rationale**: Explicit converters prevent external representations entering Core while allowing adapters to call public validating Domain constructors. Application uses Domain types directly where appropriate; no redundant internal DTO layer. Import Linter enforces inward import relationships and forbidden dependencies; architecture tests inspect public annotations/re-exports and demonstrate detection with violating fixtures. [Import Linter layers](https://import-linter.readthedocs.io/en/stable/contract_types/layers/).
+**Rationale**: Explicit converters prevent external representations entering Core while allowing adapters to call supported Domain factories and controlled reconstitution APIs. Application uses Domain types directly where appropriate; no redundant internal DTO layer. Import Linter enforces inward import relationships and forbidden dependencies; architecture tests inspect public annotations/re-exports and demonstrate detection with violating fixtures. [Import Linter layers](https://import-linter.readthedocs.io/en/stable/contract_types/layers/).
 
 **Alternatives considered**: Decorated Domain GraphQL types, raw transport dictionaries throughout Application or repository implementations making eligibility decisions would undermine isolation. Package naming and Protocols alone are not architecture enforcement. Dynamic imports, reflection and Any can bypass static inspection; forbid such escapes in Core and verify converter semantics behaviorally.
 
@@ -63,7 +71,7 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## 4. Domain type safety and static quality
 
-**Decision**: Distinct immutable value classes for StudentId, ProgrammeId, CourseId and SubjectId, using frozen dataclasses with explicit runtime validation. Plain Domain entities preserve invariants on construction, reconstitution and transitions. Tagged outcomes and exhaustive typed mapping preserve reason distinctions. Use strict mypy across source, Ruff lint/format, Import Linter and architecture/signature tests.
+**Decision**: Distinct immutable value classes for StudentId, ProgrammeId, CourseId and SubjectId, using frozen dataclasses with explicit runtime validation. Normal creation follows shared `.create` APIs; persisted values/records use separate `.reconstitute` APIs. Entity factories accept validated Domain Types. Internal constructors preserve invariants but are not public alternatives. Tagged outcomes and exhaustive typed mapping preserve reason distinctions. Use strict mypy across source, Ruff lint/format, Import Linter and architecture/signature tests.
 
 **Rationale**: [Python typing](https://docs.python.org/3.12/library/typing.html) documents that annotations are not runtime enforced and NewType does not wrap/validate runtime values. Frozen dataclasses do not deeply freeze nested collections. Validate actual value types and nonempty strings in Domain; keep immutable scalar fields/copies. [mypy](https://mypy.readthedocs.io/en/stable/command_line.html#cmdoption-mypy-strict) and [Ruff](https://docs.astral.sh/ruff/) supply separate static gates, not business guarantees.
 
@@ -81,11 +89,11 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## 6. Outside-In TDD, coverage and evidence
 
-**Decision**: Acceptance tests guide cohesive Outside-In Red/Green/Refactor increments. Use the existing deterministic identity double, real temporary SQLite and port spies. Tests MAY exercise several layers through a shared behavioral boundary. Retain lightweight commands/results demonstrating relevant behavioral failure before implementation and passing tests afterward; evidence MAY be consolidated across cohesive increments. Refactoring consideration need not produce code changes or separate no-refactor artifacts. Import/configuration failures are not behavioral Red.
+**Decision**: Acceptance tests guide cohesive Outside-In Red/Green/Refactor increments. Use the existing deterministic identity double, real temporary SQLite and port spies. Tests MAY exercise several layers through a shared behavioral boundary. Retain lightweight commands/results associated with identifiable implementation states and execution order, distinguishing acceptance-first and inner TDD activity under shared D4; evidence MAY be consolidated across cohesive increments. Refactoring consideration need not produce code changes or separate no-refactor artifacts. Import/configuration failures are not behavioral Red.
 
 **Rationale**: Constitution v2.0.0 explicitly permits coherent grouping and rejects exhaustive per-behavior histories and intermediate snapshots as mandatory proof. Final acceptance/regression, coverage, architecture, static analysis and contract checks remain mandatory. Passing tests and coverage alone do not establish TDD.
 
-**Alternatives considered**: Retaining the current prospective snapshot/per-behavior protocol as a mandatory gate would contradict the revised evidence rules. Discarding execution evidence and relying on final Green would also violate them. Keep richer historical records as optional support and migrate tooling to accept valid lightweight evidence. Reassess C1 from original execution records without treating grouping alone as a violation or declaring the finding automatically resolved.
+**Alternatives considered**: Restoring the former prospective snapshot/per-behavior protocol as a mandatory gate would contradict the revised evidence rules. Discarding execution evidence and relying on final Green would also violate them. Keep richer historical records as optional support and migrate tooling to accept valid lightweight evidence. Preserve the recorded C1/T050 reconciliation under v2.0.0; reassess only claims dependent on the new evidence contracts, without manufacturing historical chronology.
 
 **Coverage**: coverage.py branch measurement with a 100% combined statement-and-branch gate across the entire Domain and Application source directories, including unimported modules and all unchanged measurable branches. This stronger complete-scope gate implies all included functions' measurable branches are covered; it does not need a custom per-function coverage parser. Scope/exclusion/discovery audits and negative fixtures prevent vacuous passes. Any business behavior outside Core joins this scope. No business exclusions, no cover/no branch suppressions or changed-lines gate. Zero-branch functions still need behavioral tests. [Branch measurement](https://coverage.readthedocs.io/en/latest/branch.html), [configuration](https://coverage.readthedocs.io/en/latest/config.html).
 
@@ -93,7 +101,7 @@ Use Flask's test client with JSON/header requests for acceptance. Create a separ
 
 ## Resolution
 
-All applicable planning questions have decisions in [plan.md](plan.md). Python is selected by explicit owner requirement, not as a provisional alternative. The Student detail extension below adds the newly specified behavior within the current feature; no constitutional waiver, additional service or production implementation is introduced. Runtime dependencies and test gates are planned, not executed by this documentation workflow.
+Applicable common conventions have shared D1–D5 decisions; [plan.md](plan.md) applies them to this feature. Python is selected by explicit owner requirement, not as a provisional alternative. The Student detail extension below adds the newly specified behavior within the current feature; no constitutional waiver, additional service or production implementation is introduced. Runtime dependencies and test gates are planned, not executed by this documentation workflow.
 
 
 ## 7. Required Student text and case-insensitive email (extension)
@@ -120,7 +128,7 @@ All applicable planning questions have decisions in [plan.md](plan.md). Python i
 
 **Alternatives considered**: New GraphQL mutations or CLI management commands expand scope; testing only Student constructors cannot prove concurrency or persistence; direct SQL acceptance alone would bypass the Core policy and integration results. Nullable/default names/emails would weaken required attributes. Automatic legacy backfill cannot derive real values.
 
-**Evidence impact**: Existing scripts count only 15 enrollment scenarios and fixed historical increments. Extend manifest assembly/validation and negative fixtures to require all seven additional named scenario families and new increment evidence; historical passes do not validate the new spec. No unresolved research question or constitutional exception remains.
+**Evidence impact**: The current inventory already includes all 15 enrollment identities and 23 parameterized Student cases across seven scenario families. Preserve it. Extend state/chronology verification as described below; historical passes do not validate the new contracts.
 
 ## 10. Expected failure contracts (v2.0.0 amendment)
 
@@ -170,59 +178,73 @@ String coercion would introduce heterogeneous equality. Email-based Student iden
 would change identity on replacement and confuse uniqueness with entity identity.
 Persisted Python hashes are unsuitable; persistence continues using the comparison key.
 
-## 12. Constitution v2.0.0 tooling compatibility
+## 12. Source-inspected evidence compatibility (2026-10-22)
 
-**Decision**: Schedule recorder, manifest/validator and negative-fixture alignment in
-subsequent tasks. Current working-tree scripts enforce snapshots, per-behavior mappings
-and REFACTOR/NO_REFACTOR records; the earlier positional CLI examples are obsolete.
-The current recorder requires EVIDENCE_REQUEST JSON and uppercase stages; no
-compatible lightweight CLI is claimed until migration is implemented. Keep final
-source/check digest freshness separate from optional intermediate snapshots.
+**Decision**: Apply shared D4, retaining current lightweight capture and final-digest
+verification while implementing state and activity association. The recorder already
+accepts lowercase `red`, `green`, `refactor` and `verification`; no EVIDENCE_REQUEST,
+snapshots, global hash chain, per-behavior approvals or no-refactor records are required.
 
-**Rationale**: Documentation alignment cannot establish that the existing gates accept
-consolidated cohesive increments. Historical review and new work need honest execution
-evidence, while final-state verification remains unchanged.
+**Rationale**: `scripts/record.py:capture` writes commands, output, result and execution
+times but does not call its existing digest function or capture revision/state identity.
+`scripts/check_evidence.py:validate_runs` recognizes AssertionError Red followed by
+successful Green and checks group/time order, but not state association, test correspondence
+or acceptance/inner roles. Missing times may default to zero. `check_quality.py` and
+assembly/validation protect final-state freshness; they do not prove historical chronology.
 
-**Alternatives considered**: Recreating historical failures or automatically flipping
-review status would manufacture proof. Leaving obsolete gate requirements mandatory
-would defeat the amendment. No external research or dependency change is needed for
-this policy migration; the constitution and local source are the decision bases.
+**Alternatives considered**: Final Green alone, timestamps alone or bare differing
+hashes cannot prove test-first development. A mandatory commit or source snapshot for
+every cycle adds an unrequested mechanism. Shared D4 instead requires reviewable state
+references, actual ordering and ordinary review of the behavior implemented between runs.
+Preserve historical bytes and report missing associations rather than invent metadata.
 
-## 13. Remove process-only mechanisms; simplify distinct verification responsibilities
+**Verification**: Positive consolidated/shared-suite evidence and negative absent state,
+unrelated tests, missing role/context, invalid chronology and stale final results. Update
+fixtures that currently accept output/time-only records. New behavioral validation follows
+TDD; historical behavior already passing needs no manufactured Red.
 
-The plan consolidates these decisions into one verification design. Required acceptance
-scenario identities remain independent from the flexible grouping of TDD evidence;
-no fixed inventory of future increment IDs is a completion requirement.
+## 13. Structural and semantic verification responsibilities
 
-**Decision**: Replace prospective snapshots/blobs, global hash-chain continuity,
-per-behavior maps/reviews and compulsory refactor/no-refactor stages with consolidated
-lightweight commands/results and ordinary review context. Preserve historical files
-and final-check digest integrity. The current fixed historical increment inventories
-are not a valid mandatory organization for future cohesive increments.
+**Decision**: Apply shared D1/D5 and preserve configured quality/coverage gates. Import
+Linter is the primary static dependency checker. Targeted architecture tests cover
+public annotations and dynamic imports; the new gap is model factory/caller coverage.
+Semantic conversions, data-integrity classification, business decisions and short circuits
+are verified by behavioral contracts and explicit semantic review, separately identified.
 
-**Rationale**: These process mechanisms exist to enforce the superseded granularity.
-Actual behavioral failures before implementation and passes afterward remain required;
-a complex protocol does not add constitutional obligations. Keep final quality results
-and required acceptance identities independent from TDD log layout.
+**Rationale**: Current `tests/architecture/test_boundaries.py` already removed obsolete
+exact policy-call/source-comparison constraints. Do not schedule that completed cleanup
+again. Import graphs and public annotations cannot establish what arbitrary container
+contents mean. Passing dependencies must not be called semantic boundary proof.
 
-**Decision**: Make Import Linter the primary dependency graph verifier. Consolidate
-redundant AST import rules after equivalent positive/negative fixture coverage is
-shown. Retain targeted public-type/dynamic-escape checks and semantic converter tests.
-Replace exact call-name sets and source-text ownership checks with meaningful
-behavioral ownership and short-circuit tests.
+**Alternatives considered**: A second general import graph duplicates protection;
+removing semantic tests loses it. Absolute constructor privacy is neither required nor
+assumed. Use allowed/violating caller fixtures and behavioral factory/restoration tests.
+The complete-Core 100% statement-and-branch gate remains stricter than the constitutional
+whole-affected-function branch minimum; no exclusion, scope or target relaxation occurs.
 
-**Rationale**: Local inspection of `tests/architecture/test_boundaries.py` shows import
-checks overlap configured Import Linter rules, while annotations, dynamic loading
-and boundary semantics require distinct verification. Exact `policies` call sets and
-comparison substrings constrain implementation spelling rather than responsibility.
+## 14. Uniform construction and data-integrity contracts
 
-**Alternatives considered**: Deleting all fitness tests in favor of imports alone
-would lose boundary semantics/type protection. Keeping two general import scanners
-adds maintenance without a distinct responsibility. Retain specialized checks only
-where they close a demonstrated gap, and preserve every approved architecture rule.
+**Decision**: Shared D2/D3 define `.create` and `.reconstitute` and Domain
+InvalidPersistedState -> Core DataIntegrityFailure(StorageFailure) -> existing sanitized
+public technical outcome. Feature signatures and per-model invariants are in
+[domain-construction.md](contracts/domain-construction.md).
 
-**Coverage decision**: Constitution IV sets whole-affected-business-function 100%
-branch coverage. The configured complete-Core 100% statement-and-branch target is a
-stronger approved project policy and remains unchanged. No exclusion, scope or target
-relaxation is authorized by this planning update. No new dependency decision or
-external research is needed; the constitution, source and configuration are the bases.
+**Rationale**: Source inspection found raw-input Student/Enrollment `.create` methods,
+missing Programme/Course/ProgrammeCourseOffering/VerifiedIdentity factories, normal
+Enrollment and verified-identity direct constructor calls, and constructor-based row
+loaders with no explicit restoration APIs. `decode` already identifies invalid stored
+values as generic StorageFailure; retain technical handling and add identifiable
+integrity classification, not new business rejection reasons.
+
+**Alternatives considered**: Keeping validating constructors public contradicts the
+requested API style even for entities with no extra invariants. Entity factories that
+parse untrusted scalars bypass the validated-Domain-Type input contract. Reapplying
+current offering or email-availability eligibility while restoring creates false
+historical rejections. Mapping corruption to INVALID_REQUEST or missing records
+confuses saved-state integrity with caller input. No new enrollment rule, schema change,
+management endpoint, dependency or language-level privacy mechanism is needed.
+
+**Resolution**: Applicable decisions are recorded at shared project level and applied
+by the feature documents. No technical clarification remains unresolved for planning.
+The implementation, evidence and final-check migrations remain pending; proposed
+v2.1.0 is not ratified by this research or plan.

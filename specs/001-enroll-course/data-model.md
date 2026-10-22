@@ -2,7 +2,7 @@
 
 ## Domain records
 
-Identifiers are nonempty opaque strings, compared exactly, with no trimming/case folding. This is a technical representation rule, not a new enrollment eligibility condition. Malformed GraphQL types are protocol errors. After successful verification, invalid target StudentId returns INVALID_REQUEST before ownership; invalid CourseId is handled only after ownership passes; no prerequisite queries run. Neither structural check replaces a Domain invariant. Domain constructors and reconstitution enforce nonempty IDs independently of boundary validation.
+Identifiers are nonempty opaque strings, compared exactly, with no trimming/case folding. This is a technical representation rule, not a new enrollment eligibility condition. Malformed GraphQL types are protocol errors. After successful verification, invalid target StudentId returns INVALID_REQUEST before ownership; invalid CourseId is handled only after ownership passes; no prerequisite queries run. Neither structural check replaces a Domain invariant. Supported Domain factories and separate reconstitution APIs enforce nonempty IDs independently of boundary validation; constructors are internal mechanisms.
 
 | Type | Fields / key | Relationships and invariants |
 |---|---|---|
@@ -19,7 +19,7 @@ Application handles negative identity-verification results before Domain invocat
 
 Planned tables: `students(student_id PRIMARY KEY, programme_id NOT NULL, name NOT NULL, email NOT NULL)`, `programmes(programme_id PRIMARY KEY)`, `courses(course_id PRIMARY KEY)`, `programme_course_offerings(programme_id, course_id, PRIMARY KEY(programme_id, course_id))`, `enrollments(student_id, course_id, PRIMARY KEY(student_id, course_id))`. All IDs are NOT NULL TEXT with nonempty checks. Offering and enrollment references can use restrictive foreign keys; no cascading deletes into enrollments. Do not impose a student-to-programme foreign key that prevents the explicitly required dangling-programme scenario. Enrollment must not write prerequisite tables. Fixture/setup tooling owns their creation and population.
 
-The adapter explicitly maps each row to a validated Domain record. Corrupt stored representation maps to a technical failure rather than a valid Domain object or a misleading missing-record rejection. sqlite3.Row, Connection, Cursor and sqlite3 exceptions never escape to Core; the adapter translates them into validated Domain records and Core-owned storage failure types.
+The adapter explicitly maps each row to a validated Domain record. Corrupt stored representation maps through Domain InvalidPersistedState to Core DataIntegrityFailure(StorageFailure), a technical data-integrity failure rather than a valid Domain object, user-input rejection, or misleading missing-record result. sqlite3.Row, Connection, Cursor and sqlite3 exceptions never escape to Core; the adapter translates them into validated Domain records and Core-owned storage failure types.
 
 ## Consistency and transaction lifecycle
 
@@ -45,7 +45,7 @@ Use distinct frozen dataclass value classes `StudentId`, `ProgrammeId`, `CourseI
 
 Domain records have no Flask, Werkzeug, graphql-core, WSGI, persistence-framework or provider dependency. Student references ProgrammeId rather than a proxy. Missing Programme remains an absent lookup, not an eligibility failure. Tagged result dataclasses/enums represent success, one rejection or technical failure; exhaustive typed converters and tests preserve every outcome.
 
-GraphQL input/context -> neutral Application command, provider result -> Core verification result, sqlite3 columns -> validating Domain constructors, and Core outcome -> GraphQL output are explicit bridges. Adapter-local typed records/dictionaries may represent transport data, but must not cross into Core as graphql-core objects or unchecked Any. Reconstitution exercises the same Domain invariants. Application may use Domain values directly; no duplicate internal DTO layer is needed.
+GraphQL input/context -> neutral Application command, provider result -> Core verification result, sqlite3 columns -> controlled Domain value/record reconstitution, and Core outcome -> GraphQL output are explicit bridges. Adapter-local typed records/dictionaries may represent transport data, but must not cross into Core as graphql-core objects or unchecked Any. Reconstitution enforces applicable persisted-state invariants without replaying creation-only eligibility. Application may use Domain values directly; no duplicate internal DTO layer is needed.
 
 Application sequences repository reads, handles Student/Programme/Course absence itself, and invokes Domain policies through the use case's ordered flow and Protocol ports. Domain does not receive repository-miss checks as trivial guard calls. The resolver adapts a request and delegates; it performs no prerequisite queries, eligibility decisions or transaction orchestration. Output materializes committed identifiers without additional database reads during GraphQL serialization.
 
@@ -88,16 +88,18 @@ Add typeof/text/nonblank checks to the students table and unique expression inde
 
 Internal student-record operation transitions: raw details -> validated candidate -> locked owner lookup -> Domain email-availability decision -> insert or replacement -> commit -> accepted; invalid details or conflict -> no write/rollback -> typed rejection. For replace, select target by StudentId, use the explicitly supplied programme in the full replacement candidate, and exclude only the same StudentId from conflict. No programme existence rule is added. A missing target or duplicate create ID has its own result. Keep the enrollment UoW unable to write Student. A concurrent claim has exactly one committed winner; a losing replacement retains all previous fields. No save is reported before commit, and success response loss cannot compensate a committed record.
 
-Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core StorageFailure and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.
+Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core DataIntegrityFailure(StorageFailure) and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.
 
-## Validation and failure representation (v2.0.0)
+## Validation and failure representation (proposed v2.1.0 feature constraints)
 
 Domain values retain their invariants. Raw-input factories return `ValidValue |
 ValidationFailure` and never expose a partially valid Domain value. Guarded internal
 constructors may raise on misuse, but Application and adapters must use factories
 for expected input validation rather than catch guards as normal control flow.
-Student restoration applies the same predicates; invalid stored values are translated
-by the persistence boundary to technical StorageFailure, never an input rejection.
+Student restoration applies persisted-state predicates through separate reconstitution;
+invalid persisted state returns Domain InvalidPersistedState and is translated by the
+persistence boundary to Core DataIntegrityFailure(StorageFailure), never an input or
+business rejection. Application keeps its existing sanitized storage-failure result.
 
 Domain policies return rejection/pass values. Repository absence is None. Port writes
 return Added/PairConflict for Enrollment or Saved/EmailKeyConflict for Student;
@@ -122,3 +124,15 @@ If Student is hashable, its hash follows StudentId alone. Reconstituted or chang
 records retain identity when StudentId is unchanged. Global email uniqueness does
 not replace Student identity or merge different StudentIds. The existing email key
 used for SQL uniqueness must be identical to the value's equality key.
+
+## Supported construction and restoration inventory
+
+Apply shared [D2/D3](../../.specify/memory/architecture-decisions.md) and the
+[Domain construction contract](contracts/domain-construction.md). All listed business
+models use `.create` for normal creation, even where validated component types already
+establish every current invariant. Entity factories do not parse raw scalar fields.
+Persistence uses separate value and record `.reconstitute` operations and never
+replays current enrollment eligibility or email-availability policies. Those policies
+and atomic constraints continue to govern new writes in the existing use-case order.
+Internal constructors and negative tests of misuse are not supported public creation.
+No new fields, business eligibility rules, tables, or GraphQL names are introduced.
