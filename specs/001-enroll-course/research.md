@@ -1,6 +1,6 @@
 # Research: Python 3.12 Student Self-Enrollment
 
-**Date**: 2026-10-21 | **Spec**: [spec.md](spec.md) | **Constitution**: v1.3.0
+**Date**: 2026-10-21 | **Spec**: [spec.md](spec.md) | **Constitution**: v1.4.0
 
 ## 1. Implementation language
 
@@ -119,3 +119,51 @@ All applicable planning questions have decisions in [plan.md](plan.md). Python i
 **Alternatives considered**: New GraphQL mutations or CLI management commands expand scope; testing only Student constructors cannot prove concurrency or persistence; direct SQL acceptance alone would bypass the Core policy and integration results. Nullable/default names/emails would weaken required attributes. Automatic legacy backfill cannot derive real values.
 
 **Evidence impact**: Existing scripts count only 15 enrollment scenarios and fixed historical increments. Extend manifest assembly/validation and negative fixtures to require all seven additional named scenario families and new increment evidence; historical passes do not validate the new spec. No unresolved research question or constitutional exception remains.
+
+## 10. Expected failure contracts (v1.4.0 amendment)
+
+**Decision**: Use Domain result-returning validation factories, existing typed policy
+rejections, repository absence values, and explicit PairConflict/EmailKeyConflict
+port results. Preserve deterministic first-match input/business validation. Retain
+Core-owned technical exceptions solely for documented operational faults; propagate
+programming/internal-contract defects to the outer error boundary.
+
+**Rationale**: Local source inspection found constructor ValueError catches and a
+raised UniqueConflict retry path in application/enroll.py, plus a blanket Exception
+catch in adapters/identity/verifier.py. Those paths are migration targets under the
+new constitution, not evidence of alignment. Factories keep rules in Domain while
+Application coordinates invalid raw input without exceptions. Precise constraint
+translation hides driver types without treating unrelated faults as conflicts.
+
+**Alternatives considered**: Constructor exceptions caught as validation violate the
+new rule; duplicated Application predicates weaken Domain ownership. Making every
+technical exception a business rejection conceals defects. An all-result technical
+port design is possible but unnecessary: the constitution permits technical exceptions
+when explicitly contracted and translated separately. Accumulating independent text
+errors is optional; the current name-before-email rule is retained.
+
+**Verification**: Add fresh behavioral evidence for returned invalid-ID/text results,
+returned conflict/replay outcomes, provider-outage versus negative verification,
+corrupt-row technical classification and programming-error propagation. Validate
+no infrastructure exceptions appear in Core signatures or outcomes. This is a local
+contract amendment; no new dependency or external API choice is introduced.
+
+## 11. StudentEmail equality, hashing and Student identity
+
+**Decision**: Define StudentEmail equality over its complete Unicode `str.casefold()`
+key and derive its hash from that same immutable key. Compare only StudentEmail
+instances; return NotImplemented for other types. Preserve submitted text independently.
+Student identity/equality uses StudentId alone, with a matching ID-based hash if
+hashable.
+
+**Rationale**: The owner explicitly requires value equality to agree with whole-address
+caseless uniqueness. Original-case dataclass equality/hash would disagree with that
+rule. A consistent hash makes equal values interchangeable in sets/dictionaries.
+Email is replaceable and cannot define Student identity. No new technology research
+or dependency choice is required for this local Domain design decision.
+
+**Alternatives considered**: Original-text equality contradicts the requested semantics;
+lower(), partial-address matching and provider normalization alter the specified key.
+String coercion would introduce heterogeneous equality. Email-based Student identity
+would change identity on replacement and confuse uniqueness with entity identity.
+Persisted Python hashes are unsuitable; persistence continues using the comparison key.

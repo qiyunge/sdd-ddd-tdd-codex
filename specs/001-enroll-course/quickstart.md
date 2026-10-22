@@ -117,3 +117,58 @@ uv run python -m scripts.record <new-increment> refactor .venv/bin/python -m pyt
 These are command patterns with placeholders, not commands to execute verbatim. Red must fail for the expected behavior, not a missing import or constructor signature. Retain real output/order and source/diff associations. Record no-refactor rationale when applicable. Update fixture constructors/seeds to valid name/email for existing tests; this is justified by the newly approved required-field contract, not permission to remove existing assertions.
 
 Before final completion, extend manifest assembly/validation to require all 15 enrollment and 7 student-detail scenario identities plus the new TDD increments. Add negative tests showing a missing/skipped new scenario, absent new increment, stale coverage or mismatched evidence fails validation. Then execute the three mandatory final commands already listed. Update review notes for this extension; historical manifests and existing green tests alone are insufficient. Complete Core statement/branch coverage, static checks, architecture, installed-package resources and real socket regression tests remain mandatory.
+
+## Failure-contract alignment validation (Constitution v1.4.0)
+
+This is planned verification; no implementation pass is claimed by this update.
+Use the existing acceptance, focused tests and final evidence commands above after
+implementing the revised contracts. Add fresh Red/Green/Refactor increments for:
+
+- Domain factories returning invalid-ID/invalid-text outcomes without raising; direct
+  valid construction/restoration and internal misuse guards remain invariant-safe.
+- Application returning INVALID_REQUEST/InvalidStudentDetails via result branches,
+  with existing verification/ownership timing and name-before-email ordering.
+- Enrollment port PairConflict returned rather than raised; rollback and one complete
+  ordered replay; second conflict is technical failure, never guessed duplication.
+- Student EmailKeyConflict returned and mapped to EmailConflict; unrelated constraints
+  remain technical failures and rejected replacements preserve previous records.
+- Provider negative result versus known outage versus injected programming exception:
+  respectively DENIED, IDENTITY_UNAVAILABLE, and sanitized internal execution error.
+  Neither denial nor provider outage may open persistence.
+- Corrupt persisted Domain input becoming PERSISTENCE_FAILURE/StudentStorageFailure, with
+  no fake absence, invalid-input or email-conflict result.
+- Unexpected programming/contract exceptions propagating through Application to the
+  host/transport error boundary, sanitized with diagnostics recorded; cleanup cannot
+  overwrite the primary failure or compensate a confirmed commit.
+
+Update port doubles to return conflict outcomes; do not preserve exception-throwing
+conflict doubles as the intended contract. Include all changed branches in full Core
+coverage and final evidence. Expected GraphQL outcomes still have no GraphQL errors;
+unexpected internal execution failures use the sanitized error envelope. Keep the
+15 enrollment and 7 Student detail scenario families mandatory.
+
+## StudentEmail equality and identity validation
+
+After implementation, use the focused Domain/Application and acceptance commands
+above with fresh Red/Green/Refactor evidence for these behaviors:
+
+- Case variants across both address parts compare equal and have equal hashes.
+- Unicode expansion pairs (`Straße@example.com`, `STRASSE@EXAMPLE.COM`) compare
+  equal and have equal hashes. Verify symmetric equality and consistent inequality.
+- A set deduplicates equal StudentEmail values; a dictionary keyed by one can be
+  retrieved using an equal variant. Never assert unequal values have unequal hashes.
+- Different whole-address keys (including plus tags, domains and significant spaces)
+  remain unequal. No trimming or Unicode composition normalization is introduced.
+- Comparison with a raw string, StudentName or None does not produce email equality;
+  the StudentEmail equality method returns NotImplemented for unrelated types.
+- Submitted spelling survives construction, persistence and reconstitution unchanged;
+  restored values retain equality/hash behavior.
+- Student instances with the same StudentId retain identity/equality after detail or
+  programme changes. Different StudentIds remain distinct even with equal email
+  values in isolated Domain fixtures; persisted duplicates remain prohibited.
+- If Student is hashable, same-ID variants have equal hashes and email replacement
+  cannot change its hash. Self-exclusion in uniqueness still compares StudentId.
+
+These are planned tests, not executed implementation results. Include equality and
+hash methods in complete Core coverage and retain the existing acceptance scenario
+families and final evidence gates.

@@ -72,7 +72,7 @@ Names identify conceptual typed results, not new entities or persisted records. 
 
 IdentityVerifier is an Application-owned Protocol returning VerifiedIdentity or None for a negative verification result. VerifiedIdentity is a trusted Domain value containing validated SubjectId, with no Student record existence implication. Domain ownership accepts VerifiedIdentity and StudentId and owns their self-enrollment identity comparison. Domain has no identity-verification port, verifier invocation, verification-failure decision or UnverifiedIdentity type. None remains an Application port result; it must never reach ownership policy as a fabricated Domain identity.
 
-Application returns the existing Core DENIED on negative verification before constructing target IDs or invoking Domain ownership. After verification succeeds it constructs the target StudentId through its validating constructor, then invokes ownership; invalid representations remain INVALID_REQUEST without persistence. This clarifies structural-input timing, not FR-009 for well-formed IDs. The existing identity-provider outage technical failure is not a negative identity assertion and also stops before ownership/persistence. CourseId validation follows successful ownership as before.
+Application returns the existing Core DENIED on negative verification before constructing target IDs or invoking Domain ownership. After verification succeeds it obtains the target StudentId through its result-returning Domain factory, then invokes ownership; invalid representations remain INVALID_REQUEST without persistence. This clarifies structural-input timing, not FR-009 for well-formed IDs. The existing identity-provider outage technical failure is not a negative identity assertion and also stops before ownership/persistence. CourseId validation follows successful ownership as before.
 
 
 ## Required Student details (extension)
@@ -89,3 +89,36 @@ Add typeof/text/nonblank checks to the students table and unique expression inde
 Internal student-record operation transitions: raw details -> validated candidate -> locked owner lookup -> Domain email-availability decision -> insert or replacement -> commit -> accepted; invalid details or conflict -> no write/rollback -> typed rejection. For replace, select target by StudentId, use the explicitly supplied programme in the full replacement candidate, and exclude only the same StudentId from conflict. No programme existence rule is added. A missing target or duplicate create ID has its own result. Keep the enrollment UoW unable to write Student. A concurrent claim has exactly one committed winner; a losing replacement retains all previous fields. No save is reported before commit, and success response loss cannot compensate a committed record.
 
 Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core StorageFailure and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.
+
+## Validation and failure representation (v1.4.0)
+
+Domain values retain their invariants. Raw-input factories return `ValidValue |
+ValidationFailure` and never expose a partially valid Domain value. Guarded internal
+constructors may raise on misuse, but Application and adapters must use factories
+for expected input validation rather than catch guards as normal control flow.
+Student restoration applies the same predicates; invalid stored values are translated
+by the persistence boundary to technical StorageFailure, never an input rejection.
+
+Domain policies return rejection/pass values. Repository absence is None. Port writes
+return Added/PairConflict for Enrollment or Saved/EmailKeyConflict for Student;
+conflicts are values, not exception subclasses. Application coordinates their mapping,
+rollback and bounded replay as defined in the boundary contracts. Domain never imports
+Application conflict or technical types. Known operational faults may use documented
+Core-owned technical exceptions; programming errors propagate to the outer internal
+error boundary. No technical exception is silently converted to a business rejection.
+
+## StudentEmail value equality and entity identity
+
+StudentEmail equality compares the complete Unicode `str.casefold()` comparison
+key between StudentEmail instances only. Original spelling remains stored but is
+excluded from equality/hash. Its immutable hash uses the same key. Return
+NotImplemented from `__eq__` for other operand types; never compare directly to a
+raw string or another value class. Define equality/hash explicitly so frozen
+dataclass defaults do not use original-case text. Unequal keys need not have distinct
+hashes; equal values MUST have equal hashes. Hash values are not persistence keys.
+
+Student identity/equality is StudentId alone, independent of email, name and programme.
+If Student is hashable, its hash follows StudentId alone. Reconstituted or changed
+records retain identity when StudentId is unchanged. Global email uniqueness does
+not replace Student identity or merge different StudentIds. The existing email key
+used for SQL uniqueness must be identical to the value's equality key.

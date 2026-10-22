@@ -122,3 +122,35 @@ Core Denied is reusable from Domain by Application, so both negative verificatio
 ## Student detail extension compatibility
 
 Student reads now return records containing required Domain-validated name and email. Enrollment input/output SDL and FR-009 sequencing remain unchanged: no new detail arguments or email-conflict rejection is added here. Enrollment never creates/edits Student records. Corrupt or incompatible persisted details are StorageFailure and map to the existing sanitized PERSISTENCE_FAILURE, rather than MISSING_STUDENT or a new eligibility rule. Host-only record establishment and replacement use the separate [student-details contract](student-details.md); its outcomes are not GraphQL enum additions.
+
+## Expected outcomes and unexpected failures (Constitution v1.4.0)
+
+The existing SDL is unchanged. DENIED, missing-record, ALREADY_ENROLLED,
+COURSE_NOT_OFFERED and structural INVALID_REQUEST are expected returned outcomes.
+INVALID_REQUEST retains its existing EnrollCourseFailure representation; that SDL
+type name does not classify it as an unexpected technical failure. Domain parsing
+factories return valid IDs or explicit validation failures. Application branches on
+those values at the established verification/ownership timing; it MUST NOT catch
+constructor ValueError/TypeError to implement normal input rejection.
+
+Enrollment UnitOfWork.add returns `Added | PairConflict`. Reads return valid records
+or None, and commit/rollback/close return None on success. PairConflict is a returned
+Core-owned value and replaces the raised UniqueConflict contract. Application rolls
+back/closes and retries the complete ordered attempt once. A second conflict becomes
+a Core technical StorageFailure mapped to PERSISTENCE_FAILURE, without inventing a
+business conclusion. Only the precise enrollment-pair constraint maps to PairConflict.
+
+IdentityVerifier returns VerifiedIdentity or None for ordinary verification. Known
+provider operational exceptions translate to Core IdentityUnavailable; known storage
+and stored-row corruption faults translate to Core StorageFailure. These documented
+technical exceptions may be raised by ports, then translated by Application to
+IDENTITY_UNAVAILABLE or PERSISTENCE_FAILURE. They never become business rejection,
+negative verification, repository absence or INVALID_REQUEST. No sqlite3/provider
+exception type crosses into Core.
+
+Unexpected programming or internal-contract exceptions propagate out of Application
+and are sanitized by the outer GraphQL/HTTP error boundary as internal execution
+errors, with diagnostics retained outside public responses. Do not catch Exception
+in the verifier/use case to fabricate DENIED, business rejection, or a provider outage.
+GraphQL errors retain null propagation and cannot imply rollback after confirmed
+commit. The host-only Student operation follows its separate failure contract.

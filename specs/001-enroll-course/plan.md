@@ -6,7 +6,7 @@
 
 ## Summary
 
-Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchronous HTTP Transport Adapter, Waitress WSGI serving and embedded sqlite3 persistence. Framework-free Domain owns self-enrollment authorization, duplicate-enrollment and offering-eligibility policies and Enrollment invariants; Application handles failed identity verification and repository misses and orchestrates FR-009 through owned ports; adapters perform explicit boundary conversions. The owner selects Python, graphql-core and Flask directly. Preserve FR-001–FR-010 and all fifteen enrollment acceptance scenarios; extend Student for FR-011–FR-013, User Story 2 scenarios 1–7, and SC-005–SC-007 alongside SC-001–SC-004 and Constitution v1.3.0.
+Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchronous HTTP Transport Adapter, Waitress WSGI serving and embedded sqlite3 persistence. Framework-free Domain owns self-enrollment authorization, duplicate-enrollment and offering-eligibility policies and Enrollment invariants; Application handles failed identity verification and repository misses and orchestrates FR-009 through owned ports; adapters perform explicit boundary conversions. The owner selects Python, graphql-core and Flask directly. Preserve FR-001–FR-010 and all fifteen enrollment acceptance scenarios; extend Student for FR-011–FR-013, User Story 2 scenarios 1–7, and SC-005–SC-007 alongside SC-001–SC-004 and Constitution v1.4.0.
 
 ## Technical Context
 
@@ -35,7 +35,7 @@ Implement with Python 3.12, graphql-core SDL-first GraphQL, Flask as the synchro
 | Principle | Before research | Post-design obligation |
 |---|---|---|
 | I. Inward dependencies | PASS: Python supports owned ports and adapters | PASS: Import Linter and architecture/signature tests enforce inward dependencies, Core independence and no framework/persistence leakage |
-| II. Domain integrity / Full Bridge | PASS: Domain retains policies; Application handles repository misses | PASS: Core rejection contracts, Application first-match sequencing, validating value classes and construction/reconstitution; explicit GraphQL/provider/row/outcome conversion; no redundant Application–Domain mappings |
+| II. Domain integrity / Full Bridge | PASS: Domain retains policies; Application handles repository misses | PASS: explicit expected-failure results, Domain-owned validating factories, separate technical exception contracts, Application first-match sequencing and invariant-safe construction/reconstitution; explicit GraphQL/provider/row/outcome conversion; no redundant Application–Domain mappings |
 | III. Outside-In TDD | PASS: public boundary declared | PASS: pytest HTTP acceptance drives executed behavioral Red/Green/Refactor; real persistence, identity double and retained evidence |
 | IV. Fitness / coverage | PASS: enforcement strategy selected | PASS: complete Core source scope at 100% statement-and-branch coverage, including whole affected functions; branchless behavioral tests; negative fitness fixtures |
 | V. Evidence / quality | PASS: final-state review required | PASS: pytest, coverage, mypy, Ruff, Import Linter, architecture and evidence checks must run and pass on final implementation state |
@@ -44,7 +44,7 @@ No deviations or constitutional exceptions. No implementation checks are claimed
 
 ### Resolved constitutional planning questions
 
-- **Boundary contracts**: Keep [SDL](contracts/schema.graphqls) and [contract](contracts/enrollment-api.md). Flask/Werkzeug request/response/context proxies, graphql-core execution context/types, WSGI environ, HTTPX objects, sqlite3 rows/connections/exceptions and identity SDK types stay outside Core. Commands can contain raw invalid input; Domain constructors enforce actual valid state. Adapters may directly call public Domain constructors for technical adaptation without orchestrating the use case. Application may directly use Domain values; no redundant mapping solely for layering.
+- **Boundary contracts**: Keep [SDL](contracts/schema.graphqls) and [contract](contracts/enrollment-api.md). Flask/Werkzeug request/response/context proxies, graphql-core execution context/types, WSGI environ, HTTPX objects, sqlite3 rows/connections/exceptions and identity SDK types stay outside Core. Commands can contain raw invalid input; Domain factories return explicit validation outcomes before guarded construction of valid state. Adapters may directly call public Domain constructors for technical adaptation without orchestrating the use case. Application may directly use Domain values; no redundant mapping solely for layering.
 - **Port ownership / context**: One Enrollment context. Application owns IdentityVerifier and EnrollmentUnitOfWork/Factory Protocols because orchestration needs them. Domain needs no external capability port. No cross-context messaging or distributed transactions.
 - **Transaction coordination**: Application invokes its IdentityVerifier port. A failed verification returns the Core-defined DENIED immediately, without a Domain ownership call or persistence. On success it passes the trusted VerifiedIdentity and validated target StudentId to Domain ownership policy; mismatch returns DENIED before persistence. It loads Student, Programme and Course sequentially, handles each absent repository result by immediately returning its Core-defined missing-record rejection, and calls Domain duplicate and offering-eligibility policies only when their prerequisite records exist. It creates Enrollment through Domain, adds and commits through the port, then returns success. No trivial Domain existence guards or duplicate Application business predicates are introduced. The sqlite3 adapter implements explicit SQL BEGIN IMMEDIATE/COMMIT/ROLLBACK with autocommit=True and closes its worker-owned connection. No SQL or business predicates in the GraphQL resolver.
 - **Rejection ownership and ordering**: Application owns FR-009 sequencing: unverified identity -> non-owner -> missing Student -> missing Programme -> missing Course -> already enrolled -> course not offered. Application handles unverified identity at stage 1; Domain ownership decides mismatch at stage 2 only after verification succeeds. Neither denial accesses persistence. Application handles repository absence for the next three; Domain decides duplicate and offering eligibility when reached. Application may branch on typed Domain outcomes to short-circuit but must not recalculate their predicates. Missing-record rejection types live in Application Core contracts; Domain policy reasons remain in Domain and are used directly in the Application result union. Domain never imports Application result types.
@@ -54,10 +54,73 @@ No deviations or constitutional exceptions. No implementation checks are claimed
 - **Application frameworks**: Choose no framework dependencies in Core for this feature. This does not amend the constitution's general permission for appropriate Application frameworks. Dataclasses, enums and typing are standard-library mechanisms; Flask/graphql-core/Waitress/HTTP and database modules remain adapters/bootstrap.
 - **Fitness scope**: Import Linter layers order bootstrap -> adapters -> application -> domain, explicitly permitting adapters to use public Domain types. Forbid outward dependencies, cycles, unrelated sibling adapter coupling and external framework/persistence/provider imports in Core, including re-exports and annotation imports. Include external-package graphs for forbidden-import contracts. AST/signature tests inspect public contracts, resolve aliases and reject external types/unchecked Any; forbid dynamic-import escape hatches in Core. Fail empty scope/scans. Violating fixtures prove detection. Semantic leakage through data containers requires converter tests and review, beyond import rules.
 - **TDD scope**: Every independently testable business/adapter behavior begins with an executed expected behavioral failure. Acceptance guides inner tests; broad tests may drive multiple layers if their failures demonstrate each changed responsibility. Configuration/documentation validation does not require artificial Red. Pure refactors begin green and rerun relevant checks. Import/configuration errors are not behavioral Red. Do not weaken tests merely to make code pass.
-- **Approval**: Project Owner remains specification/change and future exclusion approval authority. The existing ready-for-planning spec is the baseline. Python selection is explicitly authorized; the updated spec authorizes the Student detail extension; the ratified constitution is unchanged.
+- **Approval**: Project Owner remains specification/change and future exclusion approval authority. The existing ready-for-planning spec is the baseline. Python selection is explicitly authorized; the updated spec authorizes the Student detail extension; this plan is aligned with the current Constitution v1.4.0; no new ratification claim is made.
 - **Evidence**: Retain commands, stdout/stderr, exit codes, execution order, test identity and source revision plus working-tree diff digest under `specs/001-enroll-course/evidence/<increment>/`. Preserve Red before production change, Green after minimum behavior, Refactor passing tests or no-refactor rationale. Final manifest binds mandatory checks to source/config/test digest excluding evidence/build output. Later edits invalidate affected results and final gates rerun. Reviewer inspects transcripts, not summaries alone.
 - **Coverage scope**: Entire `src/enrollment/domain/` and `src/enrollment/application/`, including constructors, reconstitution, Domain invariant/authorization/duplicate/eligibility policies, Application identity-verification and repository absence branches, result decisions and orchestration. coverage.py branch=True and fail_under=100 across complete source directories is stronger than the whole-function branch minimum and covers unchanged branches too. Audit discovery of unimported files and default/custom exclusions; no business omissions or no-cover/no-branch suppressions. Include any business behavior introduced elsewhere. No-branch functions require behavior tests. Technical wiring/tooling may remain outside the business threshold only while free of business decisions; all adapter responsibilities still require tests.
 - **Static configuration**: mypy targets Python 3.12, strict mode, warn_unused_ignores, warn_unreachable and disallow_any_unimported; reject broad ignored imports and unexplained casts/Any/suppressions. Isolate justified library typing gaps to checked adapter bridges. Ruff targets py312 with E4/E7/E9, F, I, B and UP rules plus format --check. Import Linter and architecture tests above are mandatory. Pin all configurations/versions in pyproject.toml and uv.lock. None is only an editor recommendation.
+
+### Failure contracts — Constitution v1.4.0 alignment
+
+Expected validation failures and business rejections MUST be returned contractual
+outcomes. This applies to existing identifier validation and enrollment conflict
+handling as well as the Student details extension. Exception-based expected paths
+in the current implementation are migration work, not accepted design exceptions.
+
+- **Domain validation**: expose result-returning factories for identifiers, required
+  text, and records built from untrusted values. A factory returns the valid Domain
+  value or a typed validation failure; it MUST NOT construct an invalid object and
+  catch a constructor exception as routine validation. Domain owns the validation
+  predicates and applies them during construction, restoration and transitions.
+  Guarded constructors may raise for internal misuse of their valid-value contract;
+  callers MUST NOT use those guards as input parsers or translate programming errors
+  into business outcomes. Student and Enrollment factories preserve record invariants.
+- **Application validation**: coordinate factories and branch on their outcomes before
+  invoking operations requiring valid values. Preserve verification -> target-ID
+  validation -> ownership -> course-ID validation -> ordered prerequisite/policy checks.
+  Student provisioning validates IDs, then name, then email and returns the first
+  invalid field. Error accumulation is permitted by the constitution but not selected
+  for this feature; FR-009 remains exactly first-match. No duplicate validation rules
+  in Application and no blanket ValueError/TypeError catch to return INVALID_REQUEST.
+- **Expected port outcomes**: repository reads return a valid record or None for
+  absence. IdentityVerifier returns VerifiedIdentity or None for negative verification.
+  Enrollment add returns Added | PairConflict; Student insert/replace returns
+  Saved | EmailKeyConflict. These are Core-owned values, never exception subclasses.
+  Ports do not return transport enums or infrastructure exception objects.
+- **Conflict coordination**: PairConflict causes rollback/close and at most one fresh
+  full ordered enrollment attempt, preserving FR-009 precedence. A second conflict
+  is a technical StorageFailure, not an unverified ALREADY_ENROLLED assertion.
+  EmailKeyConflict is a precise persistence fact translated by Application into the
+  Domain email-conflict outcome; unrelated integrity errors MUST NOT become conflicts.
+  Adapters may catch the database driver's precise constraint exception to implement
+  these outcome contracts; that exception MUST NOT cross the port boundary.
+- **Unexpected failures**: adapters translate only documented database/row-corruption
+  failures to Application-owned StorageFailure, and documented provider operational
+  failures to IdentityUnavailable. These technical exceptions remain permitted;
+  Application translates them to PERSISTENCE_FAILURE/StudentStorageFailure result or
+  IDENTITY_UNAVAILABLE respectively, never DENIED, missing-record, invalid-input,
+  or email-conflict results. Student operation's StudentStorageFailure result and the
+  technical exception are distinct types, even if existing terminology overlaps.
+  Unexpected programming/contract exceptions propagate to the outer host/transport
+  error handler and become sanitized internal errors with diagnostic recording;
+  no broad catch in a validator, verifier or use case reclassifies them as business
+  rejections or provider outages. Raw exception detail remains outside public output.
+- **Cleanup**: rollback active work and close on rejection/exception; do not mask the
+  primary failure with cleanup failure. A technical cleanup failure must be recorded
+  and must not become a business rejection or delete a confirmed committed record.
+
+**Migration and verification**: replace current Application catches of constructor
+ValueError and UniqueConflict with typed-result branches; remove UniqueConflict as
+an exception port contract. Narrow the identity adapter's broad Exception catch to
+its documented operational failures. Persistence row decoding must inspect factory
+results explicitly rather than catch arbitrary ValueError from converter code; an
+invalid provider representation is a technical boundary-contract failure, while
+unrelated converter/programming defects propagate. Update affected contracts, doubles and tests;
+keep public GraphQL SDL/reason names and HTTP semantics unchanged. Drive each changed
+behavior with fresh acceptance/inner Red evidence, including invalid raw IDs, invalid
+text, conflicts, provider outages, corrupt stored rows, and injected programming
+errors. Factory results and port conflict branches join complete Core coverage.
+Post-design Principles I–V: PASS at design level; implementation conformity remains
+unverified until the new work and mandatory checks are complete.
 
 ## Project Structure
 
@@ -121,7 +184,7 @@ The current Student dataclass and students table contain only student_id/program
 ### Responsibilities and acceptance boundaries
 
 - Domain: add frozen StudentName and StudentEmail values in domain/values.py, validating actual string type and at least one non-whitespace character. Preserve supplied text. Student requires these values and rejects wrong types during construction/reconstitution/replacement. StudentEmail exposes the whole-text casefold comparison key. Domain owns the email-availability policy, including self-exclusion, and typed invalid-detail/email-conflict reasons.
-- Application: add an internal student-record integration operation in application/student_details.py with separate Application-owned student-record UoW Protocols. It accepts raw ID/programme/name/email input for create or replace, constructs valid Domain values, loads a conflicting owner by email key, invokes the Domain uniqueness policy, saves and commits. Missing replacement target yields a typed missing-student result; create for an existing ID yields a separate existing-student result. Neither is an email conflict. No programme existence prerequisite is added; dangling programme references remain representable. This operation is a host integration boundary, with no new HTTP/GraphQL management interface or authentication flow.
+- Application: add an internal student-record integration operation in application/student_details.py with separate Application-owned student-record UoW Protocols. It accepts raw ID/programme/name/email input for create or replace, obtains valid Domain values through result-returning factories, loads a conflicting owner by email key, invokes the Domain uniqueness policy, saves and commits. Missing replacement target yields a typed missing-student result; create for an existing ID yields a separate existing-student result. Neither is an email conflict. No programme existence prerequisite is added; dangling programme references remain representable. This operation is a host integration boundary, with no new HTTP/GraphQL management interface or authentication flow.
 - Persistence: extend schema.sql and row conversion; implement the separate student-record UoW in the existing persistence adapter. Keep enrollment UoW write capabilities limited to Enrollment. Use BEGIN IMMEDIATE before conflict lookup and save, explicit rollback/commit, and specific error translation. No adapter selects Domain email policy or orchestrates the whole operation.
 - Acceptance: preserve Flask POST /graphql for User Story 1. For User Story 2, call the public Python integration operation with real temporary SQLite and observe returned result plus reopened stored state; no HTTP management route is invented. Each new behavior begins with an executed failing acceptance test, followed by layer tests as needed. Reconstitution also has direct Domain/adapter tests; corrupted persisted Student data remains PERSISTENCE_FAILURE during enrollment, never MISSING_STUDENT or a new FR-009 business step.
 
@@ -146,3 +209,32 @@ Extend scripts/assemble_evidence.py and scripts/check_evidence.py to require bot
 ## Complexity Tracking
 
 No constitutional violations or waivers. Flask handles HTTP integration; direct graphql-core keeps GraphQL schema/resolver wiring explicit. Both stay in inbound adapters with behavioral tests. WSGI serving matches synchronous sqlite3 and avoids async coordination machinery; no additional external infrastructure is required.
+
+## StudentEmail equality and Student identity
+
+StudentEmail is an immutable value object. Two StudentEmail instances are equal
+if and only if their complete supplied email strings have equal Unicode
+`str.casefold()` keys. Preserve original spelling for display/storage; it does not
+participate separately in equality. Implement equality and hashing together rather
+than use default dataclass field equality/hash over the original spelling.
+`hash(email)` is derived from that same comparison key, so equal values always
+have equal hashes. Hashes are process-local collection behavior, never persisted
+keys or stable identifiers.
+
+Equality is supported only between StudentEmail instances. For other operand types,
+`__eq__` returns NotImplemented; do not coerce strings, StudentName, or other objects
+into emails. Inequality follows the same value semantics. Domain owns the comparison
+key used by equality, hashing, the uniqueness policy and persistence indexing, so
+these mechanisms cannot disagree. No trimming, Unicode normalization, syntax rules,
+provider aliases, or partial-address comparison is added.
+
+Student entity identity and entity equality remain based exclusively on StudentId.
+Changing name/email/programme does not change that identity; two distinct StudentIds
+never become the same Student because their emails compare equal. If Student is
+hashable, hash by immutable StudentId consistently; email must never enter its hash.
+Email uniqueness remains a separate Domain rule backed by atomic persistence.
+
+Pre-design and post-design gates: PASS at design level under Constitution v1.4.0.
+No new dependency or unresolved planning choice. Require fresh behavioral Red for
+value equality, hashing, heterogeneous comparison and Student identity; include
+whole affected methods in the existing complete Core coverage/evidence gates.
