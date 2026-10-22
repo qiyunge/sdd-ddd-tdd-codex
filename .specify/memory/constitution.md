@@ -49,6 +49,21 @@ external validation for invariant enforcement. Application MAY hold invalid,
 incomplete, or unvalidated input and intermediate state, but MUST NOT represent
 such state as valid Domain objects.
 
+Predictable input validation failures and business rejections MUST be represented
+through explicit failure results rather than exceptions used for normal control flow.
+Domain MUST define and enforce its own invariants. Application MUST coordinate
+validation of untrusted input and MAY accumulate independent validation errors before
+invoking operations that require valid Domain values.
+
+Exceptions MAY be used for unexpected technical failures, programming errors, and
+violations of internal contracts. Such exceptions MUST NOT be silently converted
+into business rejections.
+
+Boundary contracts MUST distinguish expected failures from unexpected failures and
+define how each is propagated or translated. Infrastructure-specific exception types
+MUST NOT leak into Domain or Application contracts. These rules make expected
+outcomes explicit while preserving visibility of unexpected failures.
+
 Full Bridge boundary isolation MUST use explicit contracts and conversions wherever
 representations differ and MUST prevent external Infrastructure and Transport
 representations from leaking into Core. Conversions into Domain MUST preserve
@@ -205,7 +220,4 @@ and amendment date and record its impact for review. Specifications, plans, and
 completion reviews MUST assess compliance and explicitly report deviations; a plan
 alone MUST NOT waive a mandatory constitutional rule.
 
-Ratification record: On 2026-10-21, the Project Owner explicitly approved Constitution
-v1.3.0 for ratification in this session. This paragraph records that approval.
-
-**Version**: 1.3.0 | **Ratified**: 2026-10-21 | **Last Amended**: 2026-10-21
+**Version**: 1.4.0 | **Ratified**: 2026-10-21 | **Last Amended**: 2026-10-21
