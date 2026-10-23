@@ -31,6 +31,11 @@
 
 ## Notes
 
+- Current review, 2026-10-22: all 16 criteria pass for Constitution v3.0.0 alignment and the subsequent clarification review. Earlier dated reviews below describe historical baselines.
+- FR-015–FR-017 cover persistence-confirmed business identities, atomic creation and replacement, rollback after explicit rejection or exceptions, commit boundaries, and restoration without replaying creation-only eligibility. US1 scenarios 16–19, US2 scenarios 11–13, and SC-008–SC-010 provide corresponding acceptance outcomes. Governance constraints inherit Repository lifecycle and verification duties without selecting implementation technologies.
+- Clarification review resolved FR-014's phrase "before the missing-course check" using the existing plan's ordered flow and data-model identifier contract: after ownership succeeds, course identity validation precedes all prerequisite lookups. US1 scenario 19 and SC-002 now cover mixed invalid-input and missing-record cases. No unanswered critical questions or clarification markers remain; no new user answer was assumed.
+- Next phase: `$speckit-plan` to reassess Repository entry points, identity confirmation, transactions, construction/restoration contracts, and verification against v3.0.0; task reassessment follows planning. These 16/16 specification checks do not certify implementation, execution of the new acceptance scenarios, or historical TDD compliance.
+
 - Final review: all 16 criteria satisfied. These results assess specification quality, not implemented behavior.
 - Q1 resolved with option C: verify identity and ownership before disclosing business rejection details. FR-007 and FR-009, mixed-failure acceptance scenarios, edge cases, and success criteria now agree.
 - FR-009 uses first-match rejection in a defined order, with identity and ownership checks first; error accumulation is excluded.
