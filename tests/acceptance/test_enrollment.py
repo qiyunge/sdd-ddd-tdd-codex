@@ -45,7 +45,8 @@ def request(app, token="s", student="s", course="c"):
     ],
     ids=lambda value: str(value),
 )
-def test_scenario(database, scenario, expected, monkeypatch):
+def test_scenario(database, scenario, expected, monkeypatch, record_property):
+    record_property("scenario", f"enrollment-{scenario}")
     with connect(database) as c:
         if scenario == 2:
             c.execute("INSERT INTO programmes VALUES ('p2')")
@@ -132,3 +133,96 @@ def test_unusable_identifiers_are_invalid_requests(database):
     )
     assert "errors" in non_text
     assert not (non_text.get("data") or {}).get("enrollCourse")
+
+
+@pytest.mark.parametrize("fault", ["rejection", "exception"])
+def test_enrollment_16_factory_failure_after_insert(
+    database, monkeypatch, fault, record_property
+):
+    from enrollment.adapters.persistence import sqlite as adapter
+    from enrollment.domain.models import Enrollment
+    from enrollment.domain.outcomes import Rejection
+
+    record_property("scenario", "enrollment-16")
+    active = []
+    acknowledged = []
+    original = adapter.Session.__init__
+
+    def opened(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        active.append(self)
+
+    def factory(student, course):
+        acknowledged.append(
+            active[-1]
+            .connection.execute("SELECT student_id,course_id FROM enrollments")
+            .fetchall()
+            == [("s", "c")]
+        )
+        if fault == "exception":
+            raise RuntimeError("factory secret")
+        return Rejection.COURSE_NOT_OFFERED
+
+    monkeypatch.setattr(adapter.Session, "__init__", opened)
+    monkeypatch.setattr(Enrollment, "create", staticmethod(factory))
+    result = request(create_app(database, lambda c: c))
+    assert acknowledged == [True], (
+        "Repository must acknowledge INSERT before Domain construction"
+    )
+    assert rows(database) == []
+    assert "secret" not in str(result)
+    if fault == "rejection":
+        assert result["data"]["enrollCourse"]["reason"] == "COURSE_NOT_OFFERED"
+    else:
+        assert result["errors"][0]["message"] == "Internal server error"
+
+
+def test_enrollment_17_definite_commit_failure(database, monkeypatch, record_property):
+    from enrollment.adapters.persistence import sqlite as adapter
+
+    record_property("scenario", "enrollment-17")
+    monkeypatch.setattr(
+        adapter.Session,
+        "commit",
+        lambda self: (_ for _ in ()).throw(adapter.StorageFailure("definite failure")),
+    )
+    result = request(create_app(database, lambda c: c))
+    assert result["data"]["enrollCourse"]["failureReason"] == "PERSISTENCE_FAILURE"
+    assert rows(database) == []
+
+
+def test_enrollment_18_restore_historical_pair(database, record_property):
+    from enrollment.adapters.persistence.sqlite import Session
+    from enrollment.domain.values import CourseId, StudentId
+
+    record_property("scenario", "enrollment-18")
+    app = create_app(database, lambda c: c)
+    assert request(app)["data"]["enrollCourse"]["__typename"] == "EnrollCourseSuccess"
+    with connect(database) as db:
+        db.execute("DELETE FROM programme_course_offerings")
+    session = Session(database)
+    try:
+        saved = session.enrollment(StudentId.create("s"), CourseId.create("c"))
+        assert saved.student_id.value == "s" and saved.course_id.value == "c"
+    finally:
+        session.close()
+    assert request(app)["data"]["enrollCourse"]["reason"] == "ALREADY_ENROLLED"
+
+
+@pytest.mark.parametrize("missing", ["student", "programme"])
+@pytest.mark.parametrize(
+    "token,expected",
+    [("s", "INVALID_REQUEST"), ("other", "DENIED"), ("invalid", "DENIED")],
+)
+def test_enrollment_19_invalid_course_precedes_lookup(
+    database, missing, token, expected, record_property
+):
+    record_property("scenario", "enrollment-19")
+    with connect(database) as db:
+        db.execute(
+            "DELETE FROM students" if missing == "student" else "DELETE FROM programmes"
+        )
+    app = create_app(database, lambda c: None if c == "invalid" else c)
+    result = request(app, token=token, course="")["data"]["enrollCourse"]
+    assert result.get("failureReason", result.get("reason")) == expected
+    assert rows(database) == []

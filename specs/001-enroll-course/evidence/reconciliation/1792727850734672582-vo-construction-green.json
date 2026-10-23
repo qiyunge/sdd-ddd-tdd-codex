@@ -1,0 +1,22 @@
+{
+  "increment": "vo-construction",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "-q",
+    "tests/domain",
+    "tests/adapters/test_sqlite.py",
+    "tests/adapters/test_student_uow.py",
+    "tests/adapters/test_repository_lifecycle.py",
+    "tests/architecture/test_boundaries.py"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 58%]\n....................................................                     [100%]\n124 passed in 2.42s\n",
+  "stderr": "",
+  "started_ns": 1792727850734672582,
+  "finished_ns": 1792727853427838051,
+  "implementation_state": "25a1554debfc77ee7e6f4921e22bee37f025f1605ffec1668193ecef5cf6a483",
+  "implementation_state_after": "25a1554debfc77ee7e6f4921e22bee37f025f1605ffec1668193ecef5cf6a483",
+  "test_id": "selection: tests/domain tests/adapters/test_sqlite.py tests/adapters/test_student_uow.py tests/adapters/test_repository_lifecycle.py tests/architecture/test_boundaries.py",
+  "activity": "inner"
+}

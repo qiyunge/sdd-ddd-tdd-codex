@@ -23,5 +23,15 @@ class InvalidPersistedState:
     """Stored state violates a persisted invariant."""
 
 
+@dataclass(frozen=True)
+class InvalidSavedVersion:
+    """Replacement did not supply a usable saved version."""
+
+
+@dataclass(frozen=True)
+class OutdatedVersion:
+    """Caller must deliberately reload before trying another replacement."""
+
+
 class DetailRejection(StrEnum):
     EMAIL_CONFLICT = "EMAIL_CONFLICT"

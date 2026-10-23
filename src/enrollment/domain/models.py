@@ -54,6 +54,23 @@ class Student:
     def __hash__(self) -> int:
         return hash(self.student_id)
 
+    def replace_details(
+        self, programme_id: ProgrammeId, name: StudentName, email: StudentEmail
+    ) -> Student:
+        """Retain immutable identity, equality/hash by StudentId only.
+
+        Programme existence is not a construction/restoration invariant.
+        StudentName and StudentEmail require actual strings with a non-whitespace character under the existing Python 3.12 text rules.
+        Preserve original text.
+        StudentEmail equality/hash uses complete `str.casefold()` output, including multi-character expansions; whitespace, Unicode composition, dots and plus tags are not normalized.
+        Names are not unique.
+        """
+        if not isinstance(programme_id, ProgrammeId):
+            raise ValueError("Student transition requires ProgrammeId")
+        if not isinstance(name, StudentName) or not isinstance(email, StudentEmail):
+            raise ValueError("Student transition requires typed name and email")
+        return Student(self.student_id, programme_id, name, email)
+
     def __post_init__(self) -> None:
         if not isinstance(self.student_id, StudentId):
             raise ValueError("student_id requires StudentId")

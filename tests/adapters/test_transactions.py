@@ -10,7 +10,7 @@ PAIR = Enrollment.create(StudentId("s"), CourseId("c"))
 
 def test_commit_and_reconstitution(database):
     s = Session(database)
-    s.add(PAIR)
+    s.create_enrollment(PAIR.student_id, PAIR.course_id)
     s.commit()
     s.close()
     assert rows(database) == [("s", "c")]
@@ -23,7 +23,7 @@ def test_commit_and_reconstitution(database):
 
 def test_rollback(database):
     s = Session(database)
-    s.add(PAIR)
+    s.create_enrollment(PAIR.student_id, PAIR.course_id)
     s.close()
     assert rows(database) == []
 
@@ -44,7 +44,7 @@ def test_explicit_rollback_and_sql_trace(database):
     assert session.connection.autocommit is True
     assert session.connection.in_transaction is True
     assert session.connection.execute("PRAGMA busy_timeout").fetchone() == (5000,)
-    session.add(PAIR)
+    session.create_enrollment(PAIR.student_id, PAIR.course_id)
     session.rollback()
     session.close()
     assert "ROLLBACK" in trace
@@ -62,7 +62,7 @@ def test_non_pair_unique_is_storage_failure(database):
     session = Session(database)
     try:
         with pytest.raises(StorageFailure) as failure:
-            session.add(PAIR)
+            session.create_enrollment(PAIR.student_id, PAIR.course_id)
         assert isinstance(failure.value, StorageFailure)
     finally:
         session.close()
@@ -76,15 +76,17 @@ def test_pair_unique_and_foreign_key_classification(tmp_path):
     initialize(path)
     with connect(path) as db:
         db.execute(
-            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('s','p','Alex','alex@example.com')"
+            "INSERT INTO students(student_id,programme_id,name,email,saved_version) VALUES ('s','p','Alex','alex@example.com',1)"
         )
         db.execute("INSERT INTO courses VALUES ('c')")
         db.execute("INSERT INTO enrollments VALUES ('s','c')")
     session = Session(path)
     try:
-        assert session.add(PAIR) == PairConflict
+        assert (
+            session.create_enrollment(PAIR.student_id, PAIR.course_id) == PairConflict
+        )
         with pytest.raises(StorageFailure) as failure:
-            session.add(Enrollment.create(StudentId("missing"), CourseId("c")))
+            session.create_enrollment(StudentId("missing"), CourseId("c"))
         assert isinstance(failure.value, StorageFailure)
     finally:
         session.close()

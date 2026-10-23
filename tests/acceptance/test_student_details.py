@@ -35,7 +35,7 @@ def test_student_details_1(tmp_path):
     initialize(path)
     result = invoke(path)
     assert result is not None, "valid student must be committed and returned"
-    assert result.student_id.value == "s"
+    assert result.student.student_id.value == "s"
     with connect(path) as c:
         assert c.execute("SELECT name,email FROM students").fetchone() == (
             "Alex",
@@ -98,7 +98,10 @@ def test_student_details_4(tmp_path, existing, email):
     initialize(path)
     invoke(path, email=existing)
     result = invoke(path, student_id="other", email=email)
-    assert result is not None and getattr(result, "student_id", None) is not None
+    assert (
+        result is not None
+        and getattr(getattr(result, "student", None), "student_id", None) is not None
+    )
     with connect(path) as db:
         assert db.execute(
             "SELECT student_id,email FROM students ORDER BY student_id"
@@ -109,9 +112,12 @@ def test_student_details_5(tmp_path):
     path = tmp_path / "db"
     initialize(path)
     invoke(path)
-    result = invoke(path, mode="replace", email="aLEX@EXAMPLE.COM")
-    assert result is not None and getattr(result, "email", None) is not None
-    assert result.email.value == "aLEX@EXAMPLE.COM"
+    result = invoke(path, mode="replace", expected_version=1, email="aLEX@EXAMPLE.COM")
+    assert (
+        result is not None
+        and getattr(getattr(result, "student", None), "email", None) is not None
+    )
+    assert result.student.email.value == "aLEX@EXAMPLE.COM"
 
 
 def test_student_details_6(tmp_path):
@@ -123,7 +129,13 @@ def test_student_details_6(tmp_path):
         results = list(
             pool.map(lambda identity: invoke(path, student_id=identity), ["a", "b"])
         )
-    assert sum(getattr(r, "student_id", None) is not None for r in results) == 1
+    assert (
+        sum(
+            getattr(getattr(r, "student", None), "student_id", None) is not None
+            for r in results
+        )
+        == 1
+    )
     assert results.count("EMAIL_CONFLICT") == 1
 
 
@@ -132,9 +144,14 @@ def test_student_details_7(tmp_path):
     initialize(path)
     invoke(path)
     invoke(path, student_id="other", email="other@example.com")
-    accepted = invoke(path, mode="replace", name="New", email="new@example.com")
-    assert getattr(accepted, "name", None) is not None
-    assert invoke(path, mode="replace", email="other@example.com") == "EMAIL_CONFLICT"
+    accepted = invoke(
+        path, mode="replace", expected_version=1, name="New", email="new@example.com"
+    )
+    assert getattr(getattr(accepted, "student", None), "name", None) is not None
+    assert (
+        invoke(path, mode="replace", expected_version=2, email="other@example.com")
+        == "EMAIL_CONFLICT"
+    )
     with connect(path) as c:
         assert c.execute(
             "SELECT name,email FROM students WHERE student_id='s'"
@@ -151,7 +168,7 @@ def test_student_details_8(tmp_path):
 def test_student_details_9(tmp_path):
     path = tmp_path / "db"
     initialize(path)
-    assert invoke(path, mode="replace") == "STUDENT_NOT_FOUND"
+    assert invoke(path, mode="replace", expected_version=1) == "STUDENT_NOT_FOUND"
 
 
 def test_student_details_10(tmp_path):
@@ -187,12 +204,19 @@ def test_replacement_claims_are_atomic(tmp_path):
                     path,
                     student_id=identity,
                     mode="replace",
+                    expected_version=1,
                     email="shared@example.com",
                 ),
                 ["a", "b"],
             )
         )
-    assert sum(getattr(r, "student_id", None) is not None for r in results) == 1
+    assert (
+        sum(
+            getattr(getattr(r, "student", None), "student_id", None) is not None
+            for r in results
+        )
+        == 1
+    )
     assert results.count("EMAIL_CONFLICT") == 1
     with connect(path) as db:
         rows = db.execute(
@@ -212,3 +236,275 @@ def test_invalid_replacement_preserves_details(tmp_path):
             "Alex",
             "Alex@Example.com",
         )
+
+
+def test_student_details_11(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    result = invoke(path)
+    assert getattr(result, "saved_version", None) is not None, (
+        "Committed creation must return a saved-version snapshot"
+    )
+    assert result.saved_version.value == 1
+    assert result.student.student_id.value == "s"
+    assert result.student.name.value == "Alex"
+    from enrollment.application.student_details import get_student
+
+    assert (
+        get_student(
+            "s",
+            lambda: __import__(
+                "enrollment.adapters.persistence.sqlite", fromlist=["StudentSession"]
+            ).StudentSession(path),
+        )
+        == result
+    )
+
+
+@pytest.mark.parametrize("fault", ["rejection", "exception", "commit"])
+def test_student_details_12(tmp_path, monkeypatch, fault):
+    from enrollment.adapters.persistence import sqlite as adapter
+    from enrollment.domain.models import Student
+    from enrollment.domain.outcomes import InvalidStudentDetails
+
+    path = tmp_path / "db"
+    initialize(path)
+    active = []
+    confirmed = []
+    original = adapter.StudentSession.__init__
+
+    def opened(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        active.append(self)
+
+    def factory(*args):
+        confirmed.append(
+            active[-1].connection.execute("SELECT student_id FROM students").fetchall()
+            == [("s",)]
+        )
+        if fault == "exception":
+            raise RuntimeError("creation defect")
+        return InvalidStudentDetails("name")
+
+    monkeypatch.setattr(adapter.StudentSession, "__init__", opened)
+    if fault == "commit":
+        monkeypatch.setattr(
+            adapter.StudentSession,
+            "commit",
+            lambda self: (_ for _ in ()).throw(adapter.StorageFailure()),
+        )
+        assert invoke(path) == "STUDENT_STORAGE_FAILURE"
+    else:
+        monkeypatch.setattr(Student, "create", staticmethod(factory))
+        if fault == "exception":
+            with pytest.raises(RuntimeError, match="creation defect"):
+                invoke(path)
+        else:
+            assert invoke(path) == InvalidStudentDetails("name")
+        assert confirmed == [True], (
+            "Student INSERT acknowledgment must precede construction"
+        )
+    with connect(path) as db:
+        assert db.execute("SELECT * FROM students").fetchall() == []
+
+
+def test_student_details_13(tmp_path, monkeypatch):
+    from enrollment.adapters.persistence import sqlite as adapter
+
+    path = tmp_path / "db"
+    initialize(path)
+    initial = invoke(path)
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            adapter.StudentSession,
+            "commit",
+            lambda self: (_ for _ in ()).throw(adapter.StorageFailure()),
+        )
+        assert (
+            invoke(path, mode="replace", expected_version=1, name="Changed")
+            == "STUDENT_STORAGE_FAILURE"
+        )
+    with connect(path) as db:
+        assert db.execute("SELECT name,email FROM students").fetchone() == (
+            "Alex",
+            "Alex@Example.com",
+        )
+    assert getattr(initial, "saved_version", None) is not None
+    from enrollment.application.student_details import get_student
+
+    assert get_student("s", lambda: adapter.StudentSession(path)) == initial
+
+
+def test_initial_stale_replacement_is_rejected(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    invoke(path)
+    assert (
+        type(invoke(path, mode="replace", expected_version=9)).__name__
+        == "OutdatedVersion"
+    ), "Domain version policy must reject stale input"
+
+
+def read_student(path, identity="s"):
+    from enrollment.adapters.persistence.sqlite import StudentSession
+    from enrollment.application.student_details import get_student
+
+    return get_student(identity, lambda: StudentSession(path))
+
+
+def test_student_details_14(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    path = tmp_path / "db"
+    initialize(path)
+    saved = invoke(path)
+    original_version = saved.saved_version.value
+    start = Barrier(2)
+
+    def replace(label):
+        start.wait(3)
+        return invoke(
+            path,
+            mode="replace",
+            expected_version=original_version,
+            programme_id=label,
+            name=label,
+            email=label + "@example.com",
+        )
+
+    with ThreadPoolExecutor(2) as pool:
+        results = list(pool.map(replace, ["a", "b"]))
+    winners = [r for r in results if getattr(r, "saved_version", None) is not None]
+    assert len(winners) == 1, "Exactly one same-version replacement must commit"
+    assert sum(type(r).__name__ == "OutdatedVersion" for r in results) == 1
+    winner = winners[0]
+    assert winner.saved_version.value == original_version + 1
+    current = read_student(path)
+    assert current.student.name == winner.student.name
+    assert current.student.programme_id == winner.student.programme_id
+    assert current.student.email.value == winner.student.email.value
+    assert current.saved_version == winner.saved_version
+
+
+def test_student_details_15(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    initial = invoke(path)
+    changed = invoke(
+        path, mode="replace", expected_version=initial.saved_version.value, name="B"
+    )
+    assert getattr(changed, "saved_version", None) is not None, (
+        "Replacement must commit a new snapshot"
+    )
+    assert (
+        type(
+            invoke(path, mode="replace", expected_version=initial.saved_version.value)
+        ).__name__
+        == "OutdatedVersion"
+    )
+    reloaded = read_student(path)
+    restored = invoke(
+        path, mode="replace", expected_version=reloaded.saved_version.value
+    )
+    assert restored.saved_version.value == 3 and restored.student.name.value == "Alex"
+    identical = invoke(
+        path, mode="replace", expected_version=restored.saved_version.value
+    )
+    assert identical.saved_version.value == 4
+    assert (
+        type(
+            invoke(path, mode="replace", expected_version=reloaded.saved_version.value)
+        ).__name__
+        == "OutdatedVersion"
+    )
+
+
+@pytest.mark.parametrize(
+    "version", [None, True, False, "1", 1.0, 0, -1, 9223372036854775808]
+)
+def test_student_details_16(tmp_path, version):
+    path = tmp_path / "db"
+    initialize(path)
+    initial = invoke(path)
+    assert (
+        type(invoke(path, mode="replace", expected_version=version)).__name__
+        == "InvalidSavedVersion"
+    )
+    assert read_student(path) == initial
+
+
+@pytest.mark.parametrize("loss", ["response", "uncertain"])
+def test_student_details_17(tmp_path, monkeypatch, loss):
+    from enrollment.adapters.persistence import sqlite as adapter
+
+    path = tmp_path / "db"
+    initialize(path)
+    original = invoke(path)
+    commit = adapter.StudentSession.commit
+
+    def uncertain(self):
+        commit(self)
+        raise adapter.StorageFailure("acknowledgment lost")
+
+    with monkeypatch.context() as patch:
+        if loss == "uncertain":
+            patch.setattr(adapter.StudentSession, "commit", uncertain)
+        response = invoke(
+            path,
+            mode="replace",
+            expected_version=original.saved_version.value,
+            name="Committed",
+        )
+    if loss == "uncertain":
+        assert response == "STUDENT_STORAGE_FAILURE"
+    current = read_student(path)
+    assert current.student.name.value == "Committed", (
+        "Potentially committed state must survive response uncertainty"
+    )
+    assert current.saved_version.value == 2
+    assert (
+        type(
+            invoke(path, mode="replace", expected_version=original.saved_version.value)
+        ).__name__
+        == "OutdatedVersion"
+    )
+    assert read_student(path) == current
+
+
+def test_version_existence_and_email_precedence(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    initial = invoke(path)
+    invoke(path, student_id="other", email="other@example.com")
+    assert (
+        type(
+            invoke(path, mode="replace", expected_version=9, email="other@example.com")
+        ).__name__
+        == "OutdatedVersion"
+    )
+    assert (
+        invoke(
+            path,
+            mode="replace",
+            student_id="missing",
+            expected_version=9,
+            email="other@example.com",
+        )
+        == "STUDENT_NOT_FOUND"
+    )
+    assert (
+        type(
+            invoke(
+                path, mode="replace", student_id="missing", email="other@example.com"
+            )
+        ).__name__
+        == "InvalidSavedVersion"
+    )
+    assert (
+        getattr(
+            invoke(path, mode="replace", name=" ", expected_version=None), "field", None
+        )
+        == "name"
+    )
+    assert read_student(path) == initial

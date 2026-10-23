@@ -24,8 +24,9 @@ class FlowSession(Session):
         self.calls.append("offering")
         return ProgrammeCourseOffering.create(p, c) if self.offered else None
 
-    def add(self, e):
+    def create_enrollment(self, student, course):
         self.calls.append("add")
+        return Enrollment.create(student, course)
 
     def commit(self):
         self.calls.append("commit")
@@ -70,9 +71,9 @@ def test_second_unobservable_conflict_keeps_the_saved_pair():
     from enrollment.application.contracts import PairConflict
 
     class SavedConflict(FlowSession):
-        def add(self, enrollment):
+        def create_enrollment(self, student, course):
             self.calls.append("add")
-            self.retained = enrollment
+            self.retained = Enrollment.create(student, course)
             return PairConflict
 
     sessions = [SavedConflict(), SavedConflict()]
@@ -100,3 +101,33 @@ def test_open_failure():
         enroll(Command("s", "c", "s"), Verifier("s"), failed)
         == Failure.PERSISTENCE_FAILURE
     )
+
+
+def test_repository_receives_validated_values_and_commits_once():
+    class Requested(FlowSession):
+        requested = None
+
+        def create_enrollment(self, student, course):
+            self.requested = (student, course)
+            return Enrollment.create(student, course)
+
+    session = Requested()
+    result = enroll(Command("s", "c", "s"), Verifier("s"), lambda: session)
+    assert session.requested == (StudentId.create("s"), CourseId.create("c")), (
+        "Application must request Repository creation using validated values"
+    )
+    assert result.student_id.value == "s"
+    assert session.calls.count("commit") == 1
+
+
+def test_rejected_repository_creation_never_commits():
+    class Rejected(FlowSession):
+        def create_enrollment(self, student, course):
+            return Rejection.COURSE_NOT_OFFERED
+
+    session = Rejected()
+    assert (
+        enroll(Command("s", "c", "s"), Verifier("s"), lambda: session)
+        == Rejection.COURSE_NOT_OFFERED
+    )
+    assert "commit" not in session.calls

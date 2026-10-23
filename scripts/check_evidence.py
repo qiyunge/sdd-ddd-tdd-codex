@@ -10,7 +10,7 @@ from pathlib import Path
 
 from scripts.acceptance_inventory import STUDENT_CASES
 from scripts.check_quality import FINAL, commands
-from scripts.record import ROOT, digest
+from scripts.record import ROOT, _test_id, digest
 
 
 def chronology_errors(run: dict) -> list[str]:
@@ -25,7 +25,11 @@ def chronology_errors(run: dict) -> list[str]:
         errors.append("Implementation changed during run")
     test_id = run.get("test_id")
     command = " ".join(str(part) for part in run.get("command") or [])
-    if not isinstance(test_id, str) or not test_id or test_id not in command:
+    if (
+        not isinstance(test_id, str)
+        or not test_id
+        or test_id.removeprefix("selection: ") not in command
+    ):
         errors.append("Unrelated or missing test identity")
     if run.get("activity") not in {"acceptance", "inner"}:
         errors.append("Missing activity role")
@@ -36,6 +40,48 @@ def chronology_errors(run: dict) -> list[str]:
         or started > finished
     ):
         errors.append("Invalid execution times")
+    return errors
+
+
+def required_run_errors(runs: list[dict], required: dict) -> list[str]:
+    """New declared work never inherits the output-only historical path."""
+    errors = []
+    for name, associations in required.items():
+        group = [r for r in runs if r.get("increment") == name]
+        if not group or not associations or set(associations) - {"acceptance", "inner"}:
+            errors.append(f"Missing required increment/associations: {name}")
+            continue
+        previous_end = 0
+        for run in group:
+            errors.extend(chronology_errors(dict(run, activity=run.get("activity"))))
+            try:
+                if run.get("test_id") != _test_id(run.get("command", []), None):
+                    errors.append(f"Invalid selection identity: {name}")
+            except ValueError:
+                errors.append(f"Missing test selection: {name}")
+            activity = run.get("activity")
+            targets = associations.get(activity, [])
+            selection = str(run.get("test_id", ""))
+            if not targets or not any(target in selection for target in targets):
+                errors.append(f"Unrelated test/activity association: {name}")
+            if activity == "inner" and "tests/acceptance" in selection:
+                errors.append(f"Mislabeled acceptance activity: {name}")
+            if run.get("started_ns", 0) < previous_end:
+                errors.append(f"Overlapping/reversed executions: {name}")
+            previous_end = run.get("finished_ns", 0)
+        for activity in associations:
+            subset = [r for r in group if r.get("activity") == activity]
+            errors.extend(validate_runs(subset))
+            reds = [r for r in subset if r.get("stage") == "red"]
+            greens = [
+                r
+                for r in subset
+                if r.get("stage") == "green" and r.get("exit_code") == 0
+            ]
+            if reds and greens and reds[-1].get("test_id") != greens[-1].get("test_id"):
+                errors.append(f"Unrelated Red/Green selections: {name}")
+        if "acceptance" in associations and group[0].get("activity") != "acceptance":
+            errors.append(f"Missing acceptance-first execution: {name}")
     return errors
 
 
@@ -102,6 +148,30 @@ def validate(
     errors: list[str] = []
     try:
         state = json.loads(manifest.read_text())
+        required = state.get("required_increments", {})
+        declaration_ref = state.get("increment_declaration")
+        declaration_path = (
+            root
+            / "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
+        )
+        if (
+            declaration_path.exists()
+            or state.get("review", {}).get("constitution") == "3.0.0"
+        ):
+            if (
+                declaration_ref
+                != "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
+                or not required
+            ):
+                errors.append("Missing required increment declaration")
+            elif json.loads(declaration_path.read_text()).get("increments") != required:
+                errors.append("Required increment declaration mismatch")
+        if required != state.get("review", {}).get("required_increments", {}):
+            errors.append("Required increment review mismatch")
+        if required_increments is not None and not required_increments <= set(
+            state.get("increments", {})
+        ) | set(required):
+            errors.append("Missing explicit required increments")
         current = digest(root)
         expected_artifacts = (
             set(state["checks"].values())
@@ -111,6 +181,7 @@ def validate(
             | set(state.get("historical_records", []))
             | ({state["review_reference"]} if "review_reference" in state else set())
             | {ref for refs in state.get("observations", {}).values() for ref in refs}
+            | ({declaration_ref} if declaration_ref else set())
         )
         if set(state["artifacts"]) != expected_artifacts:
             errors.append("Missing artifact hashes")
@@ -241,6 +312,8 @@ def validate(
             "notes"
         ):
             errors.append("Evidence review is missing or has not passed")
+        if required:
+            errors.extend(required_run_errors(runs, required))
     except (OSError, ValueError, KeyError, TypeError, ET.ParseError) as exc:
         errors.append(f"Missing or invalid evidence: {exc}")
     return errors

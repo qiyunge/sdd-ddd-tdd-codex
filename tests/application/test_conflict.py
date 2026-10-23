@@ -8,7 +8,7 @@ from tests.application.test_identity import Verifier
 
 
 class Conflicting(FlowSession):
-    def add(self, e):
+    def create_enrollment(self, student, course):
         self.calls.append("add")
         return PairConflict
 

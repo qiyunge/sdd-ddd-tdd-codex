@@ -78,9 +78,10 @@ supplies the complete record. This operation is not a web endpoint. It returns a
 committed Student or an explicit invalid-input, existence, email-conflict or technical
 failure outcome. Programming defects propagate to the host error boundary.
 
-Value objects expose `.create(raw)` for supplied input and `.reconstitute(raw)` for
-stored input. `.create` returns `InvalidIdentifier` or `InvalidStudentDetails`.
-`.reconstitute` returns `InvalidPersistedState` for unusable stored text.
+Value Objects use `.create(raw)` for both supplied and stored input when their
+validation rules are identical. Invalid input returns `InvalidIdentifier`,
+`InvalidStudentDetails`, or `InvalidSavedVersion`; persistence translates these
+outcomes into `DataIntegrityFailure` when decoding stored values.
 `Programme.create`, `Course.create`, `ProgrammeCourseOffering.create`,
 `Enrollment.create`, and `Student.create` accept already validated Domain values.
 `VerifiedIdentity.create` accepts a `SubjectId`. Record `.reconstitute` restores

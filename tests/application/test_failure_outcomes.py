@@ -12,7 +12,7 @@ from tests.application.test_identity import Verifier
 
 def test_returned_pair_conflict_replays_full_order():
     class First(FlowSession):
-        def add(self, value):
+        def create_enrollment(self, student, course):
             self.calls.append("add")
             return getattr(contracts, "PairConflict", "PAIR_CONFLICT")
 
@@ -58,3 +58,17 @@ def test_cleanup_does_not_mask_programming_failure():
 
     with pytest.raises(AssertionError, match="primary defect"):
         enroll(Command("s", "c", "s"), Verifier("s"), Broken)
+
+
+@pytest.mark.parametrize("missing", [None, "student"])
+def test_cleanup_failure_overrides_pending_ordinary_outcome(missing):
+    class BrokenClose(FlowSession):
+        def close(self):
+            raise contracts.StorageFailure("termination unconfirmed")
+
+    session = BrokenClose()
+    session.missing = missing
+    assert (
+        enroll(Command("s", "c", "s"), Verifier("s"), lambda: session)
+        == Failure.PERSISTENCE_FAILURE
+    )

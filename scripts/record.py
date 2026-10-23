@@ -42,6 +42,7 @@ def capture(
     stage = stage.lower()
     if stage not in {"red", "green", "refactor", "verification"}:
         raise ValueError("Invalid stage")
+    test_id = _test_id(command, request)
     before = digest(root)
     started = time.time_ns()
     result = subprocess.run(command, cwd=root, text=True, capture_output=True)
@@ -59,7 +60,7 @@ def capture(
         finished_ns=time.time_ns(),
         implementation_state=before,
         implementation_state_after=after,
-        test_id=_test_id(command, request),
+        test_id=test_id,
         activity=_activity(command, request),
     )
     (target / f"{started}-{increment}-{stage}.json").write_text(
@@ -70,12 +71,29 @@ def capture(
 
 
 def _test_id(command: list[str], request: dict | None) -> str:
-    if request and isinstance(request.get("test_id"), str) and request["test_id"]:
-        return request["test_id"]
-    for part in command:
-        if "test" in part:
-            return part
-    return " ".join(command)
+    """Identify the requested selection; a command alone cannot prove one test ran."""
+    start = 1
+    if command[1:3] == ["-m", "pytest"]:
+        start = 3
+    selected = []
+    index = start
+    while index < len(command):
+        part = command[index]
+        if part in {"-k", "-m"} and index + 1 < len(command):
+            selected.extend([part, command[index + 1]])
+            index += 2
+            continue
+        if part.startswith(("-k=", "-m=")):
+            selected.append(part)
+        elif not part.startswith("-") and (part.startswith("tests/") or ".py" in part):
+            selected.append(part)
+        index += 1
+    if not selected:
+        raise ValueError("Missing meaningful test identity")
+    identity = "selection: " + " ".join(selected)
+    if request and request.get("test_id") not in (None, identity):
+        raise ValueError("Explicit test identity does not identify the full selection")
+    return identity
 
 
 def _activity(command: list[str], request: dict | None) -> str:

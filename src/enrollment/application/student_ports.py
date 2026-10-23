@@ -1,15 +1,35 @@
 from typing import Protocol
 
-from enrollment.domain.models import Student
-from enrollment.domain.values import StudentId
+from enrollment.domain.outcomes import InvalidStudentDetails
+from enrollment.domain.values import (
+    ProgrammeId,
+    SavedVersion,
+    StudentEmail,
+    StudentId,
+    StudentName,
+)
 
-from .student_contracts import StudentWrite
+from .student_contracts import StudentResult, StudentSnapshot, StudentWrite
 
 
 class StudentUnitOfWork(Protocol):
-    def student(self, identity: StudentId) -> Student | None: ...
+    def snapshot(self, identity: StudentId) -> StudentSnapshot | None: ...
     def email_owner(self, key: str) -> StudentId | None: ...
-    def save(self, candidate: Student, replace: bool) -> StudentWrite: ...
+    def create_student(
+        self,
+        identity: StudentId,
+        programme: ProgrammeId,
+        name: StudentName,
+        email: StudentEmail,
+    ) -> StudentSnapshot | StudentWrite | StudentResult | InvalidStudentDetails: ...
+    def replace_student(
+        self,
+        identity: StudentId,
+        programme: ProgrammeId,
+        name: StudentName,
+        email: StudentEmail,
+        expected_version: SavedVersion,
+    ) -> StudentSnapshot | StudentWrite | StudentResult | InvalidStudentDetails: ...
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
     def close(self) -> None: ...

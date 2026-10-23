@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from typing import ClassVar, Self
 
-from .outcomes import InvalidIdentifier, InvalidPersistedState, InvalidStudentDetails
+from .outcomes import (
+    InvalidIdentifier,
+    InvalidSavedVersion,
+    InvalidStudentDetails,
+)
 
 
 @dataclass(frozen=True)
@@ -12,12 +16,6 @@ class Identifier:
     def create(cls, raw: object) -> Self | InvalidIdentifier:
         if not isinstance(raw, str) or not raw:
             return InvalidIdentifier()
-        return cls(raw)
-
-    @classmethod
-    def reconstitute(cls, raw: object) -> Self | InvalidPersistedState:
-        if not isinstance(raw, str) or not raw:
-            return InvalidPersistedState()
         return cls(raw)
 
     def __post_init__(self) -> None:
@@ -39,6 +37,35 @@ class CourseId(Identifier):
 
 class SubjectId(Identifier):
     pass
+
+
+@dataclass(frozen=True)
+class SavedVersion:
+    """SavedVersion is a Domain Value Object containing an integer from 1 through 9,223,372,036,854,775,807.
+
+    Bool, missing input, strings, floats and out-of-range values are invalid; no coercion.
+    The shared factory returns InvalidSavedVersion for unusable input.
+    """
+
+    value: int
+    maximum: ClassVar[int] = 9223372036854775807
+
+    @staticmethod
+    def usable(raw: object) -> bool:
+        return type(raw) is int and 1 <= raw <= SavedVersion.maximum
+
+    @classmethod
+    def create(cls, raw: object) -> Self | InvalidSavedVersion:
+        if not cls.usable(raw):
+            return InvalidSavedVersion()
+        assert isinstance(raw, int)
+        return cls(raw)
+
+    def __post_init__(self) -> None:
+        if not self.usable(self.value):
+            raise ValueError(
+                "Saved version must be a strict positive signed-64 integer"
+            )
 
 
 @dataclass(frozen=True)
@@ -65,12 +92,6 @@ class RequiredText:
     def create(cls, raw: object) -> Self | InvalidStudentDetails:
         if not isinstance(raw, str) or not raw.strip():
             return InvalidStudentDetails(cls.field)
-        return cls(raw)
-
-    @classmethod
-    def reconstitute(cls, raw: object) -> Self | InvalidPersistedState:
-        if not isinstance(raw, str) or not raw.strip():
-            return InvalidPersistedState()
         return cls(raw)
 
     def __post_init__(self) -> None:

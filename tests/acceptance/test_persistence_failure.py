@@ -59,13 +59,23 @@ def test_faults(database, monkeypatch, point, committed):
         if point == "rollback":
             patch.setattr(
                 adapter.Session,
-                "add",
-                lambda self, e: (_ for _ in ()).throw(StorageFailure()),
+                "create_enrollment",
+                lambda self, student, course: (_ for _ in ()).throw(StorageFailure()),
             )
         result = request(create_app(database, lambda c: c))
     assert result["data"]["enrollCourse"]["failureReason"] == "PERSISTENCE_FAILURE"
     assert "secret" not in str(result)
     assert rows(database) == ([("s", "c")] if committed else [])
+    # Reconciliation is a later, independent read; no earlier success is inferred.
+    from enrollment.domain.values import CourseId, StudentId
+
+    session = adapter.Session(database)
+    try:
+        assert (
+            session.enrollment(StudentId.create("s"), CourseId.create("c")) is not None
+        ) == committed
+    finally:
+        session.close()
 
 
 def test_lock_failure(database):

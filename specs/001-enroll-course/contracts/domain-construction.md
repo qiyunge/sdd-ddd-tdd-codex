@@ -11,7 +11,7 @@
 | SavedVersion | raw object | Typed integer in 1..9,223,372,036,854,775,807, rejecting bool/coercion, or InvalidSavedVersion |
 | VerifiedIdentity | validated SubjectId after trusted verification | Trusted identity; no Student-existence assertion |
 
-Values own their invariants regardless of caller. Adapters and Application may use these supported factories for technical adaptation; no mandatory Application gateway or redundant DTO is required. Persisted values have separate `.reconstitute(raw)` returning the valid value or InvalidPersistedState. VerifiedIdentity is nonpersisted in this feature.
+Values own their invariants regardless of caller. Adapters and Application may use these supported factories for technical adaptation; no mandatory Application gateway or redundant DTO is required. Value Objects use a single validated `.create(raw)` path when input validation and persisted-state invariants are identical, as they are for all persisted values in this feature. Persistence translates invalid factory outcomes into DataIntegrityFailure for stored values; it does not duplicate validation or require a Value Object `.reconstitute(raw)` API. VerifiedIdentity is nonpersisted in this feature.
 
 ## Complete Entity factories
 
@@ -46,7 +46,7 @@ Explicit Domain rejection or exception after INSERT requires rollback of the enc
 
 ## Persistence reconstitution
 
-Persisted identifiers/details/versions are decoded through their own reconstitution contracts. Validate Student saved-version metadata on every Student restoration, including enrollment reads which return only the Entity; this does not add version comparison/advancement to enrollment. Repository then calls Entity.reconstitute with the identity obtained from the actual row, validated components.
+Persisted identifiers/details/versions are decoded through their shared validated `.create` factories. Validate Student saved-version metadata on every Student restoration, including enrollment reads which return only the Entity; this does not add version comparison/advancement to enrollment. Repository then calls Entity.reconstitute with the identity obtained from the actual row, validated components. Entity creation and restoration retain distinct APIs because their lifecycle semantics differ.
 
 | Restored Entity | Saved-state invariants | Creation-only rules not replayed |
 |---|---|---|
@@ -55,7 +55,7 @@ Persisted identifiers/details/versions are decoded through their own reconstitut
 | ProgrammeCourseOffering | Valid persisted pair | Enrollment admission |
 | Enrollment | Valid persisted student-course pair | Current membership/offering/duplicate-admission policy |
 
-Invalid values or entity state return InvalidPersistedState, translated by persistence to Core DataIntegrityFailure(StorageFailure). Application returns the existing PERSISTENCE_FAILURE/StudentStorageFailure rather than absence, invalid request, email conflict or a new FR-009 rejection. Unexpected programming errors retain their exception path and sanitized outer handling.
+Invalid values return InvalidIdentifier, InvalidStudentDetails or InvalidSavedVersion; invalid Entity state returns InvalidPersistedState. Persistence translates these outcomes to Core DataIntegrityFailure(StorageFailure). Application returns the existing PERSISTENCE_FAILURE/StudentStorageFailure rather than absence, invalid request, email conflict or a new FR-009 rejection. Unexpected programming errors retain their exception path and sanitized outer handling.
 
 ## Required checks
 

@@ -4,11 +4,11 @@
 
 ## Domain values and identity
 
-StudentId, ProgrammeId, CourseId and SubjectId are exact nonempty strings; whitespace is not trimmed and case is not folded. `.create(raw)` returns a typed value or InvalidIdentifier; `.reconstitute(raw)` returns a typed value or InvalidPersistedState. VerifiedIdentity is a nonpersisted Value Object containing a validated SubjectId after trusted verification, not evidence of Student existence.
+StudentId, ProgrammeId, CourseId and SubjectId are exact nonempty strings; whitespace is not trimmed and case is not folded. `.create(raw)` returns a typed value or InvalidIdentifier for both supplied and persisted input; persistence translates invalid outcomes into DataIntegrityFailure. All persisted Value Objects here share their input and saved-state invariants, so they need no separate `.reconstitute(raw)`. VerifiedIdentity is a nonpersisted Value Object containing a validated SubjectId after trusted verification, not evidence of Student existence.
 
 StudentName and StudentEmail require actual strings with a non-whitespace character under the existing Python 3.12 text rules. Preserve original text. StudentEmail equality/hash uses complete `str.casefold()` output, including multi-character expansions; whitespace, Unicode composition, dots and plus tags are not normalized. Names are not unique. Field input failure returns InvalidStudentDetails(field); invalid stored text is an integrity failure.
 
-SavedVersion is a Domain Value Object containing an integer from 1 through 9,223,372,036,854,775,807. Bool, missing input, strings, floats and out-of-range values are invalid; no coercion. Normal input returns InvalidSavedVersion, restoration returns InvalidPersistedState. Reaching the maximum on a requested replacement is a technical persistence limitation: no update, no version wrap/reuse. A saved version is concurrency metadata, not an Entity identity.
+SavedVersion is a Domain Value Object containing an integer from 1 through 9,223,372,036,854,775,807. Bool, missing input, strings, floats and out-of-range values are invalid; no coercion. Its shared `.create(raw)` factory returns InvalidSavedVersion for unusable input; persistence translates that outcome into DataIntegrityFailure for stored versions. Reaching the maximum on a requested replacement is a technical persistence limitation: no update, no version wrap/reuse. A saved version is concurrency metadata, not an Entity identity.
 
 ## Entities and snapshots
 
@@ -62,7 +62,7 @@ persisted row -> validated persisted Value Objects
   -> valid Entity; no creation-only eligibility replay
 ```
 
-Missing rows remain None. Every Student restoration validates its persisted saved_version, including enrollment reads returning only Student; that read need not expose the revision. Invalid stored identity, details, version or entity invariant becomes Domain InvalidPersistedState, then Core DataIntegrityFailure(StorageFailure), then the existing sanitized completion failure. Never turn corruption into absence or invalid user input.
+Missing rows remain None. Every Student restoration validates its persisted saved_version, including enrollment reads returning only Student; that read need not expose the revision. Invalid stored identity, details or version returns its Value Object validation outcome; invalid Entity state returns InvalidPersistedState. Persistence translates either into Core DataIntegrityFailure(StorageFailure), then the existing sanitized completion failure. Never turn corruption into absence or invalid user input.
 
 A valid saved Enrollment can be read after membership/offerings change; a Student can be restored with a usable programme identity whose Programme is absent. Do not replay email availability during restoration. Snapshots contain no lazy reads or persistence resources. Stale snapshots cannot authorize replacement without the matching saved version.
 

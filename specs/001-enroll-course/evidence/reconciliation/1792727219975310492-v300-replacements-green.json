@@ -1,0 +1,19 @@
+{
+  "increment": "v300-replacements",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/application/test_student_details.py",
+    "tests/adapters/test_student_uow.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "...........................                                              [100%]\n27 passed in 0.98s\n",
+  "stderr": "",
+  "started_ns": 1792727219975310492,
+  "finished_ns": 1792727221211993301,
+  "implementation_state": "8379f8eb04b2e02efae9bcda3f4ed94aa69506301b9b7ef5962ac07e2380eae7",
+  "implementation_state_after": "8379f8eb04b2e02efae9bcda3f4ed94aa69506301b9b7ef5962ac07e2380eae7",
+  "test_id": "selection: tests/application/test_student_details.py tests/adapters/test_student_uow.py",
+  "activity": "inner"
+}

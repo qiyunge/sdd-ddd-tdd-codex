@@ -17,8 +17,7 @@ def test_text_guards_and_outcomes(kind, bad):
     with pytest.raises(ValueError):
         kind(bad)
     assert isinstance(kind.create(bad), InvalidStudentDetails)
-    assert isinstance(kind.reconstitute(bad), InvalidPersistedState)
-    assert kind.reconstitute(" Alex ").value == " Alex "
+    assert kind.create(" Alex ").value == " Alex "
 
 
 def test_value_equality_and_identity():
@@ -93,3 +92,22 @@ def test_email_composition_is_not_normalized():
     assert len({composed, decomposed}) == 2
     assert composed.value == "caf\u00e9@example.com"
     assert decomposed.value == "cafe\u0301@example.com"
+
+
+@pytest.mark.parametrize(
+    "raw", [None, True, False, "1", 1.0, 0, -1, 9223372036854775808]
+)
+def test_saved_version_rejects_unusable_input(raw):
+    from enrollment.domain import outcomes, values
+
+    assert hasattr(values, "SavedVersion"), "Saved version is a required Domain value"
+    assert isinstance(values.SavedVersion.create(raw), outcomes.InvalidSavedVersion)
+    with pytest.raises(ValueError):
+        values.SavedVersion(raw)
+
+
+@pytest.mark.parametrize("raw", [1, 9223372036854775807])
+def test_saved_version_boundaries(raw):
+    from enrollment.domain.values import SavedVersion
+
+    assert SavedVersion.create(raw).value == raw

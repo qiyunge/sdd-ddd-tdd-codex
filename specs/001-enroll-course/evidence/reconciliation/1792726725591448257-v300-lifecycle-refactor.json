@@ -1,0 +1,20 @@
+{
+  "increment": "v300-lifecycle",
+  "stage": "refactor",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/application",
+    "tests/adapters/test_repository_lifecycle.py",
+    "tests/domain",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 73%]\n..........................                                               [100%]\n98 passed in 0.50s\n",
+  "stderr": "",
+  "started_ns": 1792726725591448257,
+  "finished_ns": 1792726726343504420,
+  "implementation_state": "1e87b0d4e7d7487ea45642dfe277062ada7b2603612c7af3fcaa17aa9f6c80ba",
+  "implementation_state_after": "1e87b0d4e7d7487ea45642dfe277062ada7b2603612c7af3fcaa17aa9f6c80ba",
+  "test_id": "selection: tests/application tests/adapters/test_repository_lifecycle.py tests/domain",
+  "activity": "inner"
+}

@@ -1,0 +1,237 @@
+{
+  "implementation_state": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "git_revision": "1758662f8184d67e827215205ecc761bd28a488d",
+  "python_version": "Python 3.12.3",
+  "files": {
+    "README.md": {
+      "sha256": "65bb7bad06d719966880e7c525a5523dbcd6d0084294cf2e50e66b8ebb88ecdb",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/README.md",
+      "verified": true
+    },
+    "final/checks/architecture.json": {
+      "sha256": "dfc436cb8288a42cd8cded9d7e8355fd1f2c6e213deb6b9b8c84c6c6ff70887a",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/architecture.json",
+      "verified": true
+    },
+    "final/checks/coverage-data.json": {
+      "sha256": "2d7f757a25e6a047826a1ac4ab5133c8c83f4ffa624fe1d87ea98ce328c81fa8",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/coverage-data.json",
+      "verified": true
+    },
+    "final/checks/coverage-report.json": {
+      "sha256": "182d59d4ab104c453cf76f12d57705d11757f4216eb0d21be5b534f29ce00182",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/coverage-report.json",
+      "verified": true
+    },
+    "final/checks/coverage.json": {
+      "sha256": "dc80e3d2e2c0cfa492a087f60c08d723ed188297860ffea02edd7f6a15b460a5",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/coverage.json",
+      "verified": true
+    },
+    "final/checks/format.json": {
+      "sha256": "750e0f890b8da5e7b25185efbd746858f72d46ca6fab5da8e7375a6c5facc01b",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/format.json",
+      "verified": true
+    },
+    "final/checks/history/1792623751604422138-tests.json": {
+      "sha256": "085202e640352e26c21079ff7ec99b80e7ca87ea2315dab69fe923000647a6d4",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623751604422138-tests.json",
+      "verified": true
+    },
+    "final/checks/history/1792623759233067171-architecture.json": {
+      "sha256": "23810c312aa1cf3101afd28f3e8f8eb45db9ec93e6b08c5dee5bf78293641a6c",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623759233067171-architecture.json",
+      "verified": true
+    },
+    "final/checks/history/1792623759944034614-imports.json": {
+      "sha256": "1b179d86261840c5e1abf6afa96d2e1a238b92560481063eba37065a06644b77",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623759944034614-imports.json",
+      "verified": true
+    },
+    "final/checks/history/1792623760118690673-typing.json": {
+      "sha256": "451ff4cf730f6b274fb4e7d6fd1311f7e17fd6cc01cd7421978dfd4c1f266017",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623760118690673-typing.json",
+      "verified": true
+    },
+    "final/checks/history/1792623760287645927-lint.json": {
+      "sha256": "b7941168558114df1ceca1d10c86d922ea989a0034c16f80c49b0c2beea6754e",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623760287645927-lint.json",
+      "verified": true
+    },
+    "final/checks/history/1792623760312518498-format.json": {
+      "sha256": "55fdbeef8bca2552e9a39a672fbe733c01f150511c48ee30e8362fbe125028d3",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623760312518498-format.json",
+      "verified": true
+    },
+    "final/checks/history/1792623760343318271-coverage-report.json": {
+      "sha256": "ff183388027f4fbddcd7301fe63cbc8ef0ce1994ba3b065c6a9da2e6e8d3c2ea",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623760343318271-coverage-report.json",
+      "verified": true
+    },
+    "final/checks/history/1792623760456909591-coverage-data.json": {
+      "sha256": "70bdfcedd5adce1d2b4f19e34a560fd4358ac643f157b11467b238d2c846b90d",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792623760456909591-coverage-data.json",
+      "verified": true
+    },
+    "final/checks/history/1792638396197095681-tests.json": {
+      "sha256": "297fbb226322b599a2eccff4748870a4ed6e0050862ea81ba732b6fefa4e550b",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638396197095681-tests.json",
+      "verified": true
+    },
+    "final/checks/history/1792638407344915736-architecture.json": {
+      "sha256": "b455de3c26270969716a466184955c3b65b743530cb4769acc4b206d35b4597e",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638407344915736-architecture.json",
+      "verified": true
+    },
+    "final/checks/history/1792638408904569539-imports.json": {
+      "sha256": "2a82ffd46dc87d39aa3b0387aac450936cdb33db9fbf6be250110e4db8e8db86",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638408904569539-imports.json",
+      "verified": true
+    },
+    "final/checks/history/1792638409065154301-typing.json": {
+      "sha256": "fce950b6de1d9e2cb6a901f155d0db114dc50884f5720c8dfa08bc41fc61c814",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638409065154301-typing.json",
+      "verified": true
+    },
+    "final/checks/history/1792638409235113704-lint.json": {
+      "sha256": "f5773b5c16d69aeb0758a1e5be5e2c536a537d53219febea3ae5a21603651d48",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638409235113704-lint.json",
+      "verified": true
+    },
+    "final/checks/history/1792638409268240366-format.json": {
+      "sha256": "bb2a2f28524e057a4b7f92b6b1759b87b1771b915b9434cab54a77579c10dd79",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638409268240366-format.json",
+      "verified": true
+    },
+    "final/checks/history/1792638409299828242-coverage-report.json": {
+      "sha256": "fb0e5293e6d3a2671fbd30aafc91fd25cda767588ef01f74850e595705281d7f",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638409299828242-coverage-report.json",
+      "verified": true
+    },
+    "final/checks/history/1792638409424312580-coverage-data.json": {
+      "sha256": "248e364bad6f2848150b06692b1a690a9ea6a72d9e2faac0843507deebe3796e",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792638409424312580-coverage-data.json",
+      "verified": true
+    },
+    "final/checks/history/1792685284473241079-tests.json": {
+      "sha256": "71386fc0d7b0f4e739744655a5ca96ba56af1f7c36b9031cb289a7a847b98cf7",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685284473241079-tests.json",
+      "verified": true
+    },
+    "final/checks/history/1792685294884117303-architecture.json": {
+      "sha256": "242cd597469e12043547e0451d459b7e1d6dfc915954c519d640f024b7790ef4",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685294884117303-architecture.json",
+      "verified": true
+    },
+    "final/checks/history/1792685296576725694-imports.json": {
+      "sha256": "a95b1cff3f5dd629bffc6b27f5035dd1a65bffdcd00d222edab15cd420fe2551",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685296576725694-imports.json",
+      "verified": true
+    },
+    "final/checks/history/1792685296749926405-typing.json": {
+      "sha256": "bf60f4d36e498539a95e09919f63ea4a374b7c83eba766f6a7622ca906700bb1",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685296749926405-typing.json",
+      "verified": true
+    },
+    "final/checks/history/1792685297129315145-lint.json": {
+      "sha256": "20c000f523712f8213c75204a3e41b490fac5bff712d7e2fed0c2122c5618ccc",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685297129315145-lint.json",
+      "verified": true
+    },
+    "final/checks/history/1792685297166849264-format.json": {
+      "sha256": "8b67040ba42c3d8ad3ae007cc8da06307d3cb6db80984c0fa4756a00bbecfa47",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685297166849264-format.json",
+      "verified": true
+    },
+    "final/checks/history/1792685297198716046-coverage-report.json": {
+      "sha256": "5dc885055de4e1460cdada58870c47d35acc64b18255a0bed118d534aaa3291c",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685297198716046-coverage-report.json",
+      "verified": true
+    },
+    "final/checks/history/1792685297336128710-coverage-data.json": {
+      "sha256": "dc74588514b8fb9cfabecf7582289f39ae2350dbf3fe3ba3ccbd5e4659e8de16",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792685297336128710-coverage-data.json",
+      "verified": true
+    },
+    "final/checks/history/1792704367975964968-tests.json": {
+      "sha256": "29f8031f8800d1c9e61bcf9b9cce1ebc6fe04c276e55dda3e1eaef1ccf54db7e",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704367975964968-tests.json",
+      "verified": true
+    },
+    "final/checks/history/1792704379371938169-architecture.json": {
+      "sha256": "b86d7f6614feac6fabf3596b7d00802a854e9c3def32b29808a565503ddbca77",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704379371938169-architecture.json",
+      "verified": true
+    },
+    "final/checks/history/1792704381091055312-imports.json": {
+      "sha256": "81e15d3ff0de887082aa20ccb1f33b1d7fa87d229ab71cd3d88f7bf84a662363",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704381091055312-imports.json",
+      "verified": true
+    },
+    "final/checks/history/1792704381264637215-typing.json": {
+      "sha256": "ae06eff066e5e1714905cdae2e18ddf62b81dba7355e56e1ac357f97a28aadc2",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704381264637215-typing.json",
+      "verified": true
+    },
+    "final/checks/history/1792704381619027547-lint.json": {
+      "sha256": "9bcaf39fd5f9cfe134c68844c68de49a01e0eb74a7d36876e886acbfbf8486b9",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704381619027547-lint.json",
+      "verified": true
+    },
+    "final/checks/history/1792704381655460854-format.json": {
+      "sha256": "d836f81302d6ed1b45d82450c906bccee6e2ae9b7ea0b41fd6e7437107c47bf4",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704381655460854-format.json",
+      "verified": true
+    },
+    "final/checks/history/1792704381690181249-coverage-report.json": {
+      "sha256": "4a4ec5dc49de9df3fe4643df37707c12335d30b3462552f33423274eaaa87c46",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704381690181249-coverage-report.json",
+      "verified": true
+    },
+    "final/checks/history/1792704381826338046-coverage-data.json": {
+      "sha256": "e272e4c39d553f265cda75af9baa0f94842edb9ff53283874f9c6741073021f5",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/history/1792704381826338046-coverage-data.json",
+      "verified": true
+    },
+    "final/checks/imports.json": {
+      "sha256": "c1ea2ab34050e05caa05069ff52adc4aa863d463b1175e83bf8d9243a97e1c97",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/imports.json",
+      "verified": true
+    },
+    "final/checks/lint.json": {
+      "sha256": "6c742ee014b68294c121c9fdde1f6013cb7b9643def410a86efcfe5eda84bf8f",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/lint.json",
+      "verified": true
+    },
+    "final/checks/tests.json": {
+      "sha256": "8bd3dbd412284acbe6e97a60eeff7d76682e1baa100afbfd627fce12b44cef51",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/tests.json",
+      "verified": true
+    },
+    "final/checks/tests.xml": {
+      "sha256": "7a93525e43cd8e3ef3e8aaa80efb6c77c7ef6969eac585c2a595c41ea917f351",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/tests.xml",
+      "verified": true
+    },
+    "final/checks/typing.json": {
+      "sha256": "71d76b304ca91b95a71751ec8073c3c1eb176e80555de0ec479cf77ee62a723d",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/checks/typing.json",
+      "verified": true
+    },
+    "final/manifest.json": {
+      "sha256": "3c72a14689927ddc20d8c538e3385b155a2b6ac01c1ef9f94646217fb028567c",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/manifest.json",
+      "verified": true
+    },
+    "final/validation.json": {
+      "sha256": "40833ce964be6feaa5ce3dc464f616182f1fbb464e804dedeab9fda70a409ddd",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/final/validation.json",
+      "verified": true
+    },
+    "reconciliation/review.json": {
+      "sha256": "ca301170dc41a8aeb5f24c800b3aafe75167ee4f849abef065ac10ed5ae2da26",
+      "archive": "specs/001-enroll-course/evidence/history/pre-v300-alignment/reconciliation/review.json",
+      "verified": true
+    }
+  }
+}

@@ -3,7 +3,8 @@ from threading import Event
 
 import pytest
 
-from enrollment.adapters.persistence.sqlite import Session, connect
+from enrollment.adapters.persistence.sqlite import Session, StudentSession, connect
+from enrollment.application.student_details import get_student, save_student
 from enrollment.bootstrap import create_app
 from tests.acceptance.test_enrollment import request
 from tests.support.database import rows
@@ -11,13 +12,26 @@ from tests.support.database import rows
 
 @pytest.mark.parametrize("change", ["offering", "membership"])
 def test_change_before_lock(database, change):
+    original = get_student("s", lambda: StudentSession(database))
+
     def verify(c):
         with connect(database) as db:
             if change == "offering":
                 db.execute("DELETE FROM programme_course_offerings")
             else:
                 db.execute("INSERT INTO programmes VALUES ('new')")
-                db.execute("UPDATE students SET programme_id='new'")
+        if change == "membership":
+            save_student(
+                dict(
+                    mode="replace",
+                    expected_version=original.saved_version.value,
+                    student_id="s",
+                    programme_id="new",
+                    name="Alex",
+                    email="alex@example.com",
+                ),
+                lambda: StudentSession(database),
+            )
         return c
 
     assert (
@@ -29,6 +43,7 @@ def test_change_before_lock(database, change):
 
 @pytest.mark.parametrize("change", ["offering", "membership"])
 def test_writer_waits_until_commit(database, monkeypatch, change):
+    snapshot = get_student("s", lambda: StudentSession(database))
     locked = Event()
     attempting = Event()
     finished = Event()
@@ -48,8 +63,18 @@ def test_writer_waits_until_commit(database, monkeypatch, change):
             attempting.set()
             if change == "offering":
                 db.execute("DELETE FROM programme_course_offerings")
-            else:
-                db.execute("UPDATE students SET programme_id='later'")
+        if change == "membership":
+            save_student(
+                dict(
+                    mode="replace",
+                    expected_version=snapshot.saved_version.value,
+                    student_id="s",
+                    programme_id="later",
+                    name="Alex",
+                    email="alex@example.com",
+                ),
+                lambda: StudentSession(database),
+            )
         finished.set()
 
     with ThreadPoolExecutor(2) as workers:

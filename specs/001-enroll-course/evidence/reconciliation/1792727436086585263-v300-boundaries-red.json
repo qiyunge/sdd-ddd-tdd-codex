@@ -1,0 +1,18 @@
+{
+  "increment": "v300-boundaries",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_boundaries.py",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "....F                                                                    [100%]\n=================================== FAILURES ===================================\n_____________ test_repository_only_factories_and_alias_references ______________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-47/test_repository_only_factories0')\n\n    def test_repository_only_factories_and_alias_references(tmp_path):\n        package = tmp_path / \"src/enrollment\"\n        production = package / \"application/probe.py\"\n        production.parent.mkdir(parents=True)\n        invalid = [\n            \"from enrollment.domain.models import Student\\nx = Student.create(s,p,n,e)\",\n            \"from enrollment.domain.models import Student as Learner\\nx = Learner.reconstitute(s,p,n,e)\",\n            \"from enrollment.domain import models as m\\nfactory = m.Student.create\",\n            \"import enrollment.domain.models as m\\nAlias=m.Enrollment\\nf=Alias.reconstitute\\nx=f(s,c)\",\n            \"import enrollment.domain.models\\nx=enrollment.domain.models.Course(c)\",\n            \"from enrollment.domain.models import Student\\nAlias=Student\\nx=Alias(s,p,n,e)\",\n            \"from enrollment.domain.models import Student\\nf=getattr(Student,'create')\",\n        ]\n        for source in invalid:\n            production.write_text(source)\n>           assert direct_constructors(tmp_path), source\nE           AssertionError: from enrollment.domain.models import Student\nE             x = Student.create(s,p,n,e)\nE           assert []\nE            +  where [] = direct_constructors(PosixPath('/tmp/pytest-of-devuser/pytest-47/test_repository_only_factories0'))\n\ntests/architecture/test_boundaries.py:164: AssertionError\n=========================== short test summary info ============================\nFAILED tests/architecture/test_boundaries.py::test_repository_only_factories_and_alias_references\n1 failed, 4 passed in 0.67s\n",
+  "stderr": "",
+  "started_ns": 1792727436086585263,
+  "finished_ns": 1792727437002637351,
+  "implementation_state": "270e4584a4918f1a988d9f0a817352a26431065523ebca80cd69674a5f88d5cb",
+  "implementation_state_after": "270e4584a4918f1a988d9f0a817352a26431065523ebca80cd69674a5f88d5cb",
+  "test_id": "selection: tests/architecture/test_boundaries.py",
+  "activity": "inner"
+}

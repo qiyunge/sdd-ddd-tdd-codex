@@ -1,0 +1,22 @@
+{
+  "increment": "v300-us1-checkpoint",
+  "stage": "verification",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance",
+    "tests/application",
+    "tests/adapters",
+    "tests/domain",
+    "-q",
+    "--junitxml=/tmp/v300-us1.xml"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 29%]\n........................................................................ [ 59%]\n........................................................................ [ 88%]\n............................                                             [100%]\n=============================== warnings summary ===============================\ntests/acceptance/test_enrollment.py: 15 warnings\n  tests/acceptance/test_enrollment.py:27: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')\n    @pytest.mark.parametrize(\n\ntests/acceptance/test_enrollment.py::test_enrollment_16_factory_failure_after_insert[rejection]\ntests/acceptance/test_enrollment.py::test_enrollment_16_factory_failure_after_insert[exception]\n  tests/acceptance/test_enrollment.py:138: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')\n    @pytest.mark.parametrize(\"fault\", [\"rejection\", \"exception\"])\n\ntests/acceptance/test_enrollment.py::test_enrollment_17_definite_commit_failure\n  tests/acceptance/test_enrollment.py:180: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')\n    def test_enrollment_17_definite_commit_failure(database, monkeypatch, record_property):\n\ntests/acceptance/test_enrollment.py::test_enrollment_18_restore_historical_pair\n  tests/acceptance/test_enrollment.py:194: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')\n    def test_enrollment_18_restore_historical_pair(database, record_property):\n\ntests/acceptance/test_enrollment.py::test_enrollment_19_invalid_course_precedes_lookup[s-INVALID_REQUEST-student]\ntests/acceptance/test_enrollment.py::test_enrollment_19_invalid_course_precedes_lookup[s-INVALID_REQUEST-programme]\ntests/acceptance/test_enrollment.py::test_enrollment_19_invalid_course_precedes_lookup[other-DENIED-student]\ntests/acceptance/test_enrollment.py::test_enrollment_19_invalid_course_precedes_lookup[other-DENIED-programme]\ntests/acceptance/test_enrollment.py::test_enrollment_19_invalid_course_precedes_lookup[invalid-DENIED-student]\ntests/acceptance/test_enrollment.py::test_enrollment_19_invalid_course_precedes_lookup[invalid-DENIED-programme]\n  tests/acceptance/test_enrollment.py:212: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')\n    @pytest.mark.parametrize(\"missing\", [\"student\", \"programme\"])\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n244 passed, 25 warnings in 7.94s\n",
+  "stderr": "",
+  "started_ns": 1792726948906848697,
+  "finished_ns": 1792726957163162230,
+  "implementation_state": "1e87b0d4e7d7487ea45642dfe277062ada7b2603612c7af3fcaa17aa9f6c80ba",
+  "implementation_state_after": "1e87b0d4e7d7487ea45642dfe277062ada7b2603612c7af3fcaa17aa9f6c80ba",
+  "test_id": "selection: tests/acceptance tests/application tests/adapters tests/domain",
+  "activity": "acceptance"
+}

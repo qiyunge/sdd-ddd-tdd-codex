@@ -67,9 +67,9 @@ def _attempt(
         )
         if rejection is not None:
             return rejection
-        enrollment = Enrollment.create(student_id, course_id)
-        if session.add(enrollment) == PairConflict:
-            return PairConflict
+        enrollment = session.create_enrollment(student_id, course_id)
+        if not isinstance(enrollment, Enrollment):
+            return enrollment
         session.commit()
         return enrollment
     finally:

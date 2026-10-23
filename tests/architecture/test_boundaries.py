@@ -113,34 +113,108 @@ def direct_constructors(root: Path) -> list[str]:
         root / "src/enrollment/domain/models.py",
         root / "src/enrollment/domain/values.py",
     }
+    repository = root / "src/enrollment/adapters/persistence/sqlite.py"
     findings = []
     for path in (root / "src/enrollment").rglob("*.py"):
         if path in allowed:
             continue
         tree = ast.parse(path.read_text())
-        names = set(CONSTRUCTORS)
+        aliases = {}
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:
-                    if alias.name in CONSTRUCTORS:
-                        names.add(alias.asname or alias.name)
-            if (
-                isinstance(node, ast.Assign)
-                and isinstance(node.value, ast.Name)
-                and node.value.id in names
-            ):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        names.add(target.id)
-        for node in ast.walk(tree):
+                    aliases[alias.asname or alias.name] = (
+                        (node.module or "") + "." + alias.name
+                    )
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    aliases[alias.asname or alias.name.split(".")[0]] = (
+                        alias.name if alias.asname else alias.name.split(".")[0]
+                    )
+
+        def resolve(node, aliases=aliases):
+            if isinstance(node, ast.Name):
+                return aliases.get(node.id, node.id)
+            if isinstance(node, ast.Attribute):
+                return resolve(node.value) + "." + node.attr
             if (
                 isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Name)
-                and node.func.id in names
+                and node.func.id == "getattr"
+                and len(node.args) == 2
+                and isinstance(node.args[1], ast.Constant)
+                and isinstance(node.args[1].value, str)
             ):
-                findings.append(f"{path.relative_to(root)}:{node.lineno}")
-    return findings
+                return resolve(node.args[0]) + "." + node.args[1].value
+            return ""
+
+        assignments = [node for node in ast.walk(tree) if isinstance(node, ast.Assign)]
+        for _ in range(len(assignments) + 1):
+            for node in assignments:
+                value = resolve(node.value)
+                if value:
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            aliases[target.id] = value
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and resolve(node.func).split(".")[-1] in CONSTRUCTORS
+            ):
+                findings.append(
+                    f"{path.relative_to(root)}:{node.lineno}: unsupported constructor"
+                )
+            if path != repository and isinstance(
+                node, (ast.Name, ast.Attribute, ast.Call)
+            ):
+                parts = resolve(node).split(".")
+                if (
+                    len(parts) >= 2
+                    and parts[-2] in CONSTRUCTORS - {"VerifiedIdentity"}
+                    and parts[-1] in {"create", "reconstitute"}
+                ):
+                    findings.append(
+                        f"{path.relative_to(root)}:{node.lineno}: Entity outside Repository"
+                    )
+    return sorted(set(findings))
 
 
 def test_supported_factory_and_reconstitution_calls():
     assert direct_constructors(ROOT) == []
+
+
+def test_repository_only_factories_and_alias_references(tmp_path):
+    package = tmp_path / "src/enrollment"
+    production = package / "application/probe.py"
+    production.parent.mkdir(parents=True)
+    invalid = [
+        "from enrollment.domain.models import Student\nx = Student.create(s,p,n,e)",
+        "from enrollment.domain.models import Student as Learner\nx = Learner.reconstitute(s,p,n,e)",
+        "from enrollment.domain import models as m\nfactory = m.Student.create",
+        "import enrollment.domain.models as m\nAlias=m.Enrollment\nf=Alias.reconstitute\nx=f(s,c)",
+        "import enrollment.domain.models\nx=enrollment.domain.models.Course(c)",
+        "from enrollment.domain.models import Student\nAlias=Student\nx=Alias(s,p,n,e)",
+        "from enrollment.domain.models import Student\nf=getattr(Student,'create')",
+    ]
+    for source in invalid:
+        production.write_text(source)
+        assert direct_constructors(tmp_path), source
+    for source in [
+        "from enrollment.domain.values import StudentId as ID\nx=ID.create(raw)",
+        "from enrollment.domain.values import StudentEmail\nf=StudentEmail.create",
+    ]:
+        production.write_text(source)
+        assert direct_constructors(tmp_path) == []
+    production.unlink()
+    repository = package / "adapters/persistence/sqlite.py"
+    repository.parent.mkdir(parents=True)
+    repository.write_text(
+        "from enrollment.domain.models import Student as S\nx=S.create(s,p,n,e)\ny=S.reconstitute(s,p,n,e)"
+    )
+    assert direct_constructors(tmp_path) == []
+    repository.write_text(
+        "from enrollment.domain.models import Student as S\nx=S(s,p,n,e)"
+    )
+    assert direct_constructors(tmp_path), (
+        "Repositories must use supported Domain factories"
+    )

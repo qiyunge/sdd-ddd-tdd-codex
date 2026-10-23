@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/.venv/bin/coverage",
+    "report",
+    "--fail-under=100"
+  ],
+  "stage": "coverage-report",
+  "exit_code": 0,
+  "stdout": "Name                                              Stmts   Miss Branch BrPart  Cover   Missing\n---------------------------------------------------------------------------------------------\nsrc/enrollment/application/__init__.py                0      0      0      0   100%\nsrc/enrollment/application/cleanup.py                11      0      2      0   100%\nsrc/enrollment/application/contracts.py              25      0      0      0   100%\nsrc/enrollment/application/enroll.py                 54      0     22      0   100%\nsrc/enrollment/application/ports.py                   8      0      0      0   100%\nsrc/enrollment/application/student_contracts.py      10      0      0      0   100%\nsrc/enrollment/application/student_details.py        46      0     18      0   100%\nsrc/enrollment/application/student_ports.py           6      0      0      0   100%\nsrc/enrollment/domain/__init__.py                     0      0      0      0   100%\nsrc/enrollment/domain/models.py                     105      0     42      0   100%\nsrc/enrollment/domain/outcomes.py                    16      0      0      0   100%\nsrc/enrollment/domain/policies.py                    11      0      0      0   100%\nsrc/enrollment/domain/values.py                      69      0     18      0   100%\n---------------------------------------------------------------------------------------------\nTOTAL                                               361      0    102      0   100%\n",
+  "stderr": "",
+  "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "digest_after": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "started_ns": 1792704381690181249,
+  "finished_ns": 1792704381820723884
+}

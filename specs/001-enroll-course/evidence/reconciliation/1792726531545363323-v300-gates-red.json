@@ -1,0 +1,18 @@
+{
+  "increment": "v300-gates",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "......................F                                                  [100%]\n=================================== FAILURES ===================================\n______________ test_v300_assembly_requires_declared_associations _______________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-24/test_v300_assembly_requires_de0')\n\n    def test_v300_assembly_requires_declared_associations(tmp_path):\n        root, _ = v300_fixture(tmp_path)\n        log = root/\"specs/001-enroll-course/evidence/reconciliation\"\n        log.mkdir()\n        (log/\"review.json\").write_text(json.dumps({\"passed\": True, \"notes\": \"fixture\", \"constitution\": \"3.0.0\", \"required_increments\": {\"missing\": {\"inner\": [\"tests/domain\"]}}}))\n        assembler = module(\"assemble_evidence\"); assembler.ROOT = root\n>       with pytest.raises(ValueError, match=\"increment\"):\nE       Failed: DID NOT RAISE ValueError\n\ntests/architecture/test_quality_gates.py:514: Failed\n----------------------------- Captured stdout call -----------------------------\nManifest assembled; run evidence validation next.\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_v300_assembly_requires_declared_associations\n1 failed, 22 passed in 1.08s\n",
+  "stderr": "",
+  "started_ns": 1792726531545363323,
+  "finished_ns": 1792726532876805096,
+  "implementation_state": "4479431778ff4fdccaab6123f42330927e4e6e0e3eb63b4b76d26cdd53c0a022",
+  "implementation_state_after": "4479431778ff4fdccaab6123f42330927e4e6e0e3eb63b4b76d26cdd53c0a022",
+  "test_id": "selection: tests/architecture/test_quality_gates.py",
+  "activity": "inner"
+}

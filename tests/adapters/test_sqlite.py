@@ -1,4 +1,5 @@
 import sqlite3
+from unittest.mock import patch
 
 import pytest
 
@@ -7,6 +8,7 @@ from enrollment.adapters.persistence.sqlite import (
     Session,
     StorageFailure,
     connect,
+    decode,
 )
 from enrollment.domain.models import (
     Course,
@@ -17,10 +19,37 @@ from enrollment.domain.models import (
 from enrollment.domain.values import (
     CourseId,
     ProgrammeId,
+    SavedVersion,
     StudentEmail,
     StudentId,
     StudentName,
+    SubjectId,
 )
+
+
+@pytest.mark.parametrize(
+    "kind,valid,invalid",
+    [
+        (StudentId, " s ", ""),
+        (ProgrammeId, " p ", None),
+        (CourseId, " c ", 1),
+        (SubjectId, " subject ", b"subject"),
+        (StudentName, " Alex ", "\u00a0"),
+        (StudentEmail, "Straße@Example.com", ""),
+        (SavedVersion, 9223372036854775807, True),
+    ],
+)
+def test_persisted_values_use_shared_validation(kind, valid, invalid):
+    with patch.object(kind, "create", wraps=kind.create) as create:
+        value = decode(kind, valid)
+        assert isinstance(value, kind)
+        assert value.value == valid
+        create.assert_called_once_with(valid)
+
+    with patch.object(kind, "create", wraps=kind.create) as create:
+        with pytest.raises(DataIntegrityFailure):
+            decode(kind, invalid)
+        create.assert_called_once_with(invalid)
 
 
 def test_reads(database):
@@ -68,6 +97,7 @@ def test_valid_enrollment_restores_after_offering_removed(database):
 )
 def test_invalid_persisted_student_text(database, column, value):
     with connect(database) as c:
+        c.execute("DROP TRIGGER students_saved_version_guard")
         c.execute("PRAGMA ignore_check_constraints=ON")
         c.execute(f"UPDATE students SET {column}=? WHERE student_id='s'", (value,))
     s = Session(database)
@@ -85,7 +115,7 @@ def test_dangling_programme_remains_representable(tmp_path):
     initialize(path)
     with connect(path) as c:
         c.execute(
-            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('s','missing','Alex','alex@example.com')"
+            "INSERT INTO students(student_id,programme_id,name,email,saved_version) VALUES ('s','missing','Alex','alex@example.com',1)"
         )
     s = Session(path)
     try:
@@ -103,6 +133,7 @@ def test_corrupt_student_is_sanitized_persistence_failure(database):
     from tests.application.test_identity import Verifier
 
     with connect(database) as c:
+        c.execute("DROP TRIGGER students_saved_version_guard")
         c.execute("PRAGMA ignore_check_constraints=ON")
         c.execute("UPDATE students SET programme_id='' WHERE student_id='s'")
     assert (
@@ -115,6 +146,7 @@ def test_corrupt_student_is_sanitized_persistence_failure(database):
 
 def test_corrupt_row(database):
     with connect(database) as c:
+        c.execute("DROP TRIGGER students_saved_version_guard")
         c.execute("PRAGMA ignore_check_constraints=ON")
         c.execute("UPDATE students SET programme_id='' WHERE student_id='s'")
     s = Session(database)
@@ -162,7 +194,7 @@ def test_restrictive_schema_and_pair_uniqueness(tmp_path):
         db.execute("PRAGMA foreign_keys=ON")
         db.execute("INSERT INTO programmes VALUES ('p')")
         db.execute(
-            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('s','dangling','Alex','alex@example.com')"
+            "INSERT INTO students(student_id,programme_id,name,email,saved_version) VALUES ('s','dangling','Alex','alex@example.com',1)"
         )
         db.execute("INSERT INTO courses VALUES ('c')")
         db.execute("INSERT INTO programme_course_offerings VALUES ('p','c')")

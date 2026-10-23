@@ -1,6 +1,12 @@
 from .models import Enrollment, ProgrammeCourseOffering
-from .outcomes import DetailRejection, Rejection
-from .values import StudentId, VerifiedIdentity
+from .outcomes import DetailRejection, OutdatedVersion, Rejection
+from .values import SavedVersion, StudentId, VerifiedIdentity
+
+
+def version_current(
+    expected: SavedVersion, current: SavedVersion
+) -> OutdatedVersion | None:
+    return OutdatedVersion() if expected != current else None
 
 
 def ownership(identity: VerifiedIdentity, target: StudentId) -> Rejection | None:

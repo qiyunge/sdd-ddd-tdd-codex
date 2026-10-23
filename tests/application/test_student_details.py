@@ -47,9 +47,9 @@ def test_invalid_identifier_does_not_open(field):
 def test_operation_modes_and_precise_outcomes(tmp_path):
     path = tmp_path / "db"
     initialize(path)
-    assert invoke(path, mode="replace") == "STUDENT_NOT_FOUND"
+    assert invoke(path, mode="replace", expected_version=1) == "STUDENT_NOT_FOUND"
     assert isinstance(invoke(path, mode="unknown"), InvalidStudentDetails)
-    assert getattr(invoke(path), "student_id", None) == StudentId("s")
+    assert invoke(path).student.student_id == StudentId("s")
     assert invoke(path) == "STUDENT_ALREADY_EXISTS"
 
 
@@ -59,15 +59,15 @@ def test_known_storage_failure(stage, tmp_path):
     initialize(path)
 
     class Session(StudentSession):
-        def student(self, identity):
+        def snapshot(self, identity):
             if stage == "read":
                 raise StorageFailure()
-            return super().student(identity)
+            return super().snapshot(identity)
 
-        def save(self, candidate, replace):
+        def create_student(self, *args):
             if stage == "write":
                 raise StorageFailure()
-            return super().save(candidate, replace)
+            return super().create_student(*args)
 
         def commit(self):
             if stage == "commit":
@@ -92,7 +92,7 @@ def test_returned_email_conflict(tmp_path):
     initialize(path)
 
     class Conflict(StudentSession):
-        def save(self, candidate, replace):
+        def create_student(self, *args):
             return EmailKeyConflict
 
     assert save_student(command(), lambda: Conflict(path)) == "EMAIL_CONFLICT"
@@ -103,7 +103,7 @@ def test_primary_error_survives_cleanup(tmp_path, caplog):
     initialize(path)
 
     class Broken(StudentSession):
-        def student(self, identity):
+        def snapshot(self, identity):
             raise AssertionError("primary error")
 
         def close(self):
@@ -113,3 +113,63 @@ def test_primary_error_survives_cleanup(tmp_path, caplog):
     with pytest.raises(AssertionError, match="primary error"):
         save_student(command(), lambda: Broken(path))
     assert "Cleanup failed" in caplog.text
+
+
+def test_snapshot_creation_ignores_version_and_read_finishes_before_return(tmp_path):
+    from enrollment.application.student_details import get_student
+    from enrollment.domain.values import SavedVersion
+
+    path = tmp_path / "db"
+    initialize(path)
+    created = save_student(
+        command(expected_version=False), lambda: StudentSession(path)
+    )
+    assert created.saved_version == SavedVersion.create(1)
+    calls = []
+
+    class Read(StudentSession):
+        def commit(self):
+            calls.append("commit")
+            super().commit()
+
+        def close(self):
+            calls.append("close")
+            super().close()
+
+    result = get_student("s", lambda: Read(path))
+    assert calls == ["commit", "close"] and result == created
+    assert isinstance(get_student("", lambda: None), InvalidIdentifier)
+    assert get_student("absent", lambda: StudentSession(path)) == "STUDENT_NOT_FOUND"
+
+
+@pytest.mark.parametrize(
+    "observation,expected",
+    [("version", "OutdatedVersion"), ("email", "EMAIL_CONFLICT")],
+)
+def test_defensive_replacement_observations_do_not_replay(
+    tmp_path, observation, expected
+):
+    from enrollment.application.student_contracts import VersionConflict
+
+    path = tmp_path / "db"
+    initialize(path)
+    invoke(path)
+    calls = []
+
+    class Observed(StudentSession):
+        def replace_student(self, *args):
+            calls.append(args)
+            return VersionConflict if observation == "version" else EmailKeyConflict
+
+        def commit(self):
+            pytest.fail("Rejected replacement must not commit")
+
+    result = save_student(
+        command(mode="replace", expected_version=1), lambda: Observed(path)
+    )
+    assert len(calls) == 1, "No automatic refresh/replay is allowed"
+    assert (
+        type(result).__name__ == expected
+        if observation == "version"
+        else result == expected
+    )

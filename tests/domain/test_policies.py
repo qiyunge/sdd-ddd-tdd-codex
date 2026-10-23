@@ -32,3 +32,14 @@ def test_eligibility():
         is None
     )
     assert eligibility(None) == Rejection.COURSE_NOT_OFFERED
+
+
+def test_expected_saved_version_policy():
+    from enrollment.domain.outcomes import OutdatedVersion
+    from enrollment.domain.policies import version_current
+    from enrollment.domain.values import SavedVersion
+
+    assert version_current(SavedVersion.create(1), SavedVersion.create(1)) is None
+    assert isinstance(
+        version_current(SavedVersion.create(1), SavedVersion.create(2)), OutdatedVersion
+    )

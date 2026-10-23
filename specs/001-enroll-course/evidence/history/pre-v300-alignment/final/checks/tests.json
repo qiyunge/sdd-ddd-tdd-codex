@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/.venv/bin/coverage",
+    "run",
+    "-m",
+    "pytest",
+    "--junitxml=/home/devuser/wsl-projects/sdd-ddd-tdd-codex/specs/001-enroll-course/evidence/final/checks/tests.xml",
+    "-q"
+  ],
+  "stage": "tests",
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 30%]\n........................................................................ [ 60%]\n........................................................................ [ 90%]\n......................                                                   [100%]\n238 passed in 10.66s\n",
+  "stderr": "",
+  "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "digest_after": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "started_ns": 1792704367975964968,
+  "finished_ns": 1792704379364393622
+}

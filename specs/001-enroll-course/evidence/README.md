@@ -66,3 +66,24 @@ Supported construction is `Identifier.create` / `RequiredText.create` for raw in
 `Student.create`, `Programme.create`, `Course.create`, `ProgrammeCourseOffering.create`,
 and `Enrollment.create` for validated Domain values. Record `.reconstitute` does not
 replay offering eligibility or email availability.
+
+## Constitution v3.0.0 increments
+
+`reconciliation/v300-increments.json` declares the required lifecycle, snapshot/schema,
+conditional replacement and gate increments and their acceptance/inner associations.
+`v300-baseline.json` indexes verified original bytes under
+`history/pre-v300-alignment/`; `v300-baseline-inventory.json` retains exact original
+node/parameter identities. All pre-v300 records remain historical and cannot satisfy
+new required cycles. Baseline passing runs are verification, never manufactured Red.
+
+```bash
+.venv/bin/python -m scripts.record v300-lifecycle red .venv/bin/pytest tests/acceptance/test_enrollment.py -q
+.venv/bin/python -m scripts.record v300-lifecycle red .venv/bin/pytest tests/adapters/test_repository_lifecycle.py -q
+.venv/bin/python -m scripts.record v300-lifecycle green .venv/bin/pytest tests/acceptance/test_enrollment.py -q
+```
+
+Use the same declared increment for associated acceptance-first and inner cycles.
+Keep source/tests/config stable during runs and executions nonoverlapping.
+Executable/module names alone do not identify tests; multi-test commands are
+selections and retain all target/filter context. Consider refactoring and record
+passing verification afterward; historical metadata is never silently defaulted.

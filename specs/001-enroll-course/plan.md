@@ -101,7 +101,7 @@ New Entities and pending snapshots remain within the creation operation until th
 
 ### Restoration
 
-Repository reads actual persisted identity/state, decodes Value Objects through `.reconstitute`, then calls `Entity.reconstitute`. Student restoration validates stored saved_version even when enrollment reads return only Student; enrollment adds no version comparison/advancement. Corrupt stored values become `DataIntegrityFailure(StorageFailure)` and the existing sanitized completion failure. Missing rows remain None.
+Repository reads actual persisted identity/state, decodes Value Objects through their shared validated `.create` factories, then calls `Entity.reconstitute`. Value Object input validation and persisted-state invariants coincide here, so no separate Value Object restoration factory is needed. Persistence translates invalid Value Object outcomes into `DataIntegrityFailure(StorageFailure)`. Student restoration validates stored saved_version even when enrollment reads return only Student; enrollment adds no version comparison/advancement. Corrupt stored values retain the existing sanitized completion failure. Missing rows remain None.
 
 Restoration never replays current offering eligibility or email availability; a usable programme ID does not imply programme existence. Domain factories accept no transaction handles and perform no persistence I/O. Isolated Domain tests may supply valid identities without persistence; they verify rules, not persistence confirmation.
 

@@ -32,7 +32,7 @@ def test_same_pair_overlap(database):
 def test_invalid_overlaps_unrelated_success(database):
     with connect(database) as db:
         db.execute(
-            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('other','p','Other','other@example.com')"
+            "INSERT INTO students(student_id,programme_id,name,email,saved_version) VALUES ('other','p','Other','other@example.com',1)"
         )
         db.execute("INSERT INTO courses VALUES ('unoffered')")
     together = Barrier(2)
