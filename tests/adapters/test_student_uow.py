@@ -15,7 +15,7 @@ from enrollment.domain.values import ProgrammeId, StudentEmail, StudentId, Stude
 
 
 def candidate(identity="s", email="Alex@Example.com"):
-    return Student(
+    return Student.create(
         StudentId(identity), ProgrammeId("p"), StudentName("Alex"), StudentEmail(email)
     )
 

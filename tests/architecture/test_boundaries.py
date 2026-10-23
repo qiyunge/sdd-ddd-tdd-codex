@@ -96,3 +96,51 @@ def test_primary_checker_detects_direction_and_framework_leaks(tmp_path):
             capture_output=True,
         )
         assert result.returncode == expected, result.stdout + result.stderr
+
+
+CONSTRUCTORS = {
+    "Student",
+    "Programme",
+    "Course",
+    "ProgrammeCourseOffering",
+    "Enrollment",
+    "VerifiedIdentity",
+}
+
+
+def direct_constructors(root: Path) -> list[str]:
+    allowed = {
+        root / "src/enrollment/domain/models.py",
+        root / "src/enrollment/domain/values.py",
+    }
+    findings = []
+    for path in (root / "src/enrollment").rglob("*.py"):
+        if path in allowed:
+            continue
+        tree = ast.parse(path.read_text())
+        names = set(CONSTRUCTORS)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    if alias.name in CONSTRUCTORS:
+                        names.add(alias.asname or alias.name)
+            if (
+                isinstance(node, ast.Assign)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in names
+            ):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        names.add(target.id)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id in names
+            ):
+                findings.append(f"{path.relative_to(root)}:{node.lineno}")
+    return findings
+
+
+def test_supported_factory_and_reconstitution_calls():
+    assert direct_constructors(ROOT) == []

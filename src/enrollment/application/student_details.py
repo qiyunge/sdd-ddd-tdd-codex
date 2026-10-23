@@ -7,6 +7,7 @@ from enrollment.domain.outcomes import (
     InvalidStudentDetails,
 )
 from enrollment.domain.policies import email_available
+from enrollment.domain.values import ProgrammeId, StudentEmail, StudentId, StudentName
 
 from .cleanup import close_preserving_failure
 from .contracts import StorageFailure
@@ -25,19 +26,23 @@ DetailResult = (
 def save_student(
     command: dict[str, object], sessions: StudentSessionFactory
 ) -> DetailResult:
-    candidate = Student.create(
-        command.get("student_id"),
-        command.get("programme_id"),
-        command.get("name"),
-        command.get("email"),
-    )
-    if isinstance(candidate, (InvalidIdentifier, InvalidStudentDetails)):
-        return candidate
+    student_id = StudentId.create(command.get("student_id"))
+    if isinstance(student_id, InvalidIdentifier):
+        return student_id
+    programme_id = ProgrammeId.create(command.get("programme_id"))
+    if isinstance(programme_id, InvalidIdentifier):
+        return programme_id
+    name = StudentName.create(command.get("name"))
+    if isinstance(name, InvalidStudentDetails):
+        return name
+    email = StudentEmail.create(command.get("email"))
+    if isinstance(email, InvalidStudentDetails):
+        return email
     mode = command.get("mode")
     if mode not in ("create", "replace"):
         return InvalidStudentDetails("mode")
-    identity = candidate.student_id
-    email = candidate.email
+    candidate = Student.create(student_id, programme_id, name, email)
+    identity = student_id
     try:
         session = sessions()
         try:

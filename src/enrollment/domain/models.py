@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .outcomes import InvalidIdentifier, InvalidStudentDetails
+from .outcomes import InvalidPersistedState
 from .values import CourseId, ProgrammeId, StudentEmail, StudentId, StudentName
 
 
@@ -15,21 +15,36 @@ class Student:
 
     @classmethod
     def create(
-        cls, student_id: object, programme_id: object, name: object, email: object
-    ) -> Student | InvalidIdentifier | InvalidStudentDetails:
-        identity = StudentId.create(student_id)
-        if isinstance(identity, InvalidIdentifier):
-            return identity
-        programme = ProgrammeId.create(programme_id)
-        if isinstance(programme, InvalidIdentifier):
-            return programme
-        parsed_name = StudentName.create(name)
-        if isinstance(parsed_name, InvalidStudentDetails):
-            return parsed_name
-        parsed_email = StudentEmail.create(email)
-        if isinstance(parsed_email, InvalidStudentDetails):
-            return parsed_email
-        return cls(identity, programme, parsed_name, parsed_email)
+        cls,
+        student_id: StudentId,
+        programme_id: ProgrammeId,
+        name: StudentName,
+        email: StudentEmail,
+    ) -> Student:
+        if not isinstance(student_id, StudentId) or not isinstance(
+            programme_id, ProgrammeId
+        ):
+            raise ValueError("Student.create requires validated identifiers")
+        if not isinstance(name, StudentName) or not isinstance(email, StudentEmail):
+            raise ValueError("Student.create requires validated name and email")
+        return cls(student_id, programme_id, name, email)
+
+    @classmethod
+    def reconstitute(
+        cls,
+        student_id: object,
+        programme_id: object,
+        name: object,
+        email: object,
+    ) -> Student | InvalidPersistedState:
+        if (
+            not isinstance(student_id, StudentId)
+            or not isinstance(programme_id, ProgrammeId)
+            or not isinstance(name, StudentName)
+            or not isinstance(email, StudentEmail)
+        ):
+            return InvalidPersistedState()
+        return cls(student_id, programme_id, name, email)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Student):
@@ -54,6 +69,18 @@ class Student:
 class Programme:
     programme_id: ProgrammeId
 
+    @classmethod
+    def create(cls, programme_id: ProgrammeId) -> Programme:
+        if not isinstance(programme_id, ProgrammeId):
+            raise ValueError("Programme.create requires ProgrammeId")
+        return cls(programme_id)
+
+    @classmethod
+    def reconstitute(cls, programme_id: object) -> Programme | InvalidPersistedState:
+        if not isinstance(programme_id, ProgrammeId):
+            return InvalidPersistedState()
+        return cls(programme_id)
+
     def __post_init__(self) -> None:
         if not isinstance(self.programme_id, ProgrammeId):
             raise ValueError("programme_id requires ProgrammeId")
@@ -62,6 +89,18 @@ class Programme:
 @dataclass(frozen=True)
 class Course:
     course_id: CourseId
+
+    @classmethod
+    def create(cls, course_id: CourseId) -> Course:
+        if not isinstance(course_id, CourseId):
+            raise ValueError("Course.create requires CourseId")
+        return cls(course_id)
+
+    @classmethod
+    def reconstitute(cls, course_id: object) -> Course | InvalidPersistedState:
+        if not isinstance(course_id, CourseId):
+            return InvalidPersistedState()
+        return cls(course_id)
 
     def __post_init__(self) -> None:
         if not isinstance(self.course_id, CourseId):
@@ -72,6 +111,28 @@ class Course:
 class ProgrammeCourseOffering:
     programme_id: ProgrammeId
     course_id: CourseId
+
+    @classmethod
+    def create(
+        cls, programme_id: ProgrammeId, course_id: CourseId
+    ) -> ProgrammeCourseOffering:
+        if not isinstance(programme_id, ProgrammeId) or not isinstance(
+            course_id, CourseId
+        ):
+            raise ValueError(
+                "ProgrammeCourseOffering.create requires validated identifiers"
+            )
+        return cls(programme_id, course_id)
+
+    @classmethod
+    def reconstitute(
+        cls, programme_id: object, course_id: object
+    ) -> ProgrammeCourseOffering | InvalidPersistedState:
+        if not isinstance(programme_id, ProgrammeId) or not isinstance(
+            course_id, CourseId
+        ):
+            return InvalidPersistedState()
+        return cls(programme_id, course_id)
 
     def __post_init__(self) -> None:
         if not isinstance(self.programme_id, ProgrammeId):
@@ -86,16 +147,18 @@ class Enrollment:
     course_id: CourseId
 
     @classmethod
-    def create(
+    def create(cls, student_id: StudentId, course_id: CourseId) -> Enrollment:
+        if not isinstance(student_id, StudentId) or not isinstance(course_id, CourseId):
+            raise ValueError("Enrollment.create requires validated identifiers")
+        return cls(student_id, course_id)
+
+    @classmethod
+    def reconstitute(
         cls, student_id: object, course_id: object
-    ) -> Enrollment | InvalidIdentifier:
-        student = StudentId.create(student_id)
-        if isinstance(student, InvalidIdentifier):
-            return student
-        course = CourseId.create(course_id)
-        if isinstance(course, InvalidIdentifier):
-            return course
-        return cls(student, course)
+    ) -> Enrollment | InvalidPersistedState:
+        if not isinstance(student_id, StudentId) or not isinstance(course_id, CourseId):
+            return InvalidPersistedState()
+        return cls(student_id, course_id)
 
     def __post_init__(self) -> None:
         if not isinstance(self.student_id, StudentId):

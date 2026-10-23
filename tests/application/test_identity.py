@@ -13,7 +13,9 @@ class Verifier:
 
     def verify(self, credential):
         return (
-            None if self.subject is None else VerifiedIdentity(SubjectId(self.subject))
+            None
+            if self.subject is None
+            else VerifiedIdentity.create(SubjectId(self.subject))
         )
 
 
@@ -38,6 +40,12 @@ def test_invalid_ids(student, course):
         enroll(Command(student, course, None), Verifier("s"), forbidden)
         == Failure.INVALID_REQUEST
     )
+
+
+def test_non_text_identifier_is_invalid_request():
+    command = Command("s", "c", None)
+    object.__setattr__(command, "student_id", 1)
+    assert enroll(command, Verifier("s"), forbidden) == Failure.INVALID_REQUEST
 
 
 def test_unavailable(monkeypatch):

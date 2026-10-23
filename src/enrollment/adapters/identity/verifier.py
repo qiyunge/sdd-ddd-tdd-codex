@@ -19,4 +19,4 @@ class Verifier:
         parsed = SubjectId.create(subject)
         if isinstance(parsed, InvalidIdentifier):
             raise IdentityUnavailable("Invalid identity provider representation")
-        return VerifiedIdentity(parsed)
+        return VerifiedIdentity.create(parsed)

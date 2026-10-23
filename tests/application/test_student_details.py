@@ -21,6 +21,19 @@ def command(**changes):
     return result
 
 
+def test_first_defect_stops_before_later_defects():
+    def forbidden():
+        pytest.fail("first defect opened storage")
+
+    assert isinstance(
+        save_student(command(student_id="", name=" "), forbidden), InvalidIdentifier
+    )
+    assert (
+        save_student(command(name=" ", email="taken@example.com"), forbidden).field
+        == "name"
+    )
+
+
 @pytest.mark.parametrize("field", ["student_id", "programme_id"])
 def test_invalid_identifier_does_not_open(field):
     def forbidden():

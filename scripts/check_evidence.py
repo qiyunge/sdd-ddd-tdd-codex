@@ -13,6 +13,32 @@ from scripts.check_quality import FINAL, commands
 from scripts.record import ROOT, digest
 
 
+def chronology_errors(run: dict) -> list[str]:
+    """Historical output-only records stay valid. Opted-in records must be associated."""
+    if "activity" not in run and "implementation_state" not in run:
+        return []
+    errors = []
+    state = run.get("implementation_state")
+    if not isinstance(state, str) or not state or set(state) <= {"0"}:
+        errors.append("Missing or defaulted implementation state")
+    elif run.get("implementation_state_after") != state:
+        errors.append("Implementation changed during run")
+    test_id = run.get("test_id")
+    command = " ".join(str(part) for part in run.get("command") or [])
+    if not isinstance(test_id, str) or not test_id or test_id not in command:
+        errors.append("Unrelated or missing test identity")
+    if run.get("activity") not in {"acceptance", "inner"}:
+        errors.append("Missing activity role")
+    started, finished = run.get("started_ns"), run.get("finished_ns")
+    if (
+        not isinstance(started, int)
+        or not isinstance(finished, int)
+        or started > finished
+    ):
+        errors.append("Invalid execution times")
+    return errors
+
+
 def validate_runs(runs: list[dict]) -> list[str]:
     errors = []
     groups = {}
@@ -23,6 +49,7 @@ def validate_runs(runs: list[dict]) -> list[str]:
             or not isinstance(run.get("stderr"), str)
         ):
             errors.append("Missing execution command/output")
+        errors.extend(chronology_errors(run))
         groups.setdefault(run.get("increment"), []).append(run)
     if not groups:
         return ["Missing behavioral execution evidence"]

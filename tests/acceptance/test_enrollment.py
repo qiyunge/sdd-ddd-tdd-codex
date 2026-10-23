@@ -108,3 +108,27 @@ def test_scenario(database, scenario, expected, monkeypatch):
     else:
         assert outcome.get("reason", outcome.get("failureReason")) == expected
         assert rows(database) == before
+
+
+def test_unusable_identifiers_are_invalid_requests(database):
+    app = create_app(database, lambda credential: credential)
+    empty_student = request(app, student="", course="c")
+    empty_course = request(app, student="s", course="")
+    assert "errors" not in empty_student
+    assert "errors" not in empty_course
+    assert empty_student["data"]["enrollCourse"]["failureReason"] == "INVALID_REQUEST"
+    assert empty_course["data"]["enrollCourse"]["failureReason"] == "INVALID_REQUEST"
+    non_text = (
+        app.test_client()
+        .post(
+            "/graphql",
+            json={
+                "query": QUERY,
+                "variables": {"input": {"studentId": False, "courseId": "c"}},
+            },
+            headers={"Authorization": "s"},
+        )
+        .get_json()
+    )
+    assert "errors" in non_text
+    assert not (non_text.get("data") or {}).get("enrollCourse")

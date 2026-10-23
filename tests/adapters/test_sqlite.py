@@ -2,7 +2,12 @@ import sqlite3
 
 import pytest
 
-from enrollment.adapters.persistence.sqlite import Session, StorageFailure, connect
+from enrollment.adapters.persistence.sqlite import (
+    DataIntegrityFailure,
+    Session,
+    StorageFailure,
+    connect,
+)
 from enrollment.domain.models import (
     Course,
     Programme,
@@ -21,24 +26,91 @@ from enrollment.domain.values import (
 def test_reads(database):
     s = Session(database)
     try:
-        assert s.student(StudentId("s")) == Student(
+        assert s.student(StudentId("s")) == Student.create(
             StudentId("s"),
             ProgrammeId("p"),
             StudentName("Alex"),
             StudentEmail("alex@example.com"),
         )
         assert s.student(StudentId("absent")) is None
-        assert s.programme(ProgrammeId("p")) == Programme(ProgrammeId("p"))
+        assert s.programme(ProgrammeId("p")) == Programme.create(ProgrammeId("p"))
         assert s.programme(ProgrammeId("absent")) is None
-        assert s.course(CourseId("c")) == Course(CourseId("c"))
+        assert s.course(CourseId("c")) == Course.create(CourseId("c"))
         assert s.course(CourseId("absent")) is None
-        assert s.offering(ProgrammeId("p"), CourseId("c")) == ProgrammeCourseOffering(
-            ProgrammeId("p"), CourseId("c")
+        assert s.offering(ProgrammeId("p"), CourseId("c")) == (
+            ProgrammeCourseOffering.create(ProgrammeId("p"), CourseId("c"))
         )
         assert s.offering(ProgrammeId("p"), CourseId("absent")) is None
         assert s.enrollment(StudentId("s"), CourseId("c")) is None
     finally:
         s.close()
+
+
+def test_valid_enrollment_restores_after_offering_removed(database):
+    from enrollment.domain.models import Enrollment
+
+    with connect(database) as c:
+        c.execute("INSERT INTO enrollments VALUES ('s','c')")
+        c.execute("DELETE FROM programme_course_offerings")
+    s = Session(database)
+    try:
+        assert s.enrollment(StudentId("s"), CourseId("c")) == Enrollment.create(
+            StudentId("s"), CourseId("c")
+        )
+        assert s.offering(ProgrammeId("p"), CourseId("c")) is None
+        assert s.student(StudentId("absent")) is None
+    finally:
+        s.close()
+
+
+@pytest.mark.parametrize(
+    "column,value", [("name", " "), ("name", "\u00a0"), ("email", "")]
+)
+def test_invalid_persisted_student_text(database, column, value):
+    with connect(database) as c:
+        c.execute("PRAGMA ignore_check_constraints=ON")
+        c.execute(f"UPDATE students SET {column}=? WHERE student_id='s'", (value,))
+    s = Session(database)
+    try:
+        with pytest.raises(DataIntegrityFailure):
+            s.student(StudentId("s"))
+    finally:
+        s.close()
+
+
+def test_dangling_programme_remains_representable(tmp_path):
+    from enrollment.adapters.persistence.sqlite import initialize
+
+    path = tmp_path / "db"
+    initialize(path)
+    with connect(path) as c:
+        c.execute(
+            "INSERT INTO students(student_id,programme_id,name,email) VALUES ('s','missing','Alex','alex@example.com')"
+        )
+    s = Session(path)
+    try:
+        student = s.student(StudentId("s"))
+        assert student is not None
+        assert student.programme_id.value == "missing"
+        assert student.name.value == "Alex"
+    finally:
+        s.close()
+
+
+def test_corrupt_student_is_sanitized_persistence_failure(database):
+    from enrollment.application.contracts import Command, Failure
+    from enrollment.application.enroll import enroll
+    from tests.application.test_identity import Verifier
+
+    with connect(database) as c:
+        c.execute("PRAGMA ignore_check_constraints=ON")
+        c.execute("UPDATE students SET programme_id='' WHERE student_id='s'")
+    assert (
+        enroll(Command("s", "c", "s"), Verifier("s"), lambda: Session(database))
+        == Failure.PERSISTENCE_FAILURE
+    )
+    with connect(database) as c:
+        assert c.execute("SELECT student_id FROM students").fetchone() == ("s",)
 
 
 def test_corrupt_row(database):
@@ -47,7 +119,7 @@ def test_corrupt_row(database):
         c.execute("UPDATE students SET programme_id='' WHERE student_id='s'")
     s = Session(database)
     try:
-        with pytest.raises(StorageFailure):
+        with pytest.raises(DataIntegrityFailure):
             s.student(StudentId("s"))
     finally:
         s.close()

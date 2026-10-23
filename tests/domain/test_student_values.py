@@ -1,8 +1,9 @@
 import pytest
 
 from enrollment.domain.models import Enrollment, Student
-from enrollment.domain.outcomes import InvalidIdentifier, InvalidStudentDetails
+from enrollment.domain.outcomes import InvalidPersistedState, InvalidStudentDetails
 from enrollment.domain.values import (
+    CourseId,
     ProgrammeId,
     StudentEmail,
     StudentId,
@@ -16,6 +17,8 @@ def test_text_guards_and_outcomes(kind, bad):
     with pytest.raises(ValueError):
         kind(bad)
     assert isinstance(kind.create(bad), InvalidStudentDetails)
+    assert isinstance(kind.reconstitute(bad), InvalidPersistedState)
+    assert kind.reconstitute(" Alex ").value == " Alex "
 
 
 def test_value_equality_and_identity():
@@ -25,10 +28,12 @@ def test_value_equality_and_identity():
     assert a != StudentEmail("other@example.com")
     assert a.__eq__("Straße@Example.com") is NotImplemented
     assert a != StudentName("Straße@Example.com")
-    first = Student(StudentId("s"), ProgrammeId("p"), StudentName("First"), a)
-    changed = Student(StudentId("s"), ProgrammeId("other"), StudentName("Changed"), b)
+    first = Student.create(StudentId("s"), ProgrammeId("p"), StudentName("First"), a)
+    changed = Student.create(
+        StudentId("s"), ProgrammeId("other"), StudentName("Changed"), b
+    )
     assert first == changed and hash(first) == hash(changed)
-    assert first != Student(
+    assert first != Student.create(
         StudentId("other"), ProgrammeId("p"), StudentName("First"), a
     )
     assert first.__eq__("s") is NotImplemented
@@ -36,19 +41,49 @@ def test_value_equality_and_identity():
         Student(StudentId("s"), ProgrammeId("p"), "invalid", a)
 
 
-def test_record_factories_return_expected_failures():
-    factory = getattr(Student, "create", lambda *args: None)
-    assert isinstance(factory("s", "p", " ", "valid"), InvalidStudentDetails), (
-        "Student factory must reject raw invalid details with a returned outcome"
+def test_typed_student_create_and_reconstitution():
+    student = Student.create(
+        StudentId("s"), ProgrammeId("p"), StudentName("Alex"), StudentEmail("a@b.co")
     )
-    assert isinstance(factory("", "p", "Alex", "valid"), InvalidIdentifier)
-    assert isinstance(factory("s", "", "Alex", "valid"), InvalidIdentifier)
-    assert isinstance(factory("s", "p", "Alex", ""), InvalidStudentDetails)
-    assert isinstance(factory("s", "p", "Alex", "valid"), Student)
-    factory = getattr(Enrollment, "create", lambda *args: None)
-    assert isinstance(factory("", "c"), InvalidIdentifier)
-    assert isinstance(factory("s", ""), InvalidIdentifier)
-    assert isinstance(factory("s", "c"), Enrollment)
+    assert student == Student.reconstitute(
+        StudentId("s"), ProgrammeId("p"), StudentName("Alex"), StudentEmail("a@b.co")
+    )
+    with pytest.raises(ValueError):
+        Student.create(
+            "s", ProgrammeId("p"), StudentName("Alex"), StudentEmail("a@b.co")
+        )
+    with pytest.raises(ValueError):
+        Student.create(StudentId("s"), "p", StudentName("Alex"), StudentEmail("a@b.co"))
+    with pytest.raises(ValueError):
+        Student.create(StudentId("s"), ProgrammeId("p"), "Alex", StudentEmail("a@b.co"))
+    with pytest.raises(ValueError):
+        Student.create(StudentId("s"), ProgrammeId("p"), StudentName("Alex"), "a@b.co")
+    name = StudentName("Alex")
+    email = StudentEmail("a@b.co")
+    assert isinstance(
+        Student.reconstitute("s", ProgrammeId("p"), name, email), InvalidPersistedState
+    )
+    assert isinstance(
+        Student.reconstitute(StudentId("s"), "p", name, email), InvalidPersistedState
+    )
+    assert isinstance(
+        Student.reconstitute(StudentId("s"), ProgrammeId("p"), "Alex", email),
+        InvalidPersistedState,
+    )
+    assert isinstance(
+        Student.reconstitute(StudentId("s"), ProgrammeId("p"), name, "a@b.co"),
+        InvalidPersistedState,
+    )
+    enrollment = Enrollment.create(StudentId("s"), CourseId("c"))
+    assert enrollment == Enrollment.reconstitute(StudentId("s"), CourseId("c"))
+    with pytest.raises(ValueError):
+        Enrollment.create("s", CourseId("c"))
+    with pytest.raises(ValueError):
+        Enrollment.create(StudentId("s"), "c")
+    assert isinstance(Enrollment.reconstitute("", CourseId("c")), InvalidPersistedState)
+    assert isinstance(
+        Enrollment.reconstitute(StudentId("s"), ""), InvalidPersistedState
+    )
 
 
 def test_email_composition_is_not_normalized():

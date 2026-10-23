@@ -1,8 +1,8 @@
 {
   "passed": true,
-  "notes": "Current completion review passed after the Unicode acceptance amendment: all eight final quality checks match the amended source/config/test digest, including the 23 required Student-detail cases; actual retained grouped Red/Green records demonstrate cohesive Outside-In increments under constitution v2.0.0, and the amendment is verification-only with no claimed Red. Original failed review and archived historical artifacts, including the pre-unicode-amendment archive, remain unchanged. This decision relies on execution evidence and responsibility review, not coverage alone.",
-  "constitution": "2.0.0",
-  "source_digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "notes": "Constitution v2.3.1 alignment review passed. Domain owns ownership, duplicate, offering, and email-availability decisions. Application owns FR-009 sequencing, verification coordination, repository absence, and transactions. Adapters convert stored and transport values and do not decide those policies. Import Linter contracts do not prove those semantics. Factories and reconstitution are the supported construction path; invalid persisted state is DataIntegrityFailure and the existing persistence failure. New capture records store implementation state, test identity, activity, and execution times. Historical output-only records were not rewritten and are not v2.3.1 chronology. User Story checkpoints are verification records, not manufactured Red. Final checks match digest d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090.",
+  "constitution": "2.3.1",
+  "source_digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
   "historical_reassessment": {
     "finding": "C1/T050 grouped behavioral execution",
     "decision": "The former blanket per-behavior rejection is resolved by the amended cohesive-increment rule; available Red/Green commands/results demonstrate responsibility-oriented increments. No individual execution histories or snapshots are inferred or fabricated.",
@@ -301,13 +301,15 @@
     "Student details are one cohesive host-integration increment: required text, immutable values including equality/hash, whole-address uniqueness and persistence share one model/operation. All 21 initial acceptance variants failed behavioral assertions before implementation and passed afterward; supplemental equality/hash tests verify the resulting value semantics without fabricating fresh failures.",
     "Further failure-contract, record-factory, persistence-boundary, explicit write-outcome, acceptance-gate, historical-association, final-Green ordering and rollback/close units retain actual failing tests followed by passing verification.",
     "Refactoring was considered: Domain factories centralize validation, SQL delegates Domain predicates, protocol-only declarations are separate, duplicate import policing was consolidated. Passing focused reruns follow these changes.",
-    "Unicode acceptance amendment (2026-10-22): FR-012, US2 scenarios 3-4 and SC-006 now state full Unicode case folding, including Stra\u00dfe@example.com versus STRASSE@EXAMPLE.COM, and non-equivalence of precomposed and decomposed accents. Production source is unchanged; the existing Domain casefold key already implemented this rule. New acceptance variants test_student_details_3[unicode-expansion] and test_student_details_4[unicode-composition], the Domain test test_email_composition_is_not_normalized and a 23-case STUDENT_CASES inventory were added. Their first recorded execution passed (verification record above), so no new behavioral Red is claimed and none was manufactured; this is verification of existing behavior, not a new TDD increment, and TDD compliance is not inferred from Green. Final checks were recaptured on the amended digest: 210 tests, 15 enrollment scenarios, 23 Student-detail cases, 5 Import Linter contracts, strict mypy, Ruff lint/format and 100% Core statement/branch coverage. Pre-amendment final artifacts are archived byte-for-byte under evidence/history/pre-unicode-amendment/ with a hash index."
+    "Unicode acceptance amendment (2026-10-22): FR-012, US2 scenarios 3-4 and SC-006 now state full Unicode case folding, including Stra\u00dfe@example.com versus STRASSE@EXAMPLE.COM, and non-equivalence of precomposed and decomposed accents. Production source is unchanged; the existing Domain casefold key already implemented this rule. New acceptance variants test_student_details_3[unicode-expansion] and test_student_details_4[unicode-composition], the Domain test test_email_composition_is_not_normalized and a 23-case STUDENT_CASES inventory were added. Their first recorded execution passed (verification record above), so no new behavioral Red is claimed and none was manufactured; this is verification of existing behavior, not a new TDD increment, and TDD compliance is not inferred from Green. Final checks were recaptured on the amended digest: 210 tests, 15 enrollment scenarios, 23 Student-detail cases, 5 Import Linter contracts, strict mypy, Ruff lint/format and 100% Core statement/branch coverage. Pre-amendment final artifacts are archived byte-for-byte under evidence/history/pre-unicode-amendment/ with a hash index.",
+    "v2.3.1 alignment: value and record reconstitution, typed entity factories, FR-014 invalid requests, student-details 8-10, and associated evidence capture. Existing behavior that already passed was recorded as verification. Import Linter remains a dependency check only."
   ],
   "limitations": [
     "Early tooling TypeError/signature failure and syntax/import/collection failures are retained but are not accepted as behavioral Red. Later relevant assertion failures are the valid evidence.",
     "One SQL test incorrectly expected SQLite TEXT affinity to reject integer input; corrected to a BLOB invalid stored-type case without altering Domain raw-input rejection. That failed expectation is not proof of an application defect.",
     "This review makes no claim to tamper-proof historical execution or exhaustive per-behavior histories; neither is required. It relies on actual retained commands/results and coherent unit review, not test coverage alone.",
-    "historical_records also lists the current unicode-amendment verification record and the pre-unicode-amendment archive, because it is the hashed-reference list read by scripts/assemble_evidence.py; inclusion does not make the verification record behavioral Red/Green evidence."
+    "historical_records also lists the current unicode-amendment verification record and the pre-unicode-amendment archive, because it is the hashed-reference list read by scripts/assemble_evidence.py; inclusion does not make the verification record behavioral Red/Green evidence.",
+    "Import Linter does not prove Domain, Application, or adapter semantic responsibilities. Those were reviewed against the enrollment and student-detail behavior."
   ],
   "historical_records": [
     "specs/001-enroll-course/evidence/T009/001-verification.json",
@@ -392,54 +394,59 @@
     "specs/001-enroll-course/evidence/history/pre-unicode-amendment/final/validation.json",
     "specs/001-enroll-course/evidence/history/pre-unicode-amendment/final/checks/tests.xml",
     "specs/001-enroll-course/evidence/history/pre-unicode-amendment/final/checks/coverage.json",
-    "specs/001-enroll-course/evidence/history/pre-unicode-amendment/reconciliation/review.json"
+    "specs/001-enroll-course/evidence/history/pre-unicode-amendment/reconciliation/review.json",
+    "specs/001-enroll-course/evidence/reconciliation/alignment-baseline.json",
+    "specs/001-enroll-course/evidence/reconciliation/alignment-history-review.json",
+    "specs/001-enroll-course/evidence/history/pre-v231-alignment/index.json",
+    "specs/001-enroll-course/evidence/reconciliation/1792704276010858061-us1-checkpoint-verification.json",
+    "specs/001-enroll-course/evidence/reconciliation/1792704280020532796-us2-checkpoint-verification.json"
   ],
   "final_checks": {
     "coverage-data": {
       "reference": "specs/001-enroll-course/evidence/final/checks/coverage-data.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "coverage-report": {
       "reference": "specs/001-enroll-course/evidence/final/checks/coverage-report.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "imports": {
       "reference": "specs/001-enroll-course/evidence/final/checks/imports.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "format": {
       "reference": "specs/001-enroll-course/evidence/final/checks/format.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "lint": {
       "reference": "specs/001-enroll-course/evidence/final/checks/lint.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "typing": {
       "reference": "specs/001-enroll-course/evidence/final/checks/typing.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "architecture": {
       "reference": "specs/001-enroll-course/evidence/final/checks/architecture.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     },
     "tests": {
       "reference": "specs/001-enroll-course/evidence/final/checks/tests.json",
       "exit_code": 0,
-      "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa"
+      "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090"
     }
   },
   "reviewed_behavior": {
-    "domain": "Factories own raw-input invariants, text/casefold/equality/hash and StudentId identity; Application contains no duplicate validation/uniqueness predicates.",
-    "application": "Enrollment preserves identity privacy and exact FR-009 order; PairConflict retries once using returned outcomes. Student writes use a separate port and commit before success.",
-    "adapters": "SQLite delegates Domain text/key conversion, classifies precise unique violations and stored corruption, rejects legacy schemas; unexpected converter faults propagate. Provider known outages and programming defects remain distinct.",
+    "domain": "Domain owns ownership, duplicate, offering eligibility, and email availability. create validates supplied input; reconstitute restores stored values without replaying those decisions.",
+    "application": "Application owns verification sequencing, identifier checks, one PairConflict re-evaluation, and transaction boundaries. It does not reimplement Domain predicates.",
+    "adapters": "Adapters call Domain factories and reconstitution, map InvalidPersistedState to DataIntegrityFailure, and convert technical conflicts. They do not decide ownership, eligibility, or email availability.",
     "cleanup": "Both use-case and connection rollback/close primary failures survive secondary cleanup faults with diagnostics.",
     "evidence": "No snapshot/hash-chain/per-behavior approval requirement remains. Required acceptance identities/variants, final result hashes/freshness and current review remain enforced."
   }

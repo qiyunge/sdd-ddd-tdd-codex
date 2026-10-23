@@ -78,6 +78,18 @@ supplies the complete record. This operation is not a web endpoint. It returns a
 committed Student or an explicit invalid-input, existence, email-conflict or technical
 failure outcome. Programming defects propagate to the host error boundary.
 
+Value objects expose `.create(raw)` for supplied input and `.reconstitute(raw)` for
+stored input. `.create` returns `InvalidIdentifier` or `InvalidStudentDetails`.
+`.reconstitute` returns `InvalidPersistedState` for unusable stored text.
+`Programme.create`, `Course.create`, `ProgrammeCourseOffering.create`,
+`Enrollment.create`, and `Student.create` accept already validated Domain values.
+`VerifiedIdentity.create` accepts a `SubjectId`. Record `.reconstitute` restores
+stored rows, including a Student whose programme is not present, and does not replay
+offering eligibility or email availability. Persistence maps `InvalidPersistedState`
+to `DataIntegrityFailure`, which the use cases report as the existing persistence
+failure. Internal constructors remain for misuse detection and are not the supported
+construction API.
+
 Use the adapter's `connect` helper for direct provisioning: it registers Domain-backed
 SQLite validation/comparison functions. Unconfigured writes fail closed. Initialization
 refuses legacy Student schemas without changing their data; hosts must provision a

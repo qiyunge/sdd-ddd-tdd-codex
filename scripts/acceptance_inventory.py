@@ -18,4 +18,7 @@ STUDENT_CASES = {
     "test_student_details_5": "student-details-5",
     "test_student_details_6": "student-details-6",
     "test_student_details_7": "student-details-7",
+    "test_student_details_8": "student-details-8",
+    "test_student_details_9": "student-details-9",
+    "test_student_details_10": "student-details-10",
 }

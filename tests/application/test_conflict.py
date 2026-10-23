@@ -52,3 +52,4 @@ def test_conflict_retry_bounded():
         == Failure.PERSISTENCE_FAILURE
     )
     assert len(opened) == 2
+    assert all("delete" not in session.calls for session in sessions)

@@ -307,6 +307,41 @@ def test_lightweight_recording(tmp_path):
     assert "before" not in raw and "previous_event" not in raw
 
 
+def test_associated_runs_reject_incomplete_chronology():
+    validator = module("check_evidence")
+    state = "a" * 64
+    base = dict(
+        increment="associated",
+        stage="green",
+        exit_code=0,
+        stdout="passed",
+        stderr="",
+        command=["pytest", "tests/acceptance/test_enrollment.py"],
+        started_ns=3,
+        finished_ns=4,
+        implementation_state=state,
+        implementation_state_after=state,
+        test_id="tests/acceptance/test_enrollment.py",
+        activity="acceptance",
+    )
+    red = dict(
+        base,
+        stage="red",
+        exit_code=1,
+        stdout="AssertionError: required behavior",
+        started_ns=1,
+        finished_ns=2,
+    )
+    assert validator.validate_runs([red, base]) == []
+    assert validator.chronology_errors(dict(base, implementation_state=""))
+    assert validator.chronology_errors(dict(base, implementation_state="0" * 64))
+    assert validator.chronology_errors(dict(base, implementation_state_after="b" * 64))
+    assert validator.chronology_errors(dict(base, test_id="tests/unrelated.py"))
+    assert validator.chronology_errors(dict(base, activity=""))
+    assert validator.chronology_errors(dict(base, started_ns=9))
+    assert validator.validate_runs([dict(base, exit_code=1, stdout="passed")])
+
+
 def test_consolidated_red_green_without_snapshots():
     validator = module("check_evidence")
     assert hasattr(validator, "validate_runs"), "lightweight validation unavailable"

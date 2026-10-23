@@ -7,6 +7,7 @@ from typing import TypeVar, cast
 from enrollment.application.cleanup import close_preserving_failure
 from enrollment.application.contracts import (
     Added,
+    DataIntegrityFailure,
     PairConflict,
     StorageFailure,
     WriteResult,
@@ -23,7 +24,7 @@ from enrollment.domain.models import (
     ProgrammeCourseOffering,
     Student,
 )
-from enrollment.domain.outcomes import InvalidIdentifier, InvalidStudentDetails
+from enrollment.domain.outcomes import InvalidPersistedState, InvalidStudentDetails
 from enrollment.domain.values import (
     CourseId,
     Identifier,
@@ -64,11 +65,13 @@ class Session:
         return self._read(
             "SELECT student_id,programme_id,name,email FROM students WHERE student_id=?",
             (s.value,),
-            lambda r: Student(
-                decode(StudentId, r[0]),
-                decode(ProgrammeId, r[1]),
-                decode(StudentName, r[2]),
-                decode(StudentEmail, r[3]),
+            lambda r: restored(
+                Student.reconstitute(
+                    decode(StudentId, r[0]),
+                    decode(ProgrammeId, r[1]),
+                    decode(StudentName, r[2]),
+                    decode(StudentEmail, r[3]),
+                )
             ),
         )
 
@@ -76,29 +79,33 @@ class Session:
         return self._read(
             "SELECT programme_id FROM programmes WHERE programme_id=?",
             (p.value,),
-            lambda r: Programme(decode(ProgrammeId, r[0])),
+            lambda r: restored(Programme.reconstitute(decode(ProgrammeId, r[0]))),
         )
 
     def course(self, c: CourseId) -> Course | None:
         return self._read(
             "SELECT course_id FROM courses WHERE course_id=?",
             (c.value,),
-            lambda r: Course(decode(CourseId, r[0])),
+            lambda r: restored(Course.reconstitute(decode(CourseId, r[0]))),
         )
 
     def enrollment(self, s: StudentId, c: CourseId) -> Enrollment | None:
         return self._read(
             "SELECT student_id,course_id FROM enrollments WHERE student_id=? AND course_id=?",
             (s.value, c.value),
-            lambda r: Enrollment(decode(StudentId, r[0]), decode(CourseId, r[1])),
+            lambda r: restored(
+                Enrollment.reconstitute(decode(StudentId, r[0]), decode(CourseId, r[1]))
+            ),
         )
 
     def offering(self, p: ProgrammeId, c: CourseId) -> ProgrammeCourseOffering | None:
         return self._read(
             "SELECT programme_id,course_id FROM programme_course_offerings WHERE programme_id=? AND course_id=?",
             (p.value, c.value),
-            lambda r: ProgrammeCourseOffering(
-                decode(ProgrammeId, r[0]), decode(CourseId, r[1])
+            lambda r: restored(
+                ProgrammeCourseOffering.reconstitute(
+                    decode(ProgrammeId, r[0]), decode(CourseId, r[1])
+                )
             ),
         )
 
@@ -155,10 +162,16 @@ def initialize(path: Path) -> None:
         )
 
 
+def restored[R](record: R | InvalidPersistedState) -> R:
+    if isinstance(record, InvalidPersistedState):
+        raise DataIntegrityFailure("Invalid persisted Domain value")
+    return record
+
+
 def decode[V: Identifier | RequiredText](kind: type[V], raw: object) -> V:
-    result = kind.create(raw)
-    if isinstance(result, (InvalidIdentifier, InvalidStudentDetails)):
-        raise StorageFailure("Invalid persisted Domain value")
+    result = kind.reconstitute(raw)
+    if isinstance(result, InvalidPersistedState):
+        raise DataIntegrityFailure("Invalid persisted Domain value")
     # Factory Self is preserved at runtime; mypy erases the union-bound generic.
     return cast(V, result)
 

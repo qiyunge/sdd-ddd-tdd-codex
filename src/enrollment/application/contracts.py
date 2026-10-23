@@ -28,6 +28,10 @@ class StorageFailure(Exception):
     """A technical persistence failure, not a business rejection."""
 
 
+class DataIntegrityFailure(StorageFailure):
+    """Invalid persisted state, reported through the storage-failure result."""
+
+
 class WriteResult(StrEnum):
     ADDED = "ADDED"
     PAIR_CONFLICT = "PAIR_CONFLICT"

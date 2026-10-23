@@ -141,6 +141,38 @@ def test_student_details_7(tmp_path):
         ).fetchone() == ("New", "new@example.com")
 
 
+def test_student_details_8(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    invoke(path)
+    assert invoke(path) == "STUDENT_ALREADY_EXISTS"
+
+
+def test_student_details_9(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    assert invoke(path, mode="replace") == "STUDENT_NOT_FOUND"
+
+
+def test_student_details_10(tmp_path):
+    path = tmp_path / "db"
+    initialize(path)
+    invoke(path)
+    assert type(invoke(path, student_id="", name=" ")).__name__ == "InvalidIdentifier"
+    assert (
+        type(invoke(path, student_id="other", programme_id="", email=" ")).__name__
+        == "InvalidIdentifier"
+    )
+    assert (
+        getattr(
+            invoke(path, student_id="other", name=" ", email="Alex@Example.com"),
+            "field",
+            None,
+        )
+        == "name"
+    )
+
+
 def test_replacement_claims_are_atomic(tmp_path):
     from concurrent.futures import ThreadPoolExecutor
 

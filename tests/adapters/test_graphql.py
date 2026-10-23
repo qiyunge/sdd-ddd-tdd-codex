@@ -12,7 +12,7 @@ from tests.acceptance.test_enrollment import QUERY
     "result,typename,payload",
     [
         (
-            Enrollment(StudentId("s"), CourseId("c")),
+            Enrollment.create(StudentId("s"), CourseId("c")),
             "EnrollCourseSuccess",
             {"studentId": "s", "courseId": "c"},
         ),

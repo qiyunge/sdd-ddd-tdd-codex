@@ -11,9 +11,9 @@ from enrollment.domain.values import (
 
 
 def test_ownership():
-    assert ownership(VerifiedIdentity(SubjectId("s")), StudentId("s")) is None
+    assert ownership(VerifiedIdentity.create(SubjectId("s")), StudentId("s")) is None
     assert (
-        ownership(VerifiedIdentity(SubjectId("other")), StudentId("s"))
+        ownership(VerifiedIdentity.create(SubjectId("other")), StudentId("s"))
         == Rejection.DENIED
     )
 
@@ -21,11 +21,14 @@ def test_ownership():
 def test_duplicate():
     assert duplicate(None) is None
     assert (
-        duplicate(Enrollment(StudentId("s"), CourseId("c")))
+        duplicate(Enrollment.create(StudentId("s"), CourseId("c")))
         == Rejection.ALREADY_ENROLLED
     )
 
 
 def test_eligibility():
-    assert eligibility(ProgrammeCourseOffering(ProgrammeId("p"), CourseId("c"))) is None
+    assert (
+        eligibility(ProgrammeCourseOffering.create(ProgrammeId("p"), CourseId("c")))
+        is None
+    )
     assert eligibility(None) == Rejection.COURSE_NOT_OFFERED

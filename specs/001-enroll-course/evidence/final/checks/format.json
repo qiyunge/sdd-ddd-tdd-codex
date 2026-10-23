@@ -7,10 +7,10 @@
   ],
   "stage": "format",
   "exit_code": 0,
-  "stdout": "76 files already formatted\n",
+  "stdout": "77 files already formatted\n",
   "stderr": "",
-  "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
-  "digest_after": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
-  "started_ns": 1792685297166849264,
-  "finished_ns": 1792685297192314400
+  "digest": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "digest_after": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "started_ns": 1792704381655460854,
+  "finished_ns": 1792704381684186453
 }

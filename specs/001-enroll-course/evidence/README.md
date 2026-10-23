@@ -36,3 +36,33 @@ Historical records and original review remain unchanged. `history-index.json` an
 `evidence/history/pre-reconciliation/` preserve original final artifact hashes/bytes.
 Current review reassesses grouped work under constitution v2.0.0 using actual retained
 commands/results, never rewriting history or inferring TDD from final Green.
+
+## Constitution v2.3.1 capture
+
+`specs/001-enroll-course/evidence/reconciliation/alignment-baseline.json` records the
+pre-migration digest of `src/`, `tests/`, `scripts/`, `pyproject.toml`, and `uv.lock`.
+`evidence/history/pre-v231-alignment/` is a byte copy of the previous final artifacts,
+with SHA-256 names in `index.json`.
+
+New recorder output adds these fields to each run:
+
+- `implementation_state`: digest before the command
+- `implementation_state_after`: digest after the command; a difference is a changed-during-run failure
+- `test_id`: the pytest target, which must appear in the command
+- `activity`: `acceptance` when the command targets `tests/acceptance`, otherwise `inner`
+- `started_ns` and `finished_ns`: execution order
+
+The positional command form is unchanged. Passing HTTP and host suites recorded before
+new behavior are `verification` baselines, not Red. Historical files that lack these
+fields stay unchanged and are not v2.3.1 chronology.
+
+```bash
+.venv/bin/python -m scripts.record us1-checkpoint verification .venv/bin/pytest tests/acceptance/test_enrollment.py tests/acceptance/test_concurrency.py tests/acceptance/test_eligibility_races.py tests/acceptance/test_retry.py tests/adapters/test_server.py tests/adapters/test_package_resources.py -q
+.venv/bin/python -m scripts.record us2-checkpoint verification .venv/bin/pytest tests/acceptance/test_student_details.py tests/acceptance/test_student_record_integrity.py -q
+```
+
+Supported construction is `Identifier.create` / `RequiredText.create` for raw input,
+`.reconstitute` for stored input, `VerifiedIdentity.create(SubjectId)`, and
+`Student.create`, `Programme.create`, `Course.create`, `ProgrammeCourseOffering.create`,
+and `Enrollment.create` for validated Domain values. Record `.reconstitute` does not
+replay offering eligibility or email availability.

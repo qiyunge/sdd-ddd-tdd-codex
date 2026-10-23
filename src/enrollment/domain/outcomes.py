@@ -18,5 +18,10 @@ class InvalidStudentDetails:
     field: str
 
 
+@dataclass(frozen=True)
+class InvalidPersistedState:
+    """Stored state violates a persisted invariant."""
+
+
 class DetailRejection(StrEnum):
     EMAIL_CONFLICT = "EMAIL_CONFLICT"

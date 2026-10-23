@@ -17,7 +17,7 @@ class Session:
         return (
             None
             if self.missing == "student"
-            else Student(
+            else Student.create(
                 s,
                 ProgrammeId("p"),
                 StudentName("Alex"),
@@ -27,11 +27,11 @@ class Session:
 
     def programme(self, p):
         self.calls.append("programme")
-        return None if self.missing == "programme" else Programme(p)
+        return None if self.missing == "programme" else Programme.create(p)
 
     def course(self, c):
         self.calls.append("course")
-        return None if self.missing == "course" else Course(c)
+        return None if self.missing == "course" else Course.create(c)
 
     def close(self):
         self.calls.append("close")

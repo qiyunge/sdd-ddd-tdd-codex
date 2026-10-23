@@ -18,11 +18,11 @@ class FlowSession(Session):
 
     def enrollment(self, s, c):
         self.calls.append("enrollment")
-        return Enrollment(s, c) if self.existing else None
+        return Enrollment.create(s, c) if self.existing else None
 
     def offering(self, p, c):
         self.calls.append("offering")
-        return ProgrammeCourseOffering(p, c) if self.offered else None
+        return ProgrammeCourseOffering.create(p, c) if self.offered else None
 
     def add(self, e):
         self.calls.append("add")
@@ -46,7 +46,7 @@ class FlowSession(Session):
         (
             False,
             True,
-            Enrollment(StudentId("s"), CourseId("c")),
+            Enrollment.create(StudentId("s"), CourseId("c")),
             ["enrollment", "offering", "add", "commit", "close"],
         ),
     ],
@@ -64,6 +64,32 @@ def test_commit_failure():
         == Failure.PERSISTENCE_FAILURE
     )
     assert session.calls[-1] == "close"
+
+
+def test_second_unobservable_conflict_keeps_the_saved_pair():
+    from enrollment.application.contracts import PairConflict
+
+    class SavedConflict(FlowSession):
+        def add(self, enrollment):
+            self.calls.append("add")
+            self.retained = enrollment
+            return PairConflict
+
+    sessions = [SavedConflict(), SavedConflict()]
+    opened = []
+
+    def factory():
+        opened.append(True)
+        return sessions[len(opened) - 1]
+
+    assert (
+        enroll(Command("s", "c", "s"), Verifier("s"), factory)
+        == Failure.PERSISTENCE_FAILURE
+    )
+    assert all(
+        session.retained == Enrollment.create(StudentId("s"), CourseId("c"))
+        for session in sessions
+    )
 
 
 def test_open_failure():

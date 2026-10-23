@@ -6,7 +6,9 @@ from enrollment.domain.values import SubjectId, VerifiedIdentity
 
 
 def test_trusted():
-    assert Verifier(lambda c: "s").verify("opaque") == VerifiedIdentity(SubjectId("s"))
+    assert Verifier(lambda c: "s").verify("opaque") == VerifiedIdentity.create(
+        SubjectId("s")
+    )
     assert Verifier(lambda c: None).verify(None) is None
 
 
