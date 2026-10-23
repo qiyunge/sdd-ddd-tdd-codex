@@ -1,97 +1,73 @@
-# Internal Student Record Integration Contract
+# Trusted Student Snapshot and Conditional Replacement Contract
 
-**Scope**: Host-only Python integration, not an HTTP/GraphQL management endpoint. This contract adds no GraphQL fields, identity-provider behavior, email login, or enrollment rejection reason. See [data model](../data-model.md) and FR-011–FR-013 in [spec](../spec.md).
+**Scope**: Host-only Python integration under Constitution v3.0.0, FR-011–FR-013 and FR-018. No new HTTP/GraphQL management endpoint, email login, identity-provider behavior, or enrollment reason is added. See [data model](../data-model.md) and [Repository contract](repository-lifecycle.md).
 
-## Acceptance boundary and command
+## Operations and command shape
 
-The planned Application operation in `enrollment.application.student_details` accepts an explicitly selected CREATE or REPLACE command carrying student_id, programme_id, name and email. IDs retain existing exact nonempty-string semantics. Name/email raw command fields may contain invalid input (typed as object rather than unchecked Any); the operation must validate before producing a Domain candidate. Missing values at the host adaptation boundary are represented as None, never synthesized default details. A replacement supplies the complete desired record. No partial-patch, deletion, list/search, bulk import or management UI is added.
+The planned Application integration retains `save_student(command, sessions)` and adds `get_student(student_id, sessions)` in the Student integration module. get_student accepts raw identity input, validates it through StudentId.create, reads one saved snapshot, commits, then closes its transaction before returning that snapshot or the existing missing/technical outcome. It adds no list/search or public read endpoint.
 
-The host is responsible for calling this trusted integration capability; it is not registered as a Flask route or GraphQL resolver. Enrollment callers continue to supply only studentId/courseId. This operation supports existing prerequisite provisioning rather than changing enrollment into student management.
+save_student command fields:
 
-## Results
+| Field | Create | Replace |
+|---|---|---|
+| mode | Literal create | Literal replace |
+| student_id | Required raw exact nonempty string | Required raw exact nonempty string |
+| programme_id | Required usable ID; programme existence not required | Required complete replacement value |
+| name, email | Required nonblank strings | Required complete replacement values |
+| expected_version | Not a creation precondition; absent normally, supplied value is ignored for create | Mandatory raw snapshot.saved_version.value from the state originally read; integer in 1..9,223,372,036,854,775,807, no bool/coercion |
 
-| Result | Meaning and persistence guarantee |
+This is a full replacement, not a patch. Trusted hosts must adopt the saved-version contract; a missing expected_version on replace is invalid input, never an unconditional compatibility fallback. Choosing create explicitly continues to return already-exists for an existing Student rather than replacing it.
+
+## Snapshot and outcomes
+
+StudentSnapshot is a frozen Application result with `student: Student` and `saved_version: SavedVersion`. Details and version are obtained from the same persisted row or successful atomic change. All successful external snapshots contain a committed Entity and have no lazy reads, live connection, or framework types. Versions are concurrency metadata; StudentId equality/hash is unchanged.
+
+| Result | Meaning and mutation guarantee |
 |---|---|
-| Accepted | Valid candidate committed; return StudentId or immutable committed Student, with no lazy reads |
-| InvalidStudentDetails(field) | name or email is missing, non-text, empty or whitespace-only; field identifies name/email without echoing sensitive values; no write |
-| InvalidIdentifier | Existing ID structural validation failed; no write |
-| EmailConflict | A different StudentId owns the whole-address casefold key, irrespective of programme; no creation or change |
-| StudentAlreadyExists | CREATE targets an existing StudentId; no replacement and no accidental email-conflict classification |
-| StudentNotFound | REPLACE targets an absent StudentId; no creation |
-| StudentStorageFailure | Lock/open/read/write/commit failure, incompatible schema or corrupt stored record; no raw SQL/exception detail |
+| StudentSnapshot | Read completed or create/replace committed; includes the saved version |
+| InvalidIdentifier | Unusable StudentId/ProgrammeId; no write |
+| InvalidStudentDetails(field) | Required name/email or mode input invalid; no write, no sensitive field echo |
+| InvalidSavedVersion | Missing/unusable replacement version; no write |
+| OutdatedVersion | Supplied version differs from the current committed version; no overwrite/version change, caller reloads |
+| EmailConflict | Another Student owns the full Unicode comparison key; no change |
+| StudentAlreadyExists | Create targets an existing identity; current record/version preserved |
+| StudentNotFound | Read/replace targets an absent identity; no Student created |
+| StudentStorageFailure | Known open/lock/read/write/commit/schema/integrity failure; no raw driver diagnostics |
 
-Domain defines invalid-text and email-conflict outcomes; Application defines operation existence/technical results (StudentStorageFailure for the returned technical outcome) and composes them without Domain importing Application. Match existing Core typed-result conventions. Invalid text is distinguishable from email conflict. Name is validated before email when both are invalid; this deterministic internal choice does not alter FR-009.
+InvalidSavedVersion and OutdatedVersion are explicit Domain outcomes; keep persistence technical observations separate as described in the Repository contract. Unexpected programming/contract errors propagate to the host error boundary and are sanitized there, not mislabeled as invalid details, stale input, email conflict or absence.
 
-## Processing and ports
+## Ordered save processing
 
-1. Validate command IDs and required text with Domain result-returning factories; branch on failures without catching constructor exceptions. Pass validated StudentId, ProgrammeId, StudentName and StudentEmail to Student.create; Entity factories do not parse raw values. Missing/null values cannot become valid Domain values.
-2. Open a separate Application-owned student-record transaction via a factory, registering required adapter SQL functions and taking BEGIN IMMEDIATE before reads. Do not extend the enrollment UoW with Student writes.
-3. Load target by StudentId to select existing-create or absent-replace results. If applicable, stop without writing. No programme lookup is required or implied.
-4. Load the owner of the candidate email comparison key across the entire students table. Return StudentId or None through the port; never expose a sqlite3 row/connection. Domain policy compares owner with candidate StudentId and permits absent/self ownership, otherwise returns EmailConflict. Application branches on the policy outcome without repeating its predicate.
-5. Insert or replace that Student's fields with bound SQL and no REPLACE/IGNORE conflict suppression. Preserve enrollment rows and other students. The unique expression index remains the final concurrency guard; return EmailKeyConflict only for its precise unique violation; Application translates that port outcome to Domain EmailConflict. All other integrity failures retain their own classification.
-6. Explicitly COMMIT before Accepted. On rejection or pre-commit error ROLLBACK and close. A confirmed commit is not undone by response loss. An ambiguous commit reports technical failure without destructive compensation.
+1. Validate StudentId, ProgrammeId, StudentName and StudentEmail with Domain Value Object factories, stopping in that order. Preserve supplied text, Unicode whitespace rules and complete-address full Unicode case folding. No Entity is constructed yet.
+2. Validate mode as create/replace, retaining the existing position after the four fields. For replace, validate required expected_version next; invalid version stops before any persistence lookup. Create has no version precondition.
+3. Open a fresh worker-owned Student UoW, register Domain-backed SQL functions and execute BEGIN IMMEDIATE before reads.
+4. Read the target snapshot. For create, an existing identity returns StudentAlreadyExists. For replace, absence returns StudentNotFound before any stale/email policy. These are not email conflicts.
+5. For replace, invoke the pure Domain version policy on expected/current SavedVersion. A mismatch returns OutdatedVersion before email availability; no automatic reload, merge or write retry follows.
+6. Read the owner of the complete email comparison key; Domain email policy excludes self by StudentId and returns EmailConflict for another owner. Application branches on the Domain outcome without recomputing its predicate.
+7. Invoke Repository create_student or replace_student with the validated values. New creation INSERTs state with initial version 1, obtains the confirmed StudentId from inserted state, then invokes Domain Student.create before the enclosing commit. Replacement invokes a controlled Domain transition on the persisted identity and performs the identity/version guarded UPDATE, writing version+1. Repository never commits.
+8. Translate precise EmailKeyConflict or defensive VersionConflict observations to their expected outcomes; unrelated driver failures retain technical classification. Explicit Domain rejection or exception after persistence changes rolls back the enclosing operation's uncommitted changes.
+9. Application commits the complete operation, then returns StudentSnapshot. Every committed replacement advances version, even if every supplied detail equals its current value. Rejected/rolled-back writes do not advance it. Maximum-version exhaustion is a technical failure without write, not wraparound.
 
-The separate student-record UoW offers target read, email-owner read, insert, replace, commit, rollback and close. Application owns these Protocols; persistence implements them. Domain has no repository port for this rule because Application supplies the contextual owner to a pure policy. A constructor cannot establish global uniqueness without this context.
+Keep new Entities and pending snapshots inside the operation until commit is confirmed. Do not publish/cache them or expose them via callbacks or exception payloads. On rejection/error, discard pending references and roll back known active, uncommitted changes; canceled Entities remain unavailable for later business use. Entities have no transaction status or lifecycle handles. If cleanup fails while an ordinary result is pending, surface StudentStorageFailure and retain that result diagnostically; do not report a normal rejection with unconfirmed transaction termination. An already-propagating unexpected exception remains primary with cleanup diagnostics. Definite failure preserves the current committed details/version. On uncertain commit return StudentStorageFailure requiring reconciliation through a later independent read/operational check. Do not assume rollback/deletion is safe or delete/revert potentially committed complete state. A confirmed commit survives response loss; retrying with the old version is outdated. Read and apply current details/version only when the caller deliberately reloads and submits a new request.
 
-## Stored representation and compatibility
+## Concurrent and mixed-failure behavior
 
-Persist original name/email as required TEXT, checking nonblank with a Domain-backed registered function. Index the whole-address Domain casefold function uniquely with no programme component. Register deterministic functions on initialization and every connection, including host/fixture write connections; an unconfigured connection must fail closed. Test direct SQL attempts against the configured production schema, not only the Application preflight. The host must use the provided connection setup for direct provisioning and cannot invent an independent normalized key.
+- Two otherwise valid replacements for one Student based on the same saved version produce one committed snapshot and one OutdatedVersion when persistence is available. Never mix fields, overwrite the winner with stale intent, or restore the loser's earlier view.
+- Two different Students claiming one unused caseless email still produce one committed success and one EmailConflict. This rule does not turn two updates to one Student into competing email owners.
+- Invalid name/email precedes invalid version. Invalid/missing expected_version precedes target lookup. A usable version with a missing target returns StudentNotFound. Outdated version precedes another Student's email conflict.
+- Reload/retry can succeed only against the then-current saved version and all other validity/availability checks. An intervening update can produce another outdated conflict.
+- Replacing A with B and later restoring A still advances the version; neither hashes of details nor timestamps may allow an old token to become valid again.
 
-Legacy schemas without required fields are unsupported and must be detected without destructive changes. The host supplies valid replacement data and handles migration externally. Fresh initialization and compatible repeated initialization must work; neither inserts default names/emails. Runtime encountering invalid Student rows uses the separate controlled Domain reconstitution API and translates InvalidPersistedState to Core DataIntegrityFailure(StorageFailure), never a missing-student, user-input or eligibility result.
+## Storage compatibility and host obligations
 
-## Acceptance identities
+Use the existing local SQLite topology, configured Domain-backed comparison functions, global email index and existing identity relationships. Add saved_version representation/advancement constraints as specified in the data model; identity confirmation uses existing business-table primary-key/unique constraints and transactions. Compatible initialization remains idempotent. Refuse old/incompatible schemas before any mutation; migration/backfill is external and no default details or old-row versions are fabricated.
 
-`tests/acceptance/test_student_details.py` keeps stable scenario IDs `student-details-1` through `student-details-7` for the original User Story 2 families; parameter variants retain their parent identity. Add `student-details-8` (create an identity that already exists: existing-student rejection, record unchanged, not an email conflict), `student-details-9` (replace an identity that does not exist: missing-student rejection, no student created, not an email conflict), and `student-details-10` (several defects return only the first, in the order student identity, programme identity, name, email). Exercise real file-backed SQLite, reopen to verify persisted outcomes, and use separate worker-owned connections for races. Test restoration through the repository as well as creation/change. Preserve all existing enrollment acceptance identities. Manifest validation must require the complete enrollment set and the complete Student set, including the original twenty-three parameterized cases and scenarios 8–10, not just a total count.
+Fresh Student creation assigns version 1 explicitly. Direct unconditional updates to existing Students are not supported; use this conditional host integration. The database guard requires every accepted Student update to advance version by one, but arbitrary raw SQL is not an authorization boundary or proof of caller-supplied expected_version. Update host provisioning helpers and fixtures accordingly.
 
-Supplement with Unicode case expansion, non-ASCII whitespace, non-string values, unchanged spelling, significant surrounding whitespace, direct-constraint enforcement, function registration failure, invalid-row conversion, old-schema refusal, compatible initialization, and unrelated constraint failures. No latency or throughput promise is added.
+## Acceptance and verification
 
-## Failure propagation and internal contracts
+Preserve every original Student acceptance variant, including Unicode case expansion, composition non-equivalence and significant spaces. All replacement fixtures/helpers must obtain and explicitly supply a saved version; race/stale tests must not auto-refresh that version.
 
-InvalidIdentifier, InvalidStudentDetails, EmailConflict, StudentAlreadyExists and
-StudentNotFound are returned values, never raised exceptions. Domain Value Object factory
-signatures are conceptually `create(raw: object) -> Value | ValidationFailure`;
-record factories accept valid component values and return valid records or explicit
-record validation outcomes. Name-before-email validation remains deterministic.
-Guarded direct construction rejects internal misuse but is never the normal parser
-for untrusted input. Reconstitution is a separate controlled API using persisted-state invariants, without
-creation-only eligibility; InvalidPersistedState becomes DataIntegrityFailure(StorageFailure),
-not an InvalidStudentDetails business rejection to the host.
+US2 1–10 continue to cover details, uniqueness, existence and first-invalid-field behavior. US2 11–13 cover committed identity/state, atomic creation failure and failed replacement preservation. US2 14–17 cover competing same-version replacement, deliberate reload/retry, missing version and lost/uncertain commit response. Require exact identities student-details-1 through student-details-17 plus all original parameterized cases.
 
-Student-record port insert/replace return `Saved | EmailKeyConflict`. Reads return
-validated records or None; commit/rollback/close return None on successful completion.
-Factory/open, reads, writes and transaction operations may raise only the documented
-Core-owned StorageFailure for recognized storage/compatibility faults. Application
-translates that technical exception into the distinct StudentStorageFailure result. Neither
-kind of technical failure is an email conflict. Infrastructure exception types stay
-inside the adapter; precise driver constraint catches implement the port outcome.
-Unexpected programming/internal-contract exceptions propagate to the host error
-boundary, which records diagnostics and reports a sanitized internal failure; it
-MUST NOT convert them to invalid details, conflict or missing student. Cleanup must
-preserve the primary failure and confirmed commits.
-
-## Value equality and Student identity
-
-Returned StudentEmail values compare equal only to StudentEmail instances with the
-same complete Unicode `str.casefold()` key. Equal values have equal hashes, including
-casefold expansions such as `Straße@example.com` and `STRASSE@EXAMPLE.COM`.
-Original submitted text remains available unchanged. For unrelated operands,
-`__eq__` returns NotImplemented; no string coercion or cross-value-class equality.
-Set membership and dictionary lookup must agree with this equality. Hashes are
-process-local, not database keys or externally stable identifiers.
-
-Student identity/equality uses StudentId alone. A name/email/programme replacement
-keeps the Student's identity, including a case-only email replacement. Equal email
-values do not make different StudentIds the same entity. The conflict policy excludes
-self by StudentId; separate student records remain subject to global email uniqueness.
-
-## Construction and integrity alignment
-
-Apply the [Domain construction contract](domain-construction.md) and
-[plan.md](../plan.md). Normal creation uses factories
-with validated Entity component types; persisted rows use explicit controlled reconstitution
-called directly by Persistence Adapters. Internal constructors are not public alternatives.
-Data-integrity failure remains internally distinguishable from availability faults, while
-existing sanitized public technical outcomes are preserved. This alignment changes no
-GraphQL fields/reasons, public request shape, email rules or FR-009 order. Behavioral tests
-and explicit semantic review complement structural dependency checks; imports alone do not
-prove correct conversion or failure classification.
+Add focused contracts for snapshot consistency/no lazy reads, version input edge cases including bool/range, unchanged-detail advancement, maximum-version exhaustion, value restoration without token reuse, stale+email conflict, absent+version cases, corrupt persisted versions, SQL guard and schema refusal. Real Repository tests prove no premature commit, INSERT-based identity confirmation, Domain-rejection rollback, duplicate-identity rejection and success only after commit, beyond what dependency checks can prove. New behavioral increments require state-associated Red/Green evidence and final whole-Core coverage/static gates.

@@ -1,5 +1,7 @@
 # GraphQL Enrollment and Core Port Contracts
 
+**Baseline**: Current specification under Constitution v3.0.0; [ADR-0001](../adr/0001-entity-lifecycle-and-student-revisions.md) and [Repository lifecycle](repository-lifecycle.md). Public SDL is unchanged; internal Repository migration is pending.
+
 ## Public acceptance boundary
 
 Flask serves GraphQL over HTTP POST `/graphql`, with one SDL-first business mutation defined in [schema.graphqls](schema.graphqls). The minimal Query `_empty` field is required schema scaffolding, returns null and performs no I/O; it adds no business query. No subscriptions, batches as an extra API, federation, new read/management operations or UI are introduced.
@@ -44,12 +46,12 @@ For a structurally executable mutation:
 
 1. Application calls its Application-owned IdentityVerifier port. If the result is None (verification does not establish a trusted identity), Application immediately returns Core DENIED. Do not invoke Domain ownership, construct an UnverifiedIdentity, open a UoW or access persistence.
 2. On successful verification, Application constructs the validated target StudentId and passes it with trusted VerifiedIdentity to Domain ownership policy. Domain compares the subject identifier with the student identity exactly, without trimming or case folding, and returns the same Core DENIED on mismatch. Domain never calls IdentityVerifier or any identity-verification port. No database session or lookup is allowed for either denial. An unusable target student identity—missing, empty, or not text—is INVALID_REQUEST after verification and before ownership (FR-014). It is not a generic denial, not a missing student, and not an FR-009 reason. Well-formed IDs follow exact FR-009 ordering.
-3. After ownership passes, convert the remaining raw CourseId through validating Domain mechanisms. An unusable course identity is INVALID_REQUEST before the missing-course check (FR-014), not a missing-record or offering inference.
+3. After ownership passes, convert the remaining raw CourseId through validating Domain mechanisms. An unusable course identity is INVALID_REQUEST immediately after ownership and before every prerequisite record lookup (FR-014), including when the Student or Programme is missing; it is not a missing-record or offering inference.
 4. Open an atomic session and load Student. Application handles an absent result by returning the Core-defined MissingStudent rejection (MISSING_STUDENT); do not call a Domain existence guard or request Programme.
 5. Load that student's Programme. Application handles absence by returning Core-defined MissingProgramme (MISSING_PROGRAMME); do not call a Domain existence guard or request Course.
 6. Load Course. Application handles absence by returning Core-defined MissingCourse (MISSING_COURSE); do not call a Domain existence guard or request enrollment/offerings.
 7. Load enrollment for the pair, invoke Domain duplicate-enrollment policy and stop on existing enrollment. Offering is not loaded/evaluated here.
-8. Load current offering under the same immediate transaction, invoke Domain offering-eligibility policy, create Enrollment through Domain, add and commit.
+8. Load current offering under the same immediate transaction and invoke Domain offering-eligibility policy. Application then calls Repository create_enrollment with the validated IDs; Repository INSERTs the pair into enrollments, obtains the confirmed composite identity and invokes Domain Enrollment.create with validated values before commit. Domain rejection rolls back the enclosing operation's uncommitted changes. Repository never commits independently. Application commits the whole use case.
 9. Return success only after confirmed commit; materialize response without additional persistence reads.
 
 This preserves FR-009's exact order: unverified -> mismatch -> missing student -> missing programme -> missing course -> already enrolled -> course not offered. No eager fetching or error accumulation. A missing prerequisite prevents dependent checks. Identity verification may succeed without a Student record. Structural GraphQL errors occur before resolver execution and disclose no record state; they are not enrollment business rejection ordering.
@@ -63,10 +65,10 @@ Application exposes a plain Python enrollment use case receiving a neutral comma
 - **IdentityVerifier**: is Application-owned, verifies neutral credentials and returns trusted Domain VerifiedIdentity or None for negative verification; provider failure translates into a Core-owned technical failure. Verification does not query or infer Student existence. The trusted adapter implements verification; caller-supplied `verified=true` is not supported.
 - **EnrollmentUnitOfWorkFactory**: opens one atomic session after identity and ownership checks. The immediate write lock precedes all prerequisite reads. Application owns commit coordination; adapter owns sqlite3 mechanics.
 - **Session reads**: Student by StudentId -> Student or absent; Programme by ProgrammeId -> Programme or absent; Course by CourseId -> Course or absent; Enrollment by pair -> Enrollment or absent; offering by pair -> ProgrammeCourseOffering or absent. Domain values or None represent presence/absence; sqlite3 rows do not cross the port. Application immediately handles Student/Programme/Course absence, then invokes Domain duplicate and offering policies when reached. It requests later data only after the preceding step passes.
-- **Session writes**: add validated Enrollment, commit, rollback/close. No prerequisite mutation methods. SQL parameters are bound; no string-concatenated identifiers from request data. One connection per invocation, closed after success/rejection/failure.
+- **Session writes**: create_enrollment(StudentId, CourseId) returns a pending Repository-created Enrollment, PairConflict or applicable explicit Domain creation rejection. Application never constructs a complete Enrollment to pass to add/save. Application invokes commit; Repository operations never independently commit. Keep pending Entities inside the creation operation until commit; on failure discard pending results so canceled Entities are unavailable for further business use. No prerequisite mutation methods. Bind SQL values, keep composite keys separate, and close each worker-owned connection after the use case.
 - **Port failures**: row corruption and sqlite3 errors become Core-owned storage failures, never sqlite3 exceptions or a fake missing-record result. A detected pair uniqueness conflict permits at most one fresh full ordered evaluation after rollback, preserving higher-priority reasons. Other integrity failures must not be labeled ALREADY_ENROLLED. The immediate-transaction design should normally let the second valid request observe the first pair before insert.
 
-Explicit bridges are GraphQL DTO/context -> Application command; provider result -> Core verification; sqlite3 columns -> controlled Domain value/record reconstitution; Core outcome -> GraphQL DTO. Domain invariants apply during construction and reconstitution. Direct adapter use of public Domain mechanisms is permitted. No extra mapping layer is required between Application and Domain when their representation is already the same.
+Explicit bridges are GraphQL DTO/context -> Application command; provider result -> Core verification; sqlite3 columns -> controlled Domain value/record reconstitution; Core outcome -> GraphQL DTO. Domain invariants apply during construction and reconstitution. Direct adapter Value Object factory use is permitted; complete Entity creation/restoration is restricted to persistence Repository implementations within the confirmed-identity lifecycle. No extra mapping layer is required between Application and Domain when their representation is already the same.
 
 ## Verification obligations
 
@@ -133,8 +135,7 @@ factories return valid IDs or explicit validation failures. Application branches
 those values at the established verification/ownership timing; it MUST NOT catch
 constructor ValueError/TypeError to implement normal input rejection.
 
-Enrollment UnitOfWork.add returns `Added | PairConflict`. Reads return valid records
-or None, and commit/rollback/close return None on success. PairConflict is a returned
+Enrollment UnitOfWork.create_enrollment returns a pending Enrollment, `PairConflict`, or an applicable explicit Domain creation rejection. Reads return Repository-restored records or None; commit/rollback/close return None on success. PairConflict is a returned
 Core-owned value and replaces the raised UniqueConflict contract. Application rolls
 back/closes and retries the complete ordered attempt once. A second conflict becomes
 a Core technical StorageFailure mapped to PERSISTENCE_FAILURE, without inventing a
@@ -158,10 +159,15 @@ commit. The host-only Student operation follows its separate failure contract.
 
 Apply the [Domain construction contract](domain-construction.md) and
 [plan.md](../plan.md). Normal creation uses factories
-with validated Entity component types; persisted rows use explicit controlled reconstitution
-called directly by Persistence Adapters. Internal constructors are not public alternatives.
+with validated Entity components, only after Repository acknowledgment of the business-table INSERT and retrieval of its confirmed natural/composite identity. Persisted rows use explicit controlled reconstitution called directly by persistence Repository implementations from stored identities. Application has no complete Entity construction path. Internal constructors are not public alternatives.
 Data-integrity failure remains internally distinguishable from availability faults, while
 existing sanitized public technical outcomes are preserved. This alignment changes no
 GraphQL fields/reasons, public request shape, email rules or FR-009 order. Behavioral tests
 and explicit semantic review complement structural dependency checks; imports alone do not
 prove correct conversion or failure classification.
+
+## Lifecycle and saved-version compatibility
+
+Apply FR-015–FR-017 through the Repository lifecycle. A successful HTTP enrollment is serialized only after enclosing commit is confirmed. New Entities stay inside the creation operation; failed operations discard pending references and expose no successful or reusable canceled creation result. Domain Entities carry no transaction status or lifetime handles. Corrupt stored versions/details remain the existing PERSISTENCE_FAILURE. Uncertain commit returns technical failure requiring reconciliation through a later independent read/operational check; do not assume rollback/deletion is safe or delete/revert potentially committed complete rows.
+
+StudentSnapshot, expected_version, InvalidSavedVersion and OutdatedVersion belong only to the trusted Student integration. They add no SDL fields or GraphQL reasons and do not affect enrollment duplicate precedence. Enrollment never changes Student details or versions. Preserve tests of every existing GraphQL coercion/transport/error rule. Add US1 16–19 acceptance identities for atomic lifecycle, failed commit, historical restoration and mixed invalid-course/missing-record behavior, alongside all existing enrollment scenarios.

@@ -1,138 +1,91 @@
-# Data Model: Student Self-Enrollment
+# Data Model: Repository lifecycle and saved Student versions
 
-## Domain records
+**Baseline**: [spec.md](spec.md), Constitution v3.0.0, [ADR-0001](adr/0001-entity-lifecycle-and-student-revisions.md). This is the target design; source/schema migration is pending.
 
-Identifiers are nonempty opaque strings, compared exactly, with no trimming/case folding. This is a technical representation rule, not a new enrollment eligibility condition. Malformed GraphQL types are protocol errors. After successful verification, invalid target StudentId returns INVALID_REQUEST before ownership; invalid CourseId is handled only after ownership passes; no prerequisite queries run. Neither structural check replaces a Domain invariant. Supported Domain factories and separate reconstitution APIs enforce nonempty IDs independently of boundary validation; constructors are internal mechanisms.
+## Domain values and identity
 
-| Type | Fields / key | Relationships and invariants |
+StudentId, ProgrammeId, CourseId and SubjectId are exact nonempty strings; whitespace is not trimmed and case is not folded. `.create(raw)` returns a typed value or InvalidIdentifier; `.reconstitute(raw)` returns a typed value or InvalidPersistedState. VerifiedIdentity is a nonpersisted Value Object containing a validated SubjectId after trusted verification, not evidence of Student existence.
+
+StudentName and StudentEmail require actual strings with a non-whitespace character under the existing Python 3.12 text rules. Preserve original text. StudentEmail equality/hash uses complete `str.casefold()` output, including multi-character expansions; whitespace, Unicode composition, dots and plus tags are not normalized. Names are not unique. Field input failure returns InvalidStudentDetails(field); invalid stored text is an integrity failure.
+
+SavedVersion is a Domain Value Object containing an integer from 1 through 9,223,372,036,854,775,807. Bool, missing input, strings, floats and out-of-range values are invalid; no coercion. Normal input returns InvalidSavedVersion, restoration returns InvalidPersistedState. Reaching the maximum on a requested replacement is a technical persistence limitation: no update, no version wrap/reuse. A saved version is concurrency metadata, not an Entity identity.
+
+## Entities and snapshots
+
+| Type | Identity | State and invariants |
 |---|---|---|
-| VerifiedIdentity | subject_id | Created only from successful IdentityVerifier output; verification does not imply a Student exists |
-| Student | student_id (key), programme_id, name: StudentName, email: StudentEmail | One referenced programme; a dangling programme reference must remain representable so MISSING_PROGRAMME can be returned |
-| Programme | programme_id (key) | May offer zero or more courses |
-| Course | course_id (key) | May be offered by zero or more programmes |
-| ProgrammeCourseOffering | programme_id + course_id (key) | Existing many-to-many relationship; both IDs required |
-| Enrollment | student_id + course_id (key) | Immutable association; exactly one pair, no term dimension or synthetic identity required |
+| Student | StudentId | ProgrammeId, nonblank StudentName/StudentEmail; immutable identity, equality/hash by StudentId only. Programme existence is not a construction/restoration invariant. Global email availability is a contextual Domain policy plus atomic write guard. |
+| Programme | ProgrammeId | Valid confirmed identity; existing prerequisite, no management use case added. |
+| Course | CourseId | Valid confirmed identity; shared by multiple programmes. |
+| ProgrammeCourseOffering | (ProgrammeId, CourseId) | Both confirmed typed components; represents a persisted offering relationship. |
+| Enrollment | (StudentId, CourseId) | Unique confirmed pair; new admission requires approved prerequisite/duplicate/offering policy sequence. |
+| StudentSnapshot | Not an Entity | Immutable Application result containing a Repository-issued Student and SavedVersion from one saved row/atomic operation. Its wrapper carries necessary concurrency metadata, not duplicate Domain fields. |
 
-Application handles negative identity-verification results before Domain invocation. Domain policy owns self-enrollment ownership for a trusted VerifiedIdentity and target StudentId, duplicate-enrollment rejection and offering eligibility. Application handles absent Student, Programme and Course repository results with the corresponding Core-defined rejection types. It orchestrates exact FR-009 order, loads only data required by the next step and stops at the first rejection. Do not introduce trivial Domain guards for repository None checks or duplicate Domain predicates in Application. Enrollment construction/reconstitution validates structural invariants. A policy/factory creates a new Enrollment only after prerequisite, uniqueness and eligibility checks; reconstitution does not reapply today's eligibility because later offering changes cannot invalidate an existing enrollment.
+Entities contain Domain state and invariants, without transaction status or persistence lifecycle handles. Persistence acknowledgment of the inserted/stored identity confirms it; a typed ID alone does not. Newly constructed Entities stay inside the creation operation until commit is confirmed.
 
-## Persistence representation
+## Logical schema
 
-Planned tables: `students(student_id PRIMARY KEY, programme_id NOT NULL, name NOT NULL, email NOT NULL)`, `programmes(programme_id PRIMARY KEY)`, `courses(course_id PRIMARY KEY)`, `programme_course_offerings(programme_id, course_id, PRIMARY KEY(programme_id, course_id))`, `enrollments(student_id, course_id, PRIMARY KEY(student_id, course_id))`. All IDs are NOT NULL TEXT with nonempty checks. Offering and enrollment references can use restrictive foreign keys; no cascading deletes into enrollments. Do not impose a student-to-programme foreign key that prevents the explicitly required dangling-programme scenario. Enrollment must not write prerequisite tables. Fixture/setup tooling owns their creation and population.
+Existing business tables retain their business keys and relationships:
 
-The adapter explicitly maps each row to a validated Domain record. Corrupt stored representation maps through Domain InvalidPersistedState to Core DataIntegrityFailure(StorageFailure), a technical data-integrity failure rather than a valid Domain object, user-input rejection, or misleading missing-record result. sqlite3.Row, Connection, Cursor and sqlite3 exceptions never escape to Core; the adapter translates them into validated Domain records and Core-owned storage failure types.
+- `programmes(programme_id)` and `courses(course_id)` retain exact text primary keys.
+- `students(student_id, programme_id, name, email, saved_version)` retains StudentId primary key, required text constraints, and the global unique `students_email_key` expression index backed by Domain email comparison. A usable programme_id need not reference an existing Programme, preserving missing-programme enrollment behavior.
+- `programme_course_offerings(programme_id, course_id)` retains its composite primary key and existing foreign keys.
+- `enrollments(student_id, course_id)` retains its composite primary key and existing foreign keys; no term/year exception or additional identity is added.
 
-## Consistency and transaction lifecycle
+Student saved_version is NOT NULL INTEGER with strict SQLite `typeof(...)=integer` and positive signed-64 range. Repositories insert 1 explicitly for fresh Students; no silent version assignment is applied to existing schemas. A validation-only BEFORE UPDATE guard rejects any Student update whose new saved_version is not exactly the previous value plus one, including unchanged-detail writes. Exhaustion cannot pass through floating-point promotion. The guard does not mutate rows or establish caller intent; supported edits still require the expected-version host contract.
 
-1. Application invokes IdentityVerifier and returns Core DENIED immediately on a negative result, without Domain ownership or persistence. On success it supplies trusted VerifiedIdentity and validated StudentId to Domain ownership policy; mismatch returns DENIED before opening persistence.
-2. Create a fresh sqlite3 connection with Python 3.12 autocommit=True and issue SQL BEGIN IMMEDIATE before reading prerequisites. Use explicit SQL COMMIT/ROLLBACK, since connection.commit()/rollback() are no-ops in this mode. Create, use and close the connection in one worker thread; no connection sharing, nested BEGIN or implicit transaction defaults. Integration tests prove early lock acquisition and commit visibility.
-3. Read Student, its Programme and Course in order. Application immediately returns MissingStudent, MissingProgramme or MissingCourse for an absent result and requests no later data. After all three exist, load the existing enrollment and invoke Domain duplicate policy; only after it passes load offering and invoke Domain eligibility policy. Application sequences and short-circuits these outcomes without duplicating their predicates.
-4. If eligible, create the immutable Enrollment, insert, and commit before emitting success. A unique pair constraint provides storage defense. A unique conflict must never cause eligibility to override duplicate precedence; an unexpected conflict triggers rollback and a fresh full ordered evaluation, bounded to one replay, rather than blindly mapping every integrity error to ALREADY_ENROLLED. Other storage errors return PERSISTENCE_FAILURE.
-5. On an Application missing-record rejection, Domain policy rejection or technical failure, rollback any active transaction and close the connection. No enrollment cleanup operation or global reset is permitted.
+SQLite functions `required_text` and `email_key` are registered on every configured connection and delegate to Domain rules. Unconfigured writes fail closed; no independent ASCII key or stored caller-forgeable email key is added.
 
-The immediate transaction serializes all local writers. Membership/offering writers using the same database cannot change prerequisites between the decision and commit. A change committed before transaction acquisition is observed; a writer blocked behind enrollment takes effect after that enrollment commits. This establishes the save ordering required by FR-003. No network calls occur inside the write transaction. Independent valid requests can wait behind a rejected request, then proceed normally; lock timeouts are explicit failures, not business rejections.
+## Confirmation and creation transitions
 
-On pre-commit storage failure the transaction must leave no row. A process or response failure after commit leaves the durable row and a retry follows normal precedence; never compensate/delete a committed enrollment. Ambiguous commit outcomes require reconnect/read diagnostics and an explicit failure response rather than an unverified success; they do not justify deleting a potentially committed row.
+```text
+validated request values
+  -> enclosing BEGIN IMMEDIATE
+  -> business-table INSERT acknowledged; actual natural/composite identity obtained
+  -> Domain Entity.create with confirmed identity and validated values
+  -> Domain acceptance; pending Entity kept within creation operation
+  -> enclosing Application COMMIT confirmed
+  -> successful Entity or StudentSnapshot result
+```
 
-## State transitions
+Application owns the transaction; Repository owns persistence confirmation and Entity construction. Primary-key/unique constraints reject duplicate identities. Obtain the inserted identity through a same-transaction read (or fully consumed RETURNING if supported); retain separate components for composite keys. This does not require a new SQLite version or generated business identity.
 
-`verification failure -> Application DENIED (no ownership call)`; `VerifiedIdentity -> Domain ownership check -> DENIED | prerequisite checks`; `prerequisite checks -> first business rejection | eligible`; `eligible -> pending insert -> committed -> ENROLLED`; `pending insert -> rollback -> PERSISTENCE_FAILURE`. No persisted pending state, enrollment update, withdrawal or delete transition is introduced.
+INSERT precedes Domain construction, but its state stays uncommitted and rollback-capable. Entity.create enforces creation rules before successful commit. Any explicit Domain rejection, exception or persistence failure causes rollback of the enclosing operation's uncommitted writes. Repository never commits. Do not use INSERT OR REPLACE or salvage partial work into a commit.
 
-Uniqueness is enforced by both policy and the database. Persisted enrollment remains unchanged on retries, duplicate rejection, later membership/offering changes, or response loss. Unit/integration tests cover construction, reconstitution and every applicable transition.
+Pending Entities must not leave the operation through results, caches, callbacks or exception payloads. On failure discard pending references and make no canceled Entity available for later business use. Domain Entities have no transaction status, revocation API or lifetime handle. There is no reservation table or allocation/finalization/recovery protocol.
 
-## Python 3.12 types and explicit bridges
+## Restoration
 
-Use distinct frozen dataclass value classes `StudentId`, `ProgrammeId`, `CourseId` and `SubjectId`, with runtime checks for actual string type and nonempty value. Compare exactly, without trimming/case folding or a new UUID restriction. Annotations and NewType alone do not validate runtime values. Frozen fields do not deeply freeze mutable contents; these IDs hold immutable strings. VerifiedIdentity contains SubjectId; Domain explicitly compares its underlying identity to the target StudentId. Verification provenance comes from the trusted port, never a client-provided flag.
+```text
+persisted row -> validated persisted Value Objects
+  -> Entity.reconstitute(persisted identity, state)
+  -> valid Entity; no creation-only eligibility replay
+```
 
-Domain records have no Flask, Werkzeug, graphql-core, WSGI, persistence-framework or provider dependency. Student references ProgrammeId rather than a proxy. Missing Programme remains an absent lookup, not an eligibility failure. Tagged result dataclasses/enums represent success, one rejection or technical failure; exhaustive typed converters and tests preserve every outcome.
+Missing rows remain None. Every Student restoration validates its persisted saved_version, including enrollment reads returning only Student; that read need not expose the revision. Invalid stored identity, details, version or entity invariant becomes Domain InvalidPersistedState, then Core DataIntegrityFailure(StorageFailure), then the existing sanitized completion failure. Never turn corruption into absence or invalid user input.
 
-GraphQL input/context -> neutral Application command, provider result -> Core verification result, sqlite3 columns -> controlled Domain value/record reconstitution, and Core outcome -> GraphQL output are explicit bridges. Adapter-local typed records/dictionaries may represent transport data, but must not cross into Core as graphql-core objects or unchecked Any. Reconstitution enforces applicable persisted-state invariants without replaying creation-only eligibility. Application may use Domain values directly; no duplicate internal DTO layer is needed.
+A valid saved Enrollment can be read after membership/offerings change; a Student can be restored with a usable programme identity whose Programme is absent. Do not replay email availability during restoration. Snapshots contain no lazy reads or persistence resources. Stale snapshots cannot authorize replacement without the matching saved version.
 
-Application sequences repository reads, handles Student/Programme/Course absence itself, and invokes Domain policies through the use case's ordered flow and Protocol ports. Domain does not receive repository-miss checks as trivial guard calls. The resolver adapts a request and delegates; it performs no prerequisite queries, eligibility decisions or transaction orchestration. Output materializes committed identifiers without additional database reads during GraphQL serialization.
+## Conditional Student replacement
 
-In synchronous WSGI execution, the connection lifecycle stays inside the handling worker. On rejection/error issue SQL ROLLBACK only if a transaction is active, then close. On confirmed SQL COMMIT, preserve the durable pair regardless of response or later cleanup failure. If commit outcome cannot be established, report technical failure without compensation and retain normal retry precedence. Threaded tests use separate connections; no check_same_thread=False workaround or global connection.
+1. The host obtains details plus saved version through get_student. The returned snapshot is committed/connection-free before external return.
+2. The host submits mode=replace, student_id, programme_id, name, email and raw expected_version=snapshot.saved_version.value from the state originally read; Application validates it into SavedVersion for Repository Ports.
+3. Application validates fields in approved order, validates mode, then replacement-version representation. Invalid input stops before persistence.
+4. Under BEGIN IMMEDIATE, Repository reads the target snapshot. Absence returns StudentNotFound. Domain compares expected/current version; mismatch returns OutdatedVersion before email policy.
+5. Domain email policy compares ownership by StudentId. If allowed, Repository invokes a controlled Student.replace_details transition on the existing confirmed identity; it does not recreate a new business identity or call reconstitution on arbitrary unsaved state.
+6. Repository updates the full details and saved_version+1 with predicates on StudentId and expected_version. It must affect one row. A defensive zero-row result is an explicit outdated-version outcome; this adapter cannot legitimately lose the row between its checks under the writer lock.
+7. Application commits once, then returns the new StudentSnapshot. Rejection or confirmed rollback leaves the committed version unchanged. Cleanup failure is technical failure and does not justify reporting success.
 
-## Flask transport isolation
+All updates based on one saved version compete for that version. With persistence available and otherwise valid input, exactly one succeeds and the other is outdated. A caller must reload before retry; Application must not automatically refresh the expected version. Even identical-detail replacement consumes a new saved version; old field values restored later cannot revive an old token. There is no automatic merge or version history API.
 
-Flask introduces no persisted entity or Domain state. Request, Response, current_app, g, session and Werkzeug proxies remain in the HTTP adapter and never become entity fields, Core port types or Domain construction dependencies. Extract neutral input before delegation; keep request/identity data separate from shared app and GraphQL schema state. Flask lifecycle callbacks must not make enrollment decisions or coordinate commits; Application and its UoW retain the transaction lifecycle above.
+## Failures, compatibility and direct provisioning
 
-## Core result ownership
+Confirmed rollback after a pre-commit failure preserves prior committed details/version and removes new uncommitted state. Failed or uncertain transactions expose no successful creation result. Uncertain commit requires reconciliation through a later independent read/operational check; do not assume rollback/deletion is safe or delete/revert possibly committed complete state. Rollback applies only to a transaction known to remain active and uncommitted. Confirmed commit survives response loss; retrying a replacement with the old version returns OutdatedVersion if the target still exists. Enrollment retries continue following FR-009, not the Student version policy.
 
-| Result category | Defining layer | Decision owner |
-|---|---|---|
-| MissingStudent / MissingProgramme / MissingCourse | Application Core contracts | Application handles each corresponding absent repository result |
-| Denied (unverified or non-owner) | Core Denied type/value defined in Domain and reused by Application | Application returns it on negative verification; Domain ownership returns it on mismatch after verified input; neither accesses persistence |
-| AlreadyEnrolled | Domain policy result | Domain duplicate-enrollment rule |
-| CourseNotOffered | Domain policy result | Domain course-offering eligibility |
-| Enrollment structural validity | Domain types/factories | Domain construction, reconstitution and transitions |
-| Success / technical failure / orchestration result union | Application Core contracts | Application coordinates commit/failure and includes Domain outcomes directly |
+Inspect existing schema compatibility before mutation, including saved_version column/constraints, revision guard and stored-version validity. Refuse incompatible/legacy databases unchanged; hosts arrange an external audited migration or fresh provisioning. Compatible initialization is idempotent. Do not weaken constraints to fabricate corrupt/missing-record test fixtures.
 
-Names identify conceptual typed results, not new entities or persisted records. The transport mapper preserves the existing schema reason codes. Domain never imports the Application result union or missing-record types; no redundant wrapper/mapping is required solely between these Core layers. Repository ports return validated Domain records or None. Application must never construct a placeholder Domain object for a missing record or infer failed eligibility from absence.
+Fresh provisioning uses Repository creation helpers for complete Entity instances. Direct SQL may establish valid prerequisite persisted state using configured connections, but it must not construct business Entity instances outside Repository. Existing Student edits must use conditional host replacement; unconditional SQL update is unsupported even when a version-advancement trigger could accept its arithmetic.
 
-## Identity verification boundary
+## Verification mapping
 
-IdentityVerifier is an Application-owned Protocol returning VerifiedIdentity or None for a negative verification result. VerifiedIdentity is a trusted Domain value containing validated SubjectId, with no Student record existence implication. Domain ownership accepts VerifiedIdentity and StudentId and owns their self-enrollment identity comparison. Domain has no identity-verification port, verifier invocation, verification-failure decision or UnverifiedIdentity type. None remains an Application port result; it must never reach ownership policy as a fabricated Domain identity.
-
-Application returns the existing Core DENIED on negative verification before constructing target IDs or invoking Domain ownership. After verification succeeds it obtains the target StudentId through its result-returning Domain factory, then invokes ownership; invalid representations remain INVALID_REQUEST without persistence. This clarifies structural-input timing, not FR-009 for well-formed IDs. The existing identity-provider outage technical failure is not a negative identity assertion and also stops before ownership/persistence. CourseId validation follows successful ownership as before.
-
-
-## Required Student details (extension)
-
-| Value | Stored representation | Domain invariant |
-|---|---|---|
-| StudentName | name TEXT NOT NULL | Actual string containing a non-whitespace character; original text retained; no uniqueness |
-| StudentEmail | email TEXT NOT NULL | Same required-text invariant; whole supplied value casefold() is the comparison key |
-
-Student's frozen fields require both typed values, with no defaults. Construction, reconstitution and validated replacement enforce types and text invariants regardless of caller. The comparison key is derived, not an independent mutable field or client input. No email syntax or length rule is introduced. A Student alone establishes local validity; global email availability additionally requires the Domain uniqueness policy and atomic storage context.
-
-Add typeof/text/nonblank checks to the students table and unique expression index students_email_key on the registered Domain-backed email comparison function, across all students without programme in the key. Register deterministic functions in every persistence connection before schema access; delegate predicates/key conversion to Domain rather than duplicate them in SQL. An unconfigured writer fails closed. Keep original email spelling and do not strip whitespace before indexing. SQL functions must handle invalid/non-text/null values without accidentally making CHECK evaluate to an accepted NULL; explicit NOT NULL/type checks remain required.
-
-Internal student-record operation transitions: raw details -> validated candidate -> locked owner lookup -> Domain email-availability decision -> insert or replacement -> commit -> accepted; invalid details or conflict -> no write/rollback -> typed rejection. For replace, select target by StudentId, use the explicitly supplied programme in the full replacement candidate, and exclude only the same StudentId from conflict. No programme existence rule is added. A missing target or duplicate create ID has its own result. Keep the enrollment UoW unable to write Student. A concurrent claim has exactly one committed winner; a losing replacement retains all previous fields. No save is reported before commit, and success response loss cannot compensate a committed record.
-
-Session.student must select and reconstitute both new fields through Domain values. Invalid persisted text becomes Core DataIntegrityFailure(StorageFailure) and the existing sanitized PERSISTENCE_FAILURE transport result; it is never absence or a new ordered business rejection. Restore only from the compatible constrained schema; legacy/corrupt databases are refused rather than treated as valid global state. No automatic backfill; detect old schema before initialization and leave it untouched. Update all test factories, repository doubles and named-column seed statements to valid unique details. Keep explicit corrupt fixtures for failure testing.
-
-## Validation and failure representation
-
-Domain values retain their invariants. Raw-input factories return `ValidValue |
-ValidationFailure` and never expose a partially valid Domain value. Guarded internal
-constructors may raise on misuse, but Application and adapters must use factories
-for expected input validation rather than catch guards as normal control flow.
-Student restoration applies persisted-state predicates through separate reconstitution;
-invalid persisted state returns Domain InvalidPersistedState and is translated by the
-persistence boundary to Core DataIntegrityFailure(StorageFailure), never an input or
-business rejection. Application keeps its existing sanitized storage-failure result.
-
-Domain policies return rejection/pass values. Repository absence is None. Port writes
-return Added/PairConflict for Enrollment or Saved/EmailKeyConflict for Student;
-conflicts are values, not exception subclasses. Application coordinates their mapping,
-rollback and bounded replay as defined in the boundary contracts. Domain never imports
-Application conflict or technical types. Known operational faults may use documented
-Core-owned technical exceptions; programming errors propagate to the outer internal
-error boundary. No technical exception is silently converted to a business rejection.
-
-## StudentEmail value equality and entity identity
-
-StudentEmail equality compares the complete Unicode `str.casefold()` comparison
-key between StudentEmail instances only. Original spelling remains stored but is
-excluded from equality/hash. Its immutable hash uses the same key. Return
-NotImplemented from `__eq__` for other operand types; never compare directly to a
-raw string or another value class. Define equality/hash explicitly so frozen
-dataclass defaults do not use original-case text. Unequal keys need not have distinct
-hashes; equal values MUST have equal hashes. Hash values are not persistence keys.
-
-Student identity/equality is StudentId alone, independent of email, name and programme.
-If Student is hashable, its hash follows StudentId alone. Reconstituted or changed
-records retain identity when StudentId is unchanged. Global email uniqueness does
-not replace Student identity or merge different StudentIds. The existing email key
-used for SQL uniqueness must be identical to the value's equality key.
-
-## Supported construction and restoration inventory
-
-Apply [plan.md](plan.md) and the
-[Domain construction contract](contracts/domain-construction.md). All listed business
-models use `.create` for normal creation, even where validated component types already
-establish every current invariant. Entity factories do not parse raw scalar fields.
-Persistence uses separate value and record `.reconstitute` operations and never
-replays current enrollment eligibility or email-availability policies. Those policies
-and atomic constraints continue to govern new writes in the existing use-case order.
-Internal constructors and negative tests of misuse are not supported public creation.
-No new fields, business eligibility rules, tables, or GraphQL names are introduced.
+FR-015–FR-017 map to US1 16–18, US2 11–13, SC-008–SC-010, plus real Repository atomicity and commit-boundary tests. FR-014 maps to US1 19 and existing invalid-input HTTP cases. FR-018 maps to US2 14–17, SC-007/SC-011, and snapshot/version/conditional-write contract tests. Preserve all original acceptance variants, Domain equality/hash checks, whole-Core coverage and historical evidence; see [quickstart](quickstart.md).
