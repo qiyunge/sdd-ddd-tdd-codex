@@ -1,0 +1,14 @@
+{
+  "command": [
+    ".venv/bin/pytest",
+    "tests/domain",
+    "tests/application",
+    "tests/adapters/test_sqlite.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "..................................................................       [100%]\n66 passed in 0.67s\n",
+  "stderr": "",
+  "started_ns": 1792636676748769807,
+  "finished_ns": 1792636677691446288
+}

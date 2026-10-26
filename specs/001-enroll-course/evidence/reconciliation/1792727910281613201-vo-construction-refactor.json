@@ -1,0 +1,25 @@
+{
+  "increment": "vo-construction",
+  "stage": "refactor",
+  "command": [
+    ".venv/bin/pytest",
+    "-q",
+    "tests/acceptance",
+    "tests/domain",
+    "tests/application",
+    "tests/adapters/test_sqlite.py",
+    "tests/adapters/test_student_uow.py",
+    "tests/adapters/test_repository_lifecycle.py",
+    "tests/adapters/test_transactions.py",
+    "tests/architecture/test_boundaries.py"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 27%]\n........................................................................ [ 54%]\n........................................................................ [ 81%]\n.................................................                        [100%]\n265 passed in 9.39s\n",
+  "stderr": "",
+  "started_ns": 1792727910281613201,
+  "finished_ns": 1792727919967373591,
+  "implementation_state": "1c33d2e709a66009851134cbe89db7016c978dc8304f102d691f6589a64631b7",
+  "implementation_state_after": "1c33d2e709a66009851134cbe89db7016c978dc8304f102d691f6589a64631b7",
+  "test_id": "selection: tests/acceptance tests/domain tests/application tests/adapters/test_sqlite.py tests/adapters/test_student_uow.py tests/adapters/test_repository_lifecycle.py tests/adapters/test_transactions.py tests/architecture/test_boundaries.py",
+  "activity": "acceptance"
+}

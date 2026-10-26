@@ -1,0 +1,430 @@
+{
+  "passed": true,
+  "notes": "Current completion review passed: all eight final quality checks match the final source/config/test digest; actual retained grouped Red/Green records demonstrate cohesive Outside-In increments under constitution v2.0.0. Original failed review and archived historical artifacts remain unchanged. This decision relies on execution evidence and responsibility review, not coverage alone.",
+  "constitution": "2.0.0",
+  "source_digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df",
+  "historical_reassessment": {
+    "finding": "C1/T050 grouped behavioral execution",
+    "decision": "The former blanket per-behavior rejection is resolved by the amended cohesive-increment rule; available Red/Green commands/results demonstrate responsibility-oriented increments. No individual execution histories or snapshots are inferred or fabricated.",
+    "cohesive_units": [
+      {
+        "cohesive_unit": "identifier value construction",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T011/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T012/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "record invariants",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T013/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T014/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "Domain ownership/duplicate/eligibility policies",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T015/001-acceptance-red.json",
+          "specs/001-enroll-course/evidence/T015/002-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T016/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "identity coordination",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T018/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T019/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "prerequisite sequencing",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T020/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T021/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "enrollment flow",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T022/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T023/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "row conversion",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T024/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T025/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "transaction integrity",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T026/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T027/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "provider adaptation",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T028/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T029/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "GraphQL bridge",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T030/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T031/003-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      },
+      {
+        "cohesive_unit": "HTTP boundary",
+        "red_references": [
+          "specs/001-enroll-course/evidence/T032/001-red.json"
+        ],
+        "green_references": [
+          "specs/001-enroll-course/evidence/T033/001-green.json"
+        ],
+        "decision": "Grouped tests and implementation form one responsibility-oriented increment; v2.0.0 does not require individual assertion/branch cycles."
+      }
+    ],
+    "additional_references": [
+      "specs/001-enroll-course/evidence/T037/001-red.json",
+      "specs/001-enroll-course/evidence/T037/002-green.json",
+      "specs/001-enroll-course/evidence/T042/001-red.json",
+      "specs/001-enroll-course/evidence/T042/003-green.json"
+    ],
+    "exclusions": [
+      "T010 scenario 11 import/setup failure is not Red; the scenario 1/13 HTTP assertion failures provide the acceptance-guided start.",
+      "T042 sandbox socket PermissionError is not Red; the inert-server assertion is behavioral Red.",
+      "Race/retry cases already satisfied by the atomic transaction unit are preserved Green rather than forced to fail."
+    ]
+  },
+  "new_execution_records": {
+    "tooling": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636703336879688-tooling-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636727355225074-tooling-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636752033635085-tooling-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "student-details": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636793014036538-student-details-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636816867973440-student-details-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636876352108389-student-details-green.json",
+        "stage": "green",
+        "exit_code": 2
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636886585782134-student-details-green.json",
+        "stage": "green",
+        "exit_code": 0
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792636925312662596-student-details-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "assembly": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637252185032949-assembly-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637263648437295-assembly-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637285958514327-assembly-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "failure-contracts": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637345962265124-failure-contracts-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637385121815681-failure-contracts-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "persistence-boundaries": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637424982850383-persistence-boundaries-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637448537142899-persistence-boundaries-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "student-write": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637467971430621-student-write-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637486519538605-student-write-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "record-factories": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637518814098584-record-factories-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637534577068332-record-factories-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "acceptance-gate": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637940028238382-acceptance-gate-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792637951380128193-acceptance-gate-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "historical-association": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792638069874464475-historical-association-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792638078631815255-historical-association-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "final-green-order": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792638111129814268-final-green-order-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792638118382594609-final-green-order-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ],
+    "persistence-cleanup": [
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792638158343961622-persistence-cleanup-red.json",
+        "stage": "red",
+        "exit_code": 1
+      },
+      {
+        "reference": "specs/001-enroll-course/evidence/reconciliation/1792638167547706456-persistence-cleanup-green.json",
+        "stage": "green",
+        "exit_code": 0
+      }
+    ]
+  },
+  "new_work_review": [
+    "Student details are one cohesive host-integration increment: required text, immutable values including equality/hash, whole-address uniqueness and persistence share one model/operation. All 21 initial acceptance variants failed behavioral assertions before implementation and passed afterward; supplemental equality/hash tests verify the resulting value semantics without fabricating fresh failures.",
+    "Further failure-contract, record-factory, persistence-boundary, explicit write-outcome, acceptance-gate, historical-association, final-Green ordering and rollback/close units retain actual failing tests followed by passing verification.",
+    "Refactoring was considered: Domain factories centralize validation, SQL delegates Domain predicates, protocol-only declarations are separate, duplicate import policing was consolidated. Passing focused reruns follow these changes."
+  ],
+  "limitations": [
+    "Early tooling TypeError/signature failure and syntax/import/collection failures are retained but are not accepted as behavioral Red. Later relevant assertion failures are the valid evidence.",
+    "One SQL test incorrectly expected SQLite TEXT affinity to reject integer input; corrected to a BLOB invalid stored-type case without altering Domain raw-input rejection. That failed expectation is not proof of an application defect.",
+    "This review makes no claim to tamper-proof historical execution or exhaustive per-behavior histories; neither is required. It relies on actual retained commands/results and coherent unit review, not test coverage alone."
+  ],
+  "historical_records": [
+    "specs/001-enroll-course/evidence/T009/001-verification.json",
+    "specs/001-enroll-course/evidence/T009/002-verification.json",
+    "specs/001-enroll-course/evidence/T010/001-red.json",
+    "specs/001-enroll-course/evidence/T011/001-red.json",
+    "specs/001-enroll-course/evidence/T012/001-green.json",
+    "specs/001-enroll-course/evidence/T012/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T013/001-red.json",
+    "specs/001-enroll-course/evidence/T014/001-green.json",
+    "specs/001-enroll-course/evidence/T014/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T015/001-acceptance-red.json",
+    "specs/001-enroll-course/evidence/T015/002-red.json",
+    "specs/001-enroll-course/evidence/T016/001-green.json",
+    "specs/001-enroll-course/evidence/T016/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T018/001-red.json",
+    "specs/001-enroll-course/evidence/T019/001-green.json",
+    "specs/001-enroll-course/evidence/T019/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T020/001-red.json",
+    "specs/001-enroll-course/evidence/T021/001-green.json",
+    "specs/001-enroll-course/evidence/T021/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T022/001-red.json",
+    "specs/001-enroll-course/evidence/T023/001-green.json",
+    "specs/001-enroll-course/evidence/T023/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T024/001-red.json",
+    "specs/001-enroll-course/evidence/T025/001-green.json",
+    "specs/001-enroll-course/evidence/T025/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T026/001-red.json",
+    "specs/001-enroll-course/evidence/T027/001-green.json",
+    "specs/001-enroll-course/evidence/T027/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T028/001-red.json",
+    "specs/001-enroll-course/evidence/T029/001-green.json",
+    "specs/001-enroll-course/evidence/T029/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T030/001-red.json",
+    "specs/001-enroll-course/evidence/T031/001-green.json",
+    "specs/001-enroll-course/evidence/T031/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T031/003-green.json",
+    "specs/001-enroll-course/evidence/T031/004-no-refactor.json",
+    "specs/001-enroll-course/evidence/T032/001-red.json",
+    "specs/001-enroll-course/evidence/T033/001-green.json",
+    "specs/001-enroll-course/evidence/T033/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T034/001-acceptance-green.json",
+    "specs/001-enroll-course/evidence/T035/001-no-change.json",
+    "specs/001-enroll-course/evidence/T036/001-acceptance-green.json",
+    "specs/001-enroll-course/evidence/T037/001-red.json",
+    "specs/001-enroll-course/evidence/T037/002-green.json",
+    "specs/001-enroll-course/evidence/T037/003-no-refactor.json",
+    "specs/001-enroll-course/evidence/T037/004-refactor.json",
+    "specs/001-enroll-course/evidence/T038/001-acceptance-green.json",
+    "specs/001-enroll-course/evidence/T039/001-no-change.json",
+    "specs/001-enroll-course/evidence/T040/001-red.json",
+    "specs/001-enroll-course/evidence/T041/001-green.json",
+    "specs/001-enroll-course/evidence/T041/002-no-refactor.json",
+    "specs/001-enroll-course/evidence/T042/001-red.json",
+    "specs/001-enroll-course/evidence/T042/002-green.json",
+    "specs/001-enroll-course/evidence/T042/003-green.json",
+    "specs/001-enroll-course/evidence/T042/004-refactor.json",
+    "specs/001-enroll-course/evidence/T043/001-green.json",
+    "specs/001-enroll-course/evidence/T044/001-green.json",
+    "specs/001-enroll-course/evidence/T045/001-red.json",
+    "specs/001-enroll-course/evidence/T045/002-green.json",
+    "specs/001-enroll-course/evidence/T045/003-no-refactor.json",
+    "specs/001-enroll-course/evidence/T045/004-refactor.json",
+    "specs/001-enroll-course/evidence/T045/005-tamper-red.json",
+    "specs/001-enroll-course/evidence/T045/006-tamper-green.json",
+    "specs/001-enroll-course/evidence/T045/007-protocol-red.json",
+    "specs/001-enroll-course/evidence/T045/008-protocol-green.json",
+    "specs/001-enroll-course/evidence/T045/009-final-refactor.json",
+    "specs/001-enroll-course/evidence/T046/001-schema-red.json",
+    "specs/001-enroll-course/evidence/T046/002-schema-green.json",
+    "specs/001-enroll-course/evidence/T046/003-red.json",
+    "specs/001-enroll-course/evidence/T046/004-green.json",
+    "specs/001-enroll-course/evidence/T046/005-unique-red.json",
+    "specs/001-enroll-course/evidence/T046/006-unique-green.json",
+    "specs/001-enroll-course/evidence/T046/007-no-refactor.json",
+    "specs/001-enroll-course/evidence/T046/008-refactor.json",
+    "specs/001-enroll-course/evidence/review.json",
+    "specs/001-enroll-course/evidence/reconciliation/history-index.json"
+  ],
+  "final_checks": {
+    "coverage-data": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/coverage-data.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "coverage-report": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/coverage-report.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "imports": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/imports.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "format": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/format.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "lint": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/lint.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "typing": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/typing.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "architecture": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/architecture.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    },
+    "tests": {
+      "reference": "specs/001-enroll-course/evidence/final/checks/tests.json",
+      "exit_code": 0,
+      "digest": "dd3bd6634910bd6c4cd912a2f63711dd22b31275a2ca140c70366d5aaff199df"
+    }
+  },
+  "reviewed_behavior": {
+    "domain": "Factories own raw-input invariants, text/casefold/equality/hash and StudentId identity; Application contains no duplicate validation/uniqueness predicates.",
+    "application": "Enrollment preserves identity privacy and exact FR-009 order; PairConflict retries once using returned outcomes. Student writes use a separate port and commit before success.",
+    "adapters": "SQLite delegates Domain text/key conversion, classifies precise unique violations and stored corruption, rejects legacy schemas; unexpected converter faults propagate. Provider known outages and programming defects remain distinct.",
+    "cleanup": "Both use-case and connection rollback/close primary failures survive secondary cleanup faults with diagnostics.",
+    "evidence": "No snapshot/hash-chain/per-behavior approval requirement remains. Required acceptance identities/variants, final result hashes/freshness and current review remain enforced."
+  }
+}

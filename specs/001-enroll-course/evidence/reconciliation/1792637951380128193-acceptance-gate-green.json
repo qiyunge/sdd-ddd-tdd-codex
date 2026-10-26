@@ -1,0 +1,15 @@
+{
+  "increment": "acceptance-gate",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "tests/acceptance/test_student_details.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "..............................                                           [100%]\n30 passed in 1.40s\n",
+  "stderr": "",
+  "started_ns": 1792637951380128193,
+  "finished_ns": 1792637953025755043
+}

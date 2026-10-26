@@ -1,0 +1,67 @@
+{
+  "constitution": "3.0.0",
+  "baseline_inventory": "specs/001-enroll-course/evidence/reconciliation/v300-baseline-inventory.json",
+  "increments": {
+    "v300-gates": {
+      "inner": [
+        "tests/architecture/test_quality_gates.py"
+      ]
+    },
+    "v300-lifecycle": {
+      "acceptance": [
+        "tests/acceptance/test_enrollment.py",
+        "tests/acceptance/test_persistence_failure.py",
+        "tests/acceptance/test_retry.py"
+      ],
+      "inner": [
+        "tests/application",
+        "tests/adapters",
+        "tests/domain"
+      ]
+    },
+    "v300-snapshots": {
+      "acceptance": [
+        "tests/acceptance/test_student_details.py",
+        "tests/acceptance/test_student_record_integrity.py"
+      ],
+      "inner": [
+        "tests/domain",
+        "tests/application/test_student_details.py",
+        "tests/adapters"
+      ]
+    },
+    "v300-replacements": {
+      "acceptance": [
+        "tests/acceptance/test_student_details.py"
+      ],
+      "inner": [
+        "tests/application/test_student_details.py",
+        "tests/adapters/test_student_uow.py"
+      ]
+    },
+    "v300-boundaries": {
+      "inner": [
+        "tests/architecture/test_boundaries.py"
+      ]
+    },
+    "v300-inventory": {
+      "inner": [
+        "tests/architecture/test_quality_gates.py"
+      ]
+    },
+    "v300-recorder": {
+      "inner": [
+        "tests/architecture/test_quality_gates.py::test_v300_recorder_wrapped_pytest_module_context"
+      ]
+    },
+    "v300-exact-identifiers": {
+      "acceptance": [
+        "tests/acceptance/test_student_details.py"
+      ],
+      "inner": [
+        "tests/domain/test_values.py",
+        "tests/adapters/test_sqlite.py"
+      ]
+    }
+  }
+}

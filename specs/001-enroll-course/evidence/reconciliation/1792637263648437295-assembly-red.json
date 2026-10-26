@@ -1,0 +1,16 @@
+{
+  "increment": "assembly",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-k",
+    "assembly_reads",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________ test_assembly_reads_consolidated_files_and_current_review ___________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-125/test_assembly_reads_consolidat0')\n\n    def test_assembly_reads_consolidated_files_and_current_review(tmp_path):\n        root, manifest = fixture(tmp_path)\n        evidence = root / \"specs/001-enroll-course/evidence\"\n        log = evidence / \"reconciliation\"\n        log.mkdir()\n        for stage in (\"red\", \"green\"):\n            raw = json.loads((root / f\"{stage}.json\").read_text())\n            raw.update(increment=\"coherent\", started_ns=1 if stage == \"red\" else 3, finished_ns=2 if stage == \"red\" else 4)\n            (log / f\"{stage}.json\").write_text(json.dumps(raw))\n        (log / \"review.json\").write_text(json.dumps({\"passed\": True, \"notes\": \"current review\"}))\n        (evidence / \"review.json\").write_text(json.dumps({\"passed\": False, \"notes\": \"historical\"}))\n        assembler = module(\"assemble_evidence\")\n        assembler.ROOT = root\n        assembler.assemble()\n        state = json.loads(manifest.read_text())\n>       assert state[\"review\"][\"passed\"] is True\nE       assert False is True\n\ntests/architecture/test_quality_gates.py:301: AssertionError\n----------------------------- Captured stdout call -----------------------------\nManifest assembled; run evidence validation next.\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_assembly_reads_consolidated_files_and_current_review\n1 failed, 5 deselected in 0.08s\n",
+  "stderr": "",
+  "started_ns": 1792637263648437295,
+  "finished_ns": 1792637263996546099
+}

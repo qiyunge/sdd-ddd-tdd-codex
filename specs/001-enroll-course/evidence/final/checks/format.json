@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/.venv/bin/ruff",
+    "format",
+    "--check",
+    "."
+  ],
+  "stage": "format",
+  "exit_code": 0,
+  "stdout": "84 files already formatted\n",
+  "stderr": "",
+  "digest": "433eb0e430edb731b9afc68e4abdd213fc6c2b3b4eccd35bd49827cce33950d1",
+  "digest_after": "433eb0e430edb731b9afc68e4abdd213fc6c2b3b4eccd35bd49827cce33950d1",
+  "started_ns": 1792992442743039976,
+  "finished_ns": 1792992442770291600
+}

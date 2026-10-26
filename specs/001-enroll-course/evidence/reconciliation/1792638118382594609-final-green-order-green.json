@@ -1,0 +1,14 @@
+{
+  "increment": "final-green-order",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": ".......                                                                  [100%]\n7 passed in 0.83s\n",
+  "stderr": "",
+  "started_ns": 1792638118382594609,
+  "finished_ns": 1792638119467282099
+}

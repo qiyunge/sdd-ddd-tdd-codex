@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/.venv/bin/coverage",
+    "json",
+    "-o",
+    "/home/devuser/wsl-projects/sdd-ddd-tdd-codex/specs/001-enroll-course/evidence/final/checks/coverage.json"
+  ],
+  "stage": "coverage-data",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "Wrote JSON report to /home/devuser/wsl-projects/sdd-ddd-tdd-codex/specs/001-enroll-course/evidence/final/checks/coverage.json\n",
+  "digest": "433eb0e430edb731b9afc68e4abdd213fc6c2b3b4eccd35bd49827cce33950d1",
+  "digest_after": "433eb0e430edb731b9afc68e4abdd213fc6c2b3b4eccd35bd49827cce33950d1",
+  "started_ns": 1792992442902173896,
+  "finished_ns": 1792992443036027389
+}

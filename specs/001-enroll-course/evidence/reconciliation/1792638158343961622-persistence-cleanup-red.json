@@ -1,0 +1,16 @@
+{
+  "increment": "persistence-cleanup",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/adapters/test_student_uow.py",
+    "-k",
+    "preserves_rollback",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________ test_session_close_preserves_rollback_failure _________________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-144/test_session_close_preserves_r0')\n\n    def test_session_close_preserves_rollback_failure(tmp_path):\n        path = tmp_path / \"db\"\n        initialize(path)\n        session = Session(path)\n        real = session.connection\n        class Faults:\n            in_transaction = True\n            def execute(self, sql):\n                raise sqlite3.OperationalError(\"primary rollback\")\n            def close(self):\n                real.close()\n                raise sqlite3.OperationalError(\"secondary close\")\n        session.connection = Faults()\n        with pytest.raises(StorageFailure) as caught:\n            session.close()\n>       assert str(caught.value.__cause__) == \"primary rollback\", \"secondary cleanup must not mask primary rollback failure\"\nE       AssertionError: secondary cleanup must not mask primary rollback failure\nE       assert 'secondary close' == 'primary rollback'\nE         \nE         - primary rollback\nE         + secondary close\n\ntests/adapters/test_student_uow.py:125: AssertionError\n=========================== short test summary info ============================\nFAILED tests/adapters/test_student_uow.py::test_session_close_preserves_rollback_failure\n1 failed, 5 deselected in 0.06s\n",
+  "stderr": "",
+  "started_ns": 1792638158343961622,
+  "finished_ns": 1792638158646458507
+}

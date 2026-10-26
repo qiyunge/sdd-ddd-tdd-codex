@@ -1,0 +1,16 @@
+{
+  "increment": "tooling",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-k",
+    "lightweight or consolidated",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n__________________________ test_lightweight_recording __________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-116/test_lightweight_recording0')\n\n    def test_lightweight_recording(tmp_path):\n        recorder = module(\"record\")\n        assert hasattr(recorder, \"capture\"), \"lightweight recorder unavailable\"\n>       code = recorder.capture(tmp_path, \"cohesive\", \"green\", [sys.executable, \"-c\", \"print('passed')\"])\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       TypeError: capture() missing 1 required positional argument: 'request'\n\ntests/architecture/test_quality_gates.py:260: TypeError\n________________ test_consolidated_red_green_without_snapshots _________________\n\n    def test_consolidated_red_green_without_snapshots():\n        validator = module(\"check_evidence\")\n>       assert hasattr(validator, \"validate_runs\"), \"lightweight validation unavailable\"\nE       AssertionError: lightweight validation unavailable\nE       assert False\nE        +  where False = hasattr(<module 'check_evidence' from '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/scripts/check_evidence.py'>, 'validate_runs')\n\ntests/architecture/test_quality_gates.py:271: AssertionError\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_lightweight_recording\nFAILED tests/architecture/test_quality_gates.py::test_consolidated_red_green_without_snapshots\n2 failed, 3 deselected in 0.09s\n",
+  "stderr": "",
+  "started_ns": 1792636703336879688,
+  "finished_ns": 1792636703672151692
+}

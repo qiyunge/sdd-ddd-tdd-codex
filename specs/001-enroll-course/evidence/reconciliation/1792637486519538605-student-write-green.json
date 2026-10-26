@@ -1,0 +1,15 @@
+{
+  "increment": "student-write",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/adapters/test_student_uow.py",
+    "tests/acceptance/test_student_details.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "..........................                                               [100%]\n26 passed in 0.84s\n",
+  "stderr": "",
+  "started_ns": 1792637486519538605,
+  "finished_ns": 1792637487616421697
+}

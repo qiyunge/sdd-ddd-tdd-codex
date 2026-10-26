@@ -1,0 +1,18 @@
+{
+  "increment": "v300-replacements",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance/test_student_details.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "...............................................                          [100%]\n47 passed in 1.54s\n",
+  "stderr": "",
+  "started_ns": 1792727245287176715,
+  "finished_ns": 1792727247098031868,
+  "implementation_state": "3d24f5d5ad381dab7cc4e52bbea6bcbef184a68e9934897cf632909ab3637a8a",
+  "implementation_state_after": "3d24f5d5ad381dab7cc4e52bbea6bcbef184a68e9934897cf632909ab3637a8a",
+  "test_id": "selection: tests/acceptance/test_student_details.py",
+  "activity": "acceptance"
+}

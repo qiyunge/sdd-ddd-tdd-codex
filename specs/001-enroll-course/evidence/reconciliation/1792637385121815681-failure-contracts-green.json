@@ -1,0 +1,16 @@
+{
+  "increment": "failure-contracts",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/application",
+    "tests/adapters/test_transactions.py",
+    "tests/adapters/test_identity_bridge.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "...............................                                          [100%]\n31 passed in 0.29s\n",
+  "stderr": "",
+  "started_ns": 1792637385121815681,
+  "finished_ns": 1792637385690338631
+}

@@ -1,0 +1,16 @@
+{
+  "increment": "acceptance-gate",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-k",
+    "missing_student",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________ test_missing_student_variant_cannot_pass_by_family_count ___________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-138/test_missing_student_variant_c0')\n\n    def test_missing_student_variant_cannot_pass_by_family_count(tmp_path):\n        import xml.etree.ElementTree as ET\n        root, manifest = fixture(tmp_path)\n        report = root / \"specs/001-enroll-course/evidence/final/checks/tests.xml\"\n        tree = ET.parse(report)\n        suite = tree.find(\"testsuite\")\n        victim = next(case for case in suite if case.get(\"name\") == \"test_student_details_2[unicode-email]\")\n        suite.remove(victim)\n        tree.write(report)\n        state = json.loads(manifest.read_text())\n        ref = str(report.relative_to(root))\n        state[\"artifacts\"][ref] = hashlib.sha256(report.read_bytes()).hexdigest()\n        manifest.write_text(json.dumps(state))\n>       assert module(\"check_evidence\").validate(manifest, root), \"missing Student detail variant must fail despite all seven families existing\"\nE       AssertionError: missing Student detail variant must fail despite all seven families existing\nE       assert []\nE        +  where [] = <function validate at 0x701fc09dc4a0>(PosixPath('/tmp/pytest-of-devuser/pytest-138/test_missing_student_variant_c0/specs/001-enroll-course/evidence/final/manifest.json'), PosixPath('/tmp/pytest-of-devuser/pytest-138/test_missing_student_variant_c0'))\nE        +    where <function validate at 0x701fc09dc4a0> = <module 'check_evidence' from '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/scripts/check_evidence.py'>.validate\nE        +      where <module 'check_evidence' from '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/scripts/check_evidence.py'> = module('check_evidence')\n\ntests/architecture/test_quality_gates.py:324: AssertionError\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_missing_student_variant_cannot_pass_by_family_count\n1 failed, 6 deselected in 0.07s\n",
+  "stderr": "",
+  "started_ns": 1792637940028238382,
+  "finished_ns": 1792637940349360309
+}

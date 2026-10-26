@@ -1,0 +1,14 @@
+{
+  "increment": "tooling",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": ".....                                                                    [100%]\n5 passed in 0.69s\n",
+  "stderr": "",
+  "started_ns": 1792636752033635085,
+  "finished_ns": 1792636752963210057
+}

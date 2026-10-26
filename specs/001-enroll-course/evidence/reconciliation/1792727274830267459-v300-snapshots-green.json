@@ -1,0 +1,18 @@
+{
+  "increment": "v300-snapshots",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance/test_student_details.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "...............................................                          [100%]\n47 passed in 1.83s\n",
+  "stderr": "",
+  "started_ns": 1792727274830267459,
+  "finished_ns": 1792727276917192151,
+  "implementation_state": "024abd9a8178f0ee898aa7991048fbc2e02de6130526b1fdd03f891b1fe75641",
+  "implementation_state_after": "024abd9a8178f0ee898aa7991048fbc2e02de6130526b1fdd03f891b1fe75641",
+  "test_id": "selection: tests/acceptance/test_student_details.py",
+  "activity": "acceptance"
+}

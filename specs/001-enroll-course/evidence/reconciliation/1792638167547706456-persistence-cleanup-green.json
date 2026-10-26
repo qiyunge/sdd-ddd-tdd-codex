@@ -1,0 +1,15 @@
+{
+  "increment": "persistence-cleanup",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/adapters/test_student_uow.py",
+    "tests/acceptance/test_persistence_failure.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "............                                                             [100%]\n12 passed in 0.66s\n",
+  "stderr": "",
+  "started_ns": 1792638167547706456,
+  "finished_ns": 1792638168482891815
+}

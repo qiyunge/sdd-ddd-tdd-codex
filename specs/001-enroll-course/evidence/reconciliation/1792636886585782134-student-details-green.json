@@ -1,0 +1,14 @@
+{
+  "increment": "student-details",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance/test_student_details.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": ".....................                                                    [100%]\n21 passed in 0.27s\n",
+  "stderr": "",
+  "started_ns": 1792636886585782134,
+  "finished_ns": 1792636887096236657
+}

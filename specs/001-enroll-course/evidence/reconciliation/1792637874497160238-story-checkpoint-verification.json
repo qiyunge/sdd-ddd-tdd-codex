@@ -1,0 +1,17 @@
+{
+  "increment": "story-checkpoint",
+  "stage": "verification",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance",
+    "tests/domain",
+    "tests/application",
+    "tests/adapters",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 36%]\n........................................................................ [ 73%]\n....................................................                     [100%]\n196 passed in 5.61s\n",
+  "stderr": "",
+  "started_ns": 1792637874497160238,
+  "finished_ns": 1792637880401151553
+}

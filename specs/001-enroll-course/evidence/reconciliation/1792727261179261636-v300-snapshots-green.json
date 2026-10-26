@@ -1,0 +1,20 @@
+{
+  "increment": "v300-snapshots",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/domain",
+    "tests/application/test_student_details.py",
+    "tests/adapters/test_student_uow.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 76%]\n......................                                                   [100%]\n94 passed in 0.88s\n",
+  "stderr": "",
+  "started_ns": 1792727261179261636,
+  "finished_ns": 1792727262307888827,
+  "implementation_state": "3d24f5d5ad381dab7cc4e52bbea6bcbef184a68e9934897cf632909ab3637a8a",
+  "implementation_state_after": "3d24f5d5ad381dab7cc4e52bbea6bcbef184a68e9934897cf632909ab3637a8a",
+  "test_id": "selection: tests/domain tests/application/test_student_details.py tests/adapters/test_student_uow.py",
+  "activity": "inner"
+}

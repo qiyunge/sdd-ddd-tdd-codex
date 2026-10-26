@@ -1,0 +1,20 @@
+{
+  "increment": "v300-lifecycle",
+  "stage": "green",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance/test_enrollment.py",
+    "tests/acceptance/test_persistence_failure.py",
+    "tests/acceptance/test_retry.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "stdout": "...................................                                      [100%]\n35 passed in 1.67s\n",
+  "stderr": "",
+  "started_ns": 1792726697683674786,
+  "finished_ns": 1792726699624556098,
+  "implementation_state": "594e43843bd4c436262d1506c238d6acaba01c503843f198de3ec039b28843e7",
+  "implementation_state_after": "594e43843bd4c436262d1506c238d6acaba01c503843f198de3ec039b28843e7",
+  "test_id": "selection: tests/acceptance/test_enrollment.py tests/acceptance/test_persistence_failure.py tests/acceptance/test_retry.py",
+  "activity": "acceptance"
+}

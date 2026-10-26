@@ -1,0 +1,20 @@
+{
+  "increment": "v300-lifecycle",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/application",
+    "tests/adapters/test_repository_lifecycle.py",
+    "tests/domain",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "..............................................F......................... [ 62%]\n............................................                             [100%]\n=================================== FAILURES ===================================\n_________________ test_failed_insert_cancels_preceding_writes __________________\n\ndatabase = PosixPath('/tmp/pytest-of-devuser/pytest-43/test_failed_insert_cancels_pre0/enrollment.db')\n\n    def test_failed_insert_cancels_preceding_writes(database):\n        session = Session(database)\n        session.connection.execute(\"INSERT INTO courses VALUES ('preceding')\")\n        try:\n            with pytest.raises(StorageFailure):\n                session.create_enrollment(StudentId.create(\"missing\"), CourseId.create(\"c\"))\n>           with pytest.raises(StorageFailure):\nE           Failed: DID NOT RAISE StorageFailure\n\ntests/adapters/test_repository_lifecycle.py:108: Failed\n=========================== short test summary info ============================\nFAILED tests/adapters/test_repository_lifecycle.py::test_failed_insert_cancels_preceding_writes\n1 failed, 115 passed in 0.95s\n",
+  "stderr": "",
+  "started_ns": 1792727297738760452,
+  "finished_ns": 1792727298937477624,
+  "implementation_state": "ee180f58df9afa0f600f2871326986f6d3244712d5113f410305727e679496f2",
+  "implementation_state_after": "ee180f58df9afa0f600f2871326986f6d3244712d5113f410305727e679496f2",
+  "test_id": "selection: tests/application tests/adapters/test_repository_lifecycle.py tests/domain",
+  "activity": "inner"
+}

@@ -1,0 +1,713 @@
+{
+  "records": [
+    "specs/001-enroll-course/evidence/reconciliation/1792726442250500658-v300-baseline-verification.json"
+  ],
+  "cases": [
+    {
+      "node_id": "tests/acceptance/test_concurrency.py::test_same_pair_overlap",
+      "name": "test_same_pair_overlap",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_concurrency.py::test_invalid_overlaps_unrelated_success",
+      "name": "test_invalid_overlaps_unrelated_success",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_eligibility_races.py::test_change_before_lock[offering]",
+      "name": "test_change_before_lock[offering]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_eligibility_races.py::test_change_before_lock[membership]",
+      "name": "test_change_before_lock[membership]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_eligibility_races.py::test_writer_waits_until_commit[offering]",
+      "name": "test_writer_waits_until_commit[offering]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_eligibility_races.py::test_writer_waits_until_commit[membership]",
+      "name": "test_writer_waits_until_commit[membership]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[1-SUCCESS]",
+      "name": "test_scenario[1-SUCCESS]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[2-SUCCESS]",
+      "name": "test_scenario[2-SUCCESS]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[3-COURSE_NOT_OFFERED]",
+      "name": "test_scenario[3-COURSE_NOT_OFFERED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[4-MISSING_STUDENT]",
+      "name": "test_scenario[4-MISSING_STUDENT]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[5-MISSING_PROGRAMME]",
+      "name": "test_scenario[5-MISSING_PROGRAMME]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[6-MISSING_COURSE]",
+      "name": "test_scenario[6-MISSING_COURSE]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[7-COURSE_NOT_OFFERED]",
+      "name": "test_scenario[7-COURSE_NOT_OFFERED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[8-ALREADY_ENROLLED]",
+      "name": "test_scenario[8-ALREADY_ENROLLED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[9-ALREADY_ENROLLED]",
+      "name": "test_scenario[9-ALREADY_ENROLLED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[10-SUCCESS]",
+      "name": "test_scenario[10-SUCCESS]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[11-PERSISTENCE_FAILURE]",
+      "name": "test_scenario[11-PERSISTENCE_FAILURE]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[12-ALREADY_ENROLLED]",
+      "name": "test_scenario[12-ALREADY_ENROLLED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[13-DENIED]",
+      "name": "test_scenario[13-DENIED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[14-DENIED]",
+      "name": "test_scenario[14-DENIED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_scenario[15-COURSE_NOT_OFFERED]",
+      "name": "test_scenario[15-COURSE_NOT_OFFERED]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_enrollment.py::test_unusable_identifiers_are_invalid_requests",
+      "name": "test_unusable_identifiers_are_invalid_requests",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_persistence_failure.py::test_faults[insert-False]",
+      "name": "test_faults[insert-False]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_persistence_failure.py::test_faults[commit-False]",
+      "name": "test_faults[commit-False]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_persistence_failure.py::test_faults[ambiguous-True]",
+      "name": "test_faults[ambiguous-True]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_persistence_failure.py::test_faults[rollback-False]",
+      "name": "test_faults[rollback-False]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_persistence_failure.py::test_faults[close-True]",
+      "name": "test_faults[close-True]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_persistence_failure.py::test_lock_failure",
+      "name": "test_lock_failure",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_retry.py::test_response_loss_repeat_preserves_committed_pair",
+      "name": "test_response_loss_repeat_preserves_committed_pair",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_retry.py::test_retry_rechecks_higher_priority_missing_record",
+      "name": "test_retry_rechecks_higher_priority_missing_record",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_retry.py::test_response_serialization_loss_does_not_compensate",
+      "name": "test_response_serialization_loss_does_not_compensate",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_1",
+      "name": "test_student_details_1",
+      "scenario": {
+        "scenario": "student-details-1"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[missing-name]",
+      "name": "test_student_details_2[missing-name]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[missing-email]",
+      "name": "test_student_details_2[missing-email]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[nontext-name]",
+      "name": "test_student_details_2[nontext-name]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[nontext-email]",
+      "name": "test_student_details_2[nontext-email]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[empty-name]",
+      "name": "test_student_details_2[empty-name]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[empty-email]",
+      "name": "test_student_details_2[empty-email]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[whitespace-name]",
+      "name": "test_student_details_2[whitespace-name]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[whitespace-email]",
+      "name": "test_student_details_2[whitespace-email]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[unicode-name]",
+      "name": "test_student_details_2[unicode-name]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_2[unicode-email]",
+      "name": "test_student_details_2[unicode-email]",
+      "scenario": {
+        "scenario": "student-details-2"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_3[exact]",
+      "name": "test_student_details_3[exact]",
+      "scenario": {
+        "scenario": "student-details-3"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_3[local]",
+      "name": "test_student_details_3[local]",
+      "scenario": {
+        "scenario": "student-details-3"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_3[domain]",
+      "name": "test_student_details_3[domain]",
+      "scenario": {
+        "scenario": "student-details-3"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_3[mixed]",
+      "name": "test_student_details_3[mixed]",
+      "scenario": {
+        "scenario": "student-details-3"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_3[unicode-expansion]",
+      "name": "test_student_details_3[unicode-expansion]",
+      "scenario": {
+        "scenario": "student-details-3"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_4[tag]",
+      "name": "test_student_details_4[tag]",
+      "scenario": {
+        "scenario": "student-details-4"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_4[domain]",
+      "name": "test_student_details_4[domain]",
+      "scenario": {
+        "scenario": "student-details-4"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_4[spaces]",
+      "name": "test_student_details_4[spaces]",
+      "scenario": {
+        "scenario": "student-details-4"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_4[unicode-composition]",
+      "name": "test_student_details_4[unicode-composition]",
+      "scenario": {
+        "scenario": "student-details-4"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_5",
+      "name": "test_student_details_5",
+      "scenario": {
+        "scenario": "student-details-5"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_6",
+      "name": "test_student_details_6",
+      "scenario": {
+        "scenario": "student-details-6"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_7",
+      "name": "test_student_details_7",
+      "scenario": {
+        "scenario": "student-details-7"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_8",
+      "name": "test_student_details_8",
+      "scenario": {
+        "scenario": "student-details-8"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_9",
+      "name": "test_student_details_9",
+      "scenario": {
+        "scenario": "student-details-9"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_student_details_10",
+      "name": "test_student_details_10",
+      "scenario": {
+        "scenario": "student-details-10"
+      },
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_replacement_claims_are_atomic",
+      "name": "test_replacement_claims_are_atomic",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_details.py::test_invalid_replacement_preserves_details",
+      "name": "test_invalid_replacement_preserves_details",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/acceptance/test_student_record_integrity.py::test_corrupt_student_is_technical_failure",
+      "name": "test_corrupt_student_is_technical_failure",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_boundaries.py::test_dynamic_and_forward_annotation_isolation",
+      "name": "test_dynamic_and_forward_annotation_isolation",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_boundaries.py::test_public_annotations_are_core_owned",
+      "name": "test_public_annotations_are_core_owned",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_boundaries.py::test_primary_checker_detects_direction_and_framework_leaks",
+      "name": "test_primary_checker_detects_direction_and_framework_leaks",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_boundaries.py::test_supported_factory_and_reconstitution_calls",
+      "name": "test_supported_factory_and_reconstitution_calls",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_capture_does_not_require_manifest",
+      "name": "test_capture_does_not_require_manifest",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_sequence_and_tampering",
+      "name": "test_sequence_and_tampering",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_real_coverage_rejects_unimported_module_and_missed_branch",
+      "name": "test_real_coverage_rejects_unimported_module_and_missed_branch",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_lightweight_recording",
+      "name": "test_lightweight_recording",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_associated_runs_reject_incomplete_chronology",
+      "name": "test_associated_runs_reject_incomplete_chronology",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_consolidated_red_green_without_snapshots",
+      "name": "test_consolidated_red_green_without_snapshots",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_assembly_reads_consolidated_files_and_current_review",
+      "name": "test_assembly_reads_consolidated_files_and_current_review",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/architecture/test_quality_gates.py::test_missing_student_variant_cannot_pass_by_family_count",
+      "name": "test_missing_student_variant_cannot_pass_by_family_count",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_reads",
+      "name": "test_reads",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_valid_enrollment_restores_after_offering_removed",
+      "name": "test_valid_enrollment_restores_after_offering_removed",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_invalid_persisted_student_text[name- ]",
+      "name": "test_invalid_persisted_student_text[name- ]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_invalid_persisted_student_text[name-\\xa0]",
+      "name": "test_invalid_persisted_student_text[name-\\xa0]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_invalid_persisted_student_text[email-]",
+      "name": "test_invalid_persisted_student_text[email-]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_dangling_programme_remains_representable",
+      "name": "test_dangling_programme_remains_representable",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_corrupt_student_is_sanitized_persistence_failure",
+      "name": "test_corrupt_student_is_sanitized_persistence_failure",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_corrupt_row",
+      "name": "test_corrupt_row",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[programmes-columns0-None]",
+      "name": "test_schema_id_constraints[programmes-columns0-None]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[programmes-columns0-]",
+      "name": "test_schema_id_constraints[programmes-columns0-]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[programmes-columns0-blob]",
+      "name": "test_schema_id_constraints[programmes-columns0-blob]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[students-columns1-None]",
+      "name": "test_schema_id_constraints[students-columns1-None]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[students-columns1-]",
+      "name": "test_schema_id_constraints[students-columns1-]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[students-columns1-blob]",
+      "name": "test_schema_id_constraints[students-columns1-blob]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[courses-columns2-None]",
+      "name": "test_schema_id_constraints[courses-columns2-None]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[courses-columns2-]",
+      "name": "test_schema_id_constraints[courses-columns2-]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[courses-columns2-blob]",
+      "name": "test_schema_id_constraints[courses-columns2-blob]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[programme_course_offerings-columns3-None]",
+      "name": "test_schema_id_constraints[programme_course_offerings-columns3-None]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[programme_course_offerings-columns3-]",
+      "name": "test_schema_id_constraints[programme_course_offerings-columns3-]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[programme_course_offerings-columns3-blob]",
+      "name": "test_schema_id_constraints[programme_course_offerings-columns3-blob]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[enrollments-columns4-None]",
+      "name": "test_schema_id_constraints[enrollments-columns4-None]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[enrollments-columns4-]",
+      "name": "test_schema_id_constraints[enrollments-columns4-]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_schema_id_constraints[enrollments-columns4-blob]",
+      "name": "test_schema_id_constraints[enrollments-columns4-blob]",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_restrictive_schema_and_pair_uniqueness",
+      "name": "test_restrictive_schema_and_pair_uniqueness",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_sqlite.py::test_parameter_binding_and_thread_ownership",
+      "name": "test_parameter_binding_and_thread_ownership",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_student_uow.py::test_database_functions_delegate_domain",
+      "name": "test_database_functions_delegate_domain",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_student_uow.py::test_converter_programming_error_propagates",
+      "name": "test_converter_programming_error_propagates",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_student_uow.py::test_domain_backed_constraints_and_email_conflict",
+      "name": "test_domain_backed_constraints_and_email_conflict",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_student_uow.py::test_legacy_refused_unchanged",
+      "name": "test_legacy_refused_unchanged",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_student_uow.py::test_student_write_success_is_explicit",
+      "name": "test_student_write_success_is_explicit",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_student_uow.py::test_session_close_preserves_rollback_failure",
+      "name": "test_session_close_preserves_rollback_failure",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_transactions.py::test_commit_and_reconstitution",
+      "name": "test_commit_and_reconstitution",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_transactions.py::test_rollback",
+      "name": "test_rollback",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_transactions.py::test_early_writer_lock",
+      "name": "test_early_writer_lock",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_transactions.py::test_explicit_rollback_and_sql_trace",
+      "name": "test_explicit_rollback_and_sql_trace",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_transactions.py::test_non_pair_unique_is_storage_failure",
+      "name": "test_non_pair_unique_is_storage_failure",
+      "scenario": {},
+      "status": "passed"
+    },
+    {
+      "node_id": "tests/adapters/test_transactions.py::test_pair_unique_and_foreign_key_classification",
+      "name": "test_pair_unique_and_foreign_key_classification",
+      "scenario": {},
+      "status": "passed"
+    }
+  ]
+}

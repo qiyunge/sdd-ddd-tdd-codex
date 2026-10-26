@@ -1,0 +1,14 @@
+{
+  "increment": "record-factories",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/domain/test_student_values.py",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "...........F                                                             [100%]\n=================================== FAILURES ===================================\n________________ test_record_factories_return_expected_failures ________________\n\n    def test_record_factories_return_expected_failures():\n        factory = getattr(Student, \"create\", lambda *args: None)\n>       assert isinstance(factory(\"s\", \"p\", \" \", \"valid\"), InvalidStudentDetails), \"Student factory must reject raw invalid details with a returned outcome\"\nE       AssertionError: Student factory must reject raw invalid details with a returned outcome\nE       assert False\nE        +  where False = isinstance(None, InvalidStudentDetails)\nE        +    where None = <function test_record_factories_return_expected_failures.<locals>.<lambda> at 0x74e0f18040e0>('s', 'p', ' ', 'valid')\n\ntests/domain/test_student_values.py:34: AssertionError\n=========================== short test summary info ============================\nFAILED tests/domain/test_student_values.py::test_record_factories_return_expected_failures\n1 failed, 11 passed in 0.04s\n",
+  "stderr": "",
+  "started_ns": 1792637518814098584,
+  "finished_ns": 1792637519112568458
+}

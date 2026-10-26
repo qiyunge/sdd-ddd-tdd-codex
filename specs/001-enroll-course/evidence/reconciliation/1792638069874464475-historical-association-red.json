@@ -1,0 +1,16 @@
+{
+  "increment": "historical-association",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/architecture/test_quality_gates.py",
+    "-k",
+    "assembly_reads",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________ test_assembly_reads_consolidated_files_and_current_review ___________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-141/test_assembly_reads_consolidat0')\n\n    def test_assembly_reads_consolidated_files_and_current_review(tmp_path):\n        root, manifest = fixture(tmp_path)\n        evidence = root / \"specs/001-enroll-course/evidence\"\n        log = evidence / \"reconciliation\"\n        log.mkdir()\n        for stage in (\"red\", \"green\"):\n            raw = json.loads((root / f\"{stage}.json\").read_text())\n            raw.update(\n                increment=\"coherent\",\n                started_ns=1 if stage == \"red\" else 3,\n                finished_ns=2 if stage == \"red\" else 4,\n            )\n            (log / f\"{stage}.json\").write_text(json.dumps(raw))\n        (log / \"review.json\").write_text(\n            json.dumps({\"passed\": True, \"notes\": \"current review\", \"historical_records\": [\"specs/001-enroll-course/evidence/review.json\"]})\n        )\n        (evidence / \"review.json\").write_text(\n            json.dumps({\"passed\": False, \"notes\": \"historical\"})\n        )\n        assembler = module(\"assemble_evidence\")\n        assembler.ROOT = root\n        assembler.assemble()\n        state = json.loads(manifest.read_text())\n        assert state[\"review\"][\"passed\"] is True\n>       assert \"specs/001-enroll-course/evidence/review.json\" in state[\"artifacts\"], \"historical review references must be preserved and verified\"\nE       AssertionError: historical review references must be preserved and verified\nE       assert 'specs/001-enroll-course/evidence/review.json' in {'specs/001-enroll-course/evidence/final/checks/architecture.json': 'c170c58620f007748bdce44a2ca4236de798b2bff7b7ed4f2...l-course/evidence/final/checks/coverage.json': 'b136814e16a4866ce234431fc59382ff2ec877b8d1d238caa7a2307f93753ca6', ...}\n\ntests/architecture/test_quality_gates.py:366: AssertionError\n----------------------------- Captured stdout call -----------------------------\nManifest assembled; run evidence validation next.\n=========================== short test summary info ============================\nFAILED tests/architecture/test_quality_gates.py::test_assembly_reads_consolidated_files_and_current_review\n1 failed, 6 deselected in 0.06s\n",
+  "stderr": "",
+  "started_ns": 1792638069874464475,
+  "finished_ns": 1792638070314553923
+}

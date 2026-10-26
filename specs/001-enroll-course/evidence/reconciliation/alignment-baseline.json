@@ -1,0 +1,13 @@
+{
+  "constitution": "2.3.1",
+  "digest": "c0dbcd8d151a61d8e71f2d7229c17b38b54fc56d7e19e808e305a51ce8aa9faa",
+  "scope": [
+    "src",
+    "tests",
+    "scripts",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "archive": "specs/001-enroll-course/evidence/history/pre-v231-alignment",
+  "archive_files": 36
+}

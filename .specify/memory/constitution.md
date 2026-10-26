@@ -19,12 +19,19 @@ Inbound Adapters MUST handle external interaction, translate boundary representa
 and delegate application use cases to Application. Outbound Adapters MUST implement
 Core-owned Ports and handle technical integration with external systems.
 
-Adapters MAY directly use public Domain types, constructors, factories, and other
-public Domain mechanisms where necessary for technical boundary adaptation, provided
-Domain invariants and dependency constraints are preserved. Application MUST NOT be
-a mandatory gateway for such technical boundary adaptation. Direct Domain access
-MUST NOT be interpreted as permission for Adapters to orchestrate complete application
-use cases.
+Adapters MAY parse and validate external representations and convert them into Domain
+Types using supported Domain factories when performing technical boundary adaptation.
+They MAY directly use supported Value Object factories and other public Domain mechanisms.
+Complete Entity creation and restoration MUST follow the Repository-controlled lifecycle
+in Principle II; Persistence Adapters implementing Repository Ports MAY invoke the
+corresponding Domain Entity factories and controlled reconstitution APIs directly.
+The construction contracts in Principle II and dependency constraints MUST be preserved.
+Application MUST NOT be a mandatory gateway
+for such technical boundary adaptation. Direct Domain access MUST NOT be interpreted
+as permission for Adapters to orchestrate complete application use cases. Validation
+performed by Adapters MUST NOT duplicate or replace Domain business rules. Validation
+MUST NOT be duplicated solely to satisfy architectural layering.
+
 Domain MUST remain independent of application frameworks, persistence frameworks,
 transport technologies, and external service SDKs. Application MAY use libraries
 and frameworks for application responsibilities, provided dependency direction
@@ -36,18 +43,140 @@ redundant mappings solely to satisfy layering.
 ### II. Domain Ownership, Integrity, and Boundary Contracts
 
 Business decisions, business rules, state transitions, and invariants MUST reside
-in Domain. Application MUST own use-case orchestration and coordination of Domain
-operations and required Ports without duplicating or overriding Domain decisions.
+in Domain. Application MUST coordinate use-case-level validation, authorization,
+and business orchestration through Domain operations and required Ports, without
+duplicating or overriding Domain decisions. Domain MUST remain the authoritative
+owner of Domain invariants and the exclusive owner of business decisions.
 Adapters MUST NOT implement Domain business decisions or assume responsibility for
 application use-case orchestration.
 Business requirements MUST drive modeling rather than persistence or transport
 representations.
 
-Entities and value objects MUST preserve invariants during construction,
-reconstitution, and transitions, regardless of caller. Domain MUST NOT rely on
-external validation for invariant enforcement. Application MAY hold invalid,
-incomplete, or unvalidated input and intermediate state, but MUST NOT represent
-such state as valid Domain objects.
+**Domain Construction Contracts**
+
+Factory-based normal creation is a project-wide architectural API style for both
+Value Objects and Entities, independently of their current validation complexity.
+
+- All Value Objects and Entities MUST expose consistent, explicit factory APIs for
+  normal creation and MUST enforce their invariants regardless of caller. Domain
+  MUST NOT rely on external validation for invariant enforcement.
+- Expected validation and business creation failures MUST return explicit outcomes.
+  Expected invalid input to a supported factory MUST NOT be reclassified as an
+  internal contract violation.
+- Direct constructors MAY exist as internal implementation mechanisms but MUST NOT
+  be supported as alternative public creation APIs, even when they validate inputs.
+  Internal constructor misuse MAY raise exceptions as an internal contract violation.
+- Language-level absolute constructor privacy MUST NOT be required. Language-specific
+  mechanisms MAY vary; appropriate automated checks MUST enforce the supported API
+  contract. Constructor accessibility alone does not make a constructor a supported
+  public creation API.
+- Entity factories MUST accept validated Domain Types and enforce all applicable
+  entity-level invariants, including any cross-field constraints, regardless of
+  whether additional cross-field constraints currently exist. Validated Domain Types
+  are Domain-owned types whose applicable invariants have been enforced through their
+  own controlled APIs; their use does not replace entity-level validation.
+- Entity normal-creation factories MUST expose `Entity.create()` and restoration
+  factories MUST expose `Entity.reconstitute()`. These remain Domain APIs invoked
+  through the Repository-controlled lifecycle below; exposing a factory MUST NOT
+  authorize callers to bypass persistence confirmation.
+
+**Entity Identity and Persistence Lifecycle**
+
+A complete Entity is a Domain Entity admitted for business use, rather than input,
+a creation request, or intermediate persistence state. Every complete Entity MUST
+have a valid, persistence-confirmed Identity before it is exposed as complete or
+participates in business operations.
+
+- Repository MUST be the entry point for creating and restoring complete Entities.
+  It MUST coordinate persistence, Identity assignment or retrieval, and Entity
+  construction through a Core-owned Port implemented by a Persistence Adapter.
+  Entities belonging to an aggregate MAY follow this lifecycle through their
+  aggregate's Repository; a separate Repository per Entity MUST NOT be required.
+- Persistence-confirmed Identity MUST mean that persistence has acknowledged the
+  Identity's association with the Entity's stored state or its reservation within
+  the active atomic creation transaction. A syntactically valid identifier or a
+  locally generated value alone MUST NOT count as persistence confirmation.
+  Existing Entities MUST obtain their confirmed Identity from persisted state.
+- Identity MAY be generated by persistence, supplied externally, or derived from
+  Domain-defined natural or composite keys. Repository MUST coordinate its
+  confirmation; this policy MUST NOT require a surrogate key or change the Domain's
+  identity semantics merely to fit storage.
+- Domain MUST own creation rules and invariants. Repository MUST invoke
+  `Entity.create()` with validated Domain Types, including the confirmed Identity,
+  to enforce applicable creation rules. Repository MUST NOT substitute persisted
+  input, database defaults, or storage constraints for Domain creation decisions.
+  Repository MUST invoke `Entity.reconstitute()` for restored state, enforcing
+  persisted-state invariants without reapplying creation-only eligibility rules.
+- Creation and persistence MUST form one atomic operation within the use-case
+  transaction. Any persistence changes preceding Domain construction MUST remain
+  uncommitted and rollback-capable. An explicit creation-failure outcome or an
+  exception MUST cause those changes to be rolled back. Persistence or commit
+  failure MUST NOT produce a successful creation result or leave a partial Entity
+  record or creation reservation. Rollback MUST NOT require reuse of consumed
+  identifier sequence values.
+- An Entity whose Identity is confirmed in an active transaction MAY participate
+  in business operations within that transaction. It MUST NOT escape as a committed
+  result, trigger externally visible business effects, or remain usable after
+  rollback. Successful creation reported outside the transaction MUST follow
+  successful commit and MUST return an Entity with a confirmed Identity.
+- Application MUST coordinate the use case through Core-owned Ports and MAY
+  coordinate the surrounding unit of work. Repository MUST participate in that
+  transaction without independently committing part of the use case. Application
+  MUST NOT generate Entity identities, directly construct or restore complete
+  Entities, or bypass Domain rules. It MAY pass supplied identifiers and validate
+  their representations through Domain Value Object factories; that validation
+  MUST NOT be treated as persistence confirmation.
+- Domain factories MUST remain independent of Repository implementations, database
+  sessions, and persistence frameworks. Repository MUST establish the lifecycle
+  preconditions; Domain MUST enforce Domain invariants without performing I/O to
+  prove persistence confirmation.
+
+**Architectural trade-off:** Complete Entity construction is coupled to the
+persistence lifecycle through Repository. This project accepts that lifecycle
+dependency to guarantee identity completeness while keeping persistence implementation
+details outside Domain. It restricts transient Entity construction and requires
+transaction coordination; it MUST NOT reverse the dependency rules in Principle I.
+
+**Reconstitution**
+
+Normal creation admits a new Domain object under current creation rules. Persistence
+reconstitution restores previously persisted Domain state under its own contract.
+
+- Reconstitution MUST be an allowed, controlled Domain API separate from normal
+  creation factories. It MUST NOT be classified as a prohibited alternative public
+  creation API.
+- Reconstitution MUST enforce persisted-state invariants without reapplying
+  creation-only eligibility rules. A persisted-state invariant is a rule that restored
+  state must satisfy to be valid; creation-only eligibility governs admission of new
+  objects and need not remain true afterward.
+- Invalid persisted state MUST be classified as a data-integrity failure, not as
+  user-input validation failure or ordinary business rejection. The shared error
+  contract MAY establish its concrete representation and propagation mechanism.
+- Persistence Adapters MAY invoke reconstitution directly when implementing
+  Repository Ports within the lifecycle above. Application MUST NOT be a mandatory
+  gateway for this adaptation.
+
+Entities and Value Objects MUST also preserve applicable invariants during state
+transitions. Application MAY hold invalid, incomplete, or unvalidated input and
+intermediate state, but MUST NOT represent such state as valid Domain objects.
+These contracts keep validation outcomes explicit and normal-creation APIs consistent,
+while allowing valid historical state to be restored after eligibility has changed.
+
+Predictable input validation failures and business rejections MUST be represented
+through explicit Result-style outcomes rather than exceptions used for normal control
+flow.
+Domain MUST define and enforce its own invariants. Application MUST coordinate
+validation of untrusted input and MAY accumulate independent validation errors before
+invoking operations that require valid Domain values.
+
+Exceptions MAY be used for unexpected technical failures, programming errors, and
+violations of internal contracts. Such exceptions MUST NOT be silently converted
+into business rejections.
+
+Boundary contracts MUST distinguish expected failures from unexpected failures and
+define how each is propagated or translated. Infrastructure-specific exception types
+MUST NOT leak into Domain or Application contracts. These rules make expected
+outcomes explicit while preserving visibility of unexpected failures.
 
 Full Bridge boundary isolation MUST use explicit contracts and conversions wherever
 representations differ and MUST prevent external Infrastructure and Transport
@@ -59,31 +188,38 @@ architectural layering.
 
 ### III. Outside-In Test-Driven Development
 
-All new or modified business behavior MUST use Outside-In TDD. Feature development
-MUST begin with executable acceptance tests. Acceptance tests MUST express business
-outcomes derived from the approved specification at a declared public boundary.
+New or changed business behavior MUST follow Outside-In TDD using cohesive
+behavioral increments. Feature development MUST begin with executable acceptance
+tests. Acceptance tests MUST express business outcomes derived from the approved
+specification at a declared public boundary.
 Acceptance tests MUST guide subsequent inner-layer TDD cycles until the specified
 outcomes are satisfied. Writing an acceptance test first MUST NOT, by itself, be
-considered sufficient evidence of Outside-In TDD. Each independently testable
-behavior increment MUST still follow Red → Green → Refactor as defined below.
+considered sufficient evidence of Outside-In TDD. Each cohesive behavioral increment
+MUST still follow Red → Green → Refactor as defined below.
 
-Planning MUST declare the public acceptance-test boundary and select any transport
+Planning MUST declare the public acceptance-test boundary and select the transport
 protocol, acceptance-test framework, test-double strategy, and test environment.
 This Constitution MUST NOT mandate a specific choice for any of those technologies
 or strategies.
 
 Each affected layer, including Application, Domain, and Adapters, MUST have its
-responsibilities verified by appropriate automated tests. Production behavior in
-each affected layer MUST be driven by failing tests.
+responsibilities verified by appropriate automated tests. Tests MAY exercise multiple
+layers through a shared behavioral boundary.
 
-Every independently testable behavior increment MUST follow Red → Green → Refactor:
+Each increment MUST:
 
-- Red: write and execute a test that fails for the expected behavioral reason before
-  implementing the corresponding production behavior. Infrastructure, configuration,
-  or unrelated failures alone MUST NOT count as Red.
-- Green: implement the minimum production code necessary to pass the test.
-- Refactor: improve design where appropriate while preserving behavior, then rerun
-  relevant tests.
+1. Execute a relevant failing behavioral test before implementing the behavior (Red).
+   The test MUST fail for the expected behavioral reason; infrastructure,
+   configuration, or unrelated failures alone MUST NOT count as Red.
+2. Implement the behavior required by the increment and verify that the relevant
+   tests pass (Green).
+3. Consider refactoring and verify that relevant tests remain passing (Refactor).
+
+Related behaviors MAY be grouped into one increment when they form a coherent
+implementation unit. Separate cycles for every assertion, branch, or independently
+testable behavior are NOT required.
+
+Refactoring does not require code changes when none are warranted.
 
 Test scope and granularity MUST reflect layer responsibilities and risks. Tests MUST
 verify observable behavior and architectural responsibilities, rather than
@@ -94,17 +230,60 @@ Tests MUST NOT be weakened, deleted, skipped, or modified solely to make an
 implementation pass. Changes to existing tests MUST be justified by approved
 requirement changes or verified test defects.
 
-TDD compliance MUST have recorded execution evidence showing commands, results,
-execution order, and relevant failures for Red → Green → Refactor. Agent summaries
-without corresponding execution evidence MUST NOT satisfy this requirement.
+Lightweight execution evidence MUST demonstrate that relevant behavioral tests failed
+before implementation and passed afterward. TDD execution evidence MUST associate
+relevant Red and Green results with identifiable implementation states and their
+execution order. Evidence MUST be sufficient to review test-first chronology; test
+output alone, without revision or state association, MUST NOT be treated as conclusive
+proof of TDD.
+
+Evidence MUST distinguish acceptance-first verification from subsequent inner-layer
+TDD activity where inner cycles are performed. Consolidated evidence MAY be used,
+provided the relevant behavioral increments and their test-first chronology remain
+identifiable. Exhaustive per-behavior execution histories, intermediate source
+snapshots, and separate no-refactor artifacts are NOT required. Feature Plans MUST
+define how TDD execution evidence is captured and associated with implementation
+states.
+
+Final acceptance tests, regression tests, coverage requirements, architecture fitness
+tests, static analysis, and contract verification remain mandatory. Passing tests and
+coverage alone MUST NOT be presented as proof that TDD was followed.
 
 ### IV. Automated Architecture and Coverage Verification
 
 Automated architecture fitness tests MUST enforce dependency direction, Core
-independence, Domain isolation from external frameworks and Adapters, and boundary
-contract and type isolation. Violations MUST fail the relevant checks. Automated
-behavioral tests MUST verify Domain invariants during construction, reconstitution,
-and state transitions where applicable.
+independence from concrete Infrastructure and Transport Adapters, Domain isolation
+from external frameworks and Adapters, and boundary contract and type isolation.
+Architecture fitness verification MUST distinguish properties enforced by automated
+structural checks from those requiring behavioral contract tests or explicit review.
+Passing dependency checks alone MUST NOT be represented as verification of semantic
+boundary isolation.
+These checks MUST preserve the Application framework permission in Principle I.
+Violations MUST fail the relevant checks. Automated behavioral tests MUST verify
+Domain invariants during construction, reconstitution, and state transitions where
+applicable. Construction tests MUST verify supported APIs enforce applicable
+invariants, including entity-level cross-field constraints, and return explicit
+outcomes for expected creation failures, including Value Object validation failures.
+Construction checks MUST verify that every Value Object and Entity exposes the
+normal-creation factory API and that callers outside Domain construction internals
+use supported factories or reconstitution APIs rather than internal constructors.
+For complete Entities, checks MUST also verify that production construction and
+restoration occur only through the Repository-controlled lifecycle. Value Object
+factories MUST remain available for supported boundary adaptation. Isolated Domain
+factory tests MAY supply valid Domain identities without a live database; they verify
+Domain rules and MUST NOT be presented as proof of persistence confirmation.
+Repository contract tests, including tests against the real persistence implementation,
+MUST verify Identity confirmation before Entity use, atomic creation, rollback after
+explicit Domain rejection and exceptions following persistence changes, failure during
+persistence or commit, and successful return only after commit at the transaction
+boundary. They MUST verify that rolled-back Entities are not exposed as successful
+results and that Repository calls do not commit part of an enclosing use case.
+These checks MUST enforce supported API use
+without requiring language-level absolute constructor privacy. Reconstitution tests
+MUST verify persisted-state invariants and, where creation-only eligibility rules
+exist, verify that restoring otherwise valid state does not reapply those rules.
+Architecture checks MUST allow Persistence Adapters to invoke controlled Domain
+reconstitution directly when implementing Repository Ports.
 
 Every new or modified business-logic function or method MUST achieve 100% branch
 coverage, measured by automated tooling. The minimum coverage measurement unit MUST
@@ -117,9 +296,10 @@ behavioral testing requirements. Branch coverage alone MUST NOT be treated as
 sufficient verification or as proof of behavioral correctness or complete business
 scenario coverage.
 
-Planning MUST identify the applicable coverage scope, tooling, and justified
-exclusions, but MUST NOT weaken the constitutional minimum. Coverage exclusions MUST
-be explicitly justified and MUST NOT conceal untested business behavior.
+Feature Plans MUST identify the coverage tooling, the applicable coverage scope, and
+any justified exclusions, but MUST NOT weaken the constitutional minimum. Coverage
+exclusions MUST be explicitly justified and MUST NOT conceal untested business
+behavior.
 
 ### V. Evidence-Based Completion
 
@@ -129,83 +309,52 @@ available. Failed, skipped, blocked, or unexecuted mandatory checks MUST be repo
 Agents MUST NOT claim completion from self-assessment, incomplete verification,
 or results that do not match the final implementation state.
 
-The project MUST define and enforce automated static quality checks. Planning MUST
-establish the applicable tools, rules, and configurations.
-
-## Architecture Decisions and Open Questions
-
-The following items identify ambiguity in the source draft. They do not authorize
-exceptions to the explicit principles above. Feature plans MUST resolve applicable
-items before implementing behavior that depends on them; unresolved items MUST be
-reported rather than silently assigned a project-wide interpretation.
-
-- TODO(ARCHITECTURE_BOUNDARIES): During feature planning, identify the boundary
-  contracts and conversions required where external and Core representations differ,
-  and define transaction-coordination details consistent with Application ownership
-  of use-case orchestration. These choices MUST preserve direct Domain access for
-  technical boundary adaptation without assigning use-case orchestration to Adapters
-  or requiring redundant Application-to-Domain DTOs or mappings.
-- TODO(PORT_OWNERSHIP): Define when a Port belongs to Domain versus Application,
-  how cross-context communication works, and where transaction boundaries reside.
-  No bounded contexts, aggregate boundaries, or deployment topology are specified;
-  Hexagonal Architecture alone does not select a monolith or microservices.
-- TODO(APPLICATION_FRAMEWORKS): Define which Application framework dependencies are
-  acceptable, including framework-owned types in public contracts. Clarify whether
-  “Core independence” in fitness tests means dependency direction or framework freedom,
-  since Application explicitly permits frameworks.
-- TODO(FITNESS_TEST_SCOPE): Select enforceable module boundaries and fitness-test
-  tooling. Distinguish statically testable dependencies from semantic representation
-  leakage requiring behavioral tests or review.
-- TODO(TDD_SCOPE): Define treatment of behavior-preserving refactors, generated code,
-  configuration, and exploratory work. Clarify whether layer-specific failing tests
-  must be separate tests or may be satisfied by broader behavioral tests.
-- TODO(ACCEPTANCE_TEST_BOUNDARY): During feature planning, declare the public boundary
-  at which acceptance tests express specified business outcomes, and select any
-  transport protocol, acceptance-test framework, test-double strategy, and test
-  environment. Specification approval authority remains to be identified. The
-  acceptance-guided relationship to inner TDD cycles is defined in Principle III
-  and is not an unresolved planning choice.
-- TODO(TDD_EVIDENCE): Define evidence location, retention, association with code
-  revisions, and review mechanism. Specify what evidence is required when no refactor
-  is needed and how later edits invalidate prior verification.
-- TODO(COVERAGE_SCOPE): During feature planning, identify all applicable new or
-  modified business-logic functions and methods, including Domain and Application
-  logic; select tooling and map changes to entire affected functions or methods.
-  Document justified exclusions and identify their approval authority. Planning
-  decisions MUST NOT weaken the whole-function-or-method minimum in Principle IV
-  or use exclusions to conceal untested business behavior.
+The project MUST define and enforce automated static quality checks, including their
+tools, rules, and configurations. Feature Plans MUST apply those checks.
 
 ## Development Workflow and Quality Gates
 
 1. Specifications MUST state the business behavior used to derive acceptance tests.
-2. Plans MUST identify responsibilities across Domain, Application, Ports, and Adapters;
-   define applicable coverage scope and static checks; and resolve applicable open
-   questions above.
-3. Tasks and implementation MUST preserve test-first ordering and record execution
-   evidence for each behavior increment.
-4. Completion review MUST inspect architecture checks, invariant and acceptance tests,
-   coverage, static checks, and TDD evidence against the final implementation state.
+2. Plans MUST comply with this Constitution and identify responsibilities
+   across Domain, Application, Ports, and Adapters. Plans MUST document
+   feature-specific architectural and implementation decisions without weakening
+   constitutional requirements.
+3. Plans MUST specify feature-level transaction coordination, concrete boundary
+   contracts and conversions, acceptance-test boundaries and environments, and
+   applicable coverage scope and checks. For affected Domain
+   types, plans MUST identify factory and reconstitution APIs, accepted Domain Types,
+   type-level and entity-level invariants, creation-only eligibility, and invalid
+   persisted-state outcomes. For Entities, plans MUST also identify Repository
+   entry points, Identity sources and confirmation points, transaction ownership,
+   commit and exposure boundaries, and rollback behavior for explicit Domain
+   failures and technical failures. Language-specific implementation mechanisms MAY vary.
+4. Tasks and implementation MUST preserve test-first ordering and record execution
+   evidence as defined in Principle III, which MAY be consolidated across cohesive
+   increments.
+5. Completion review MUST inspect architecture checks, invariant and acceptance tests,
+   regression tests, coverage, static checks, contract verification, and TDD evidence
+   against the final implementation state.
    Any missing or failing mandatory check prevents a successful completion claim.
 
 ## Governance
 
-This constitution governs feature specifications, plans, tasks, and implementation.
-Those artifacts MUST comply with its effective requirements. The source draft is
-reference material; unresolved questions above MUST NOT be treated as settled policy.
+This Constitution defines the mandatory project-wide principles for specifications,
+plans, tasks, and implementation.
 
-Amendments MUST document the proposed text, rationale, compatibility impact, and
-migration requirements, and receive explicit project-owner approval before being
-represented as ratified policy. The Project Owner is the constitutional approval
-authority.
+Feature-specific technical and architectural decisions MUST be documented in the
+corresponding Feature Plan and MUST comply with this Constitution.
+
+Constitutional changes MUST be explicitly approved by the Project Owner. The
+current Constitution MUST record its version and amendment date. Git history MAY
+be used to track revisions.
 
 Versions MUST use semantic versioning: MAJOR for incompatible principle removals or
 redefinitions; MINOR for new principles or materially expanded guidance; PATCH for
-non-semantic clarifications and corrections. Every amendment MUST update its version
-and amendment date and record its impact for review. Specifications, plans, and
-completion reviews MUST assess compliance and explicitly report deviations; a plan
-alone MUST NOT waive a mandatory constitutional rule.
+non-semantic clarifications and corrections.
 
-Ratification record: On 2026-10-21, the Project Owner explicitly approved Constitution
-v1.3.0 for ratification in this session. This paragraph records that approval.
+Specifications, plans, and completion reviews MUST assess compliance with this
+Constitution. A Feature Plan MUST NOT waive constitutional requirements.
 
-**Version**: 1.3.0 | **Ratified**: 2026-10-21 | **Last Amended**: 2026-10-21
+**Version**: 3.0.0 | **Ratified**: 2026-10-21 | **Last Amended**: 2026-10-22
+
+**Effective**: 2026-10-22

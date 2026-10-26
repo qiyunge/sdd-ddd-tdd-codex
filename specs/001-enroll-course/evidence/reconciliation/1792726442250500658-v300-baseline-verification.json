@@ -1,0 +1,23 @@
+{
+  "increment": "v300-baseline",
+  "stage": "verification",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/acceptance",
+    "tests/architecture",
+    "tests/adapters/test_sqlite.py",
+    "tests/adapters/test_student_uow.py",
+    "tests/adapters/test_transactions.py",
+    "-q",
+    "--junitxml=/tmp/v300-baseline.xml"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 66%]\n.....................................                                    [100%]\n109 passed in 5.68s\n",
+  "stderr": "",
+  "started_ns": 1792726442250500658,
+  "finished_ns": 1792726448327838988,
+  "implementation_state": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "implementation_state_after": "d90ae7fd094e61fcacee7c4a0d8bf919cada2e4cdfa0f1f5f2a95df83cc61090",
+  "test_id": ".venv/bin/pytest",
+  "activity": "acceptance"
+}

@@ -1,0 +1,19 @@
+{
+  "increment": "vo-construction-environment",
+  "stage": "verification",
+  "command": [
+    ".venv/bin/pytest",
+    "-q",
+    "tests/adapters/test_package_resources.py",
+    "tests/adapters/test_server.py"
+  ],
+  "exit_code": 0,
+  "stdout": "..                                                                       [100%]\n2 passed in 0.84s\n",
+  "stderr": "",
+  "started_ns": 1792727893692065419,
+  "finished_ns": 1792727894863734085,
+  "implementation_state": "1c33d2e709a66009851134cbe89db7016c978dc8304f102d691f6589a64631b7",
+  "implementation_state_after": "1c33d2e709a66009851134cbe89db7016c978dc8304f102d691f6589a64631b7",
+  "test_id": "selection: tests/adapters/test_package_resources.py tests/adapters/test_server.py",
+  "activity": "inner"
+}

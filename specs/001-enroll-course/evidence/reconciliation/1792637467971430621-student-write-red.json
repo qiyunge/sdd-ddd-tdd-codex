@@ -1,0 +1,16 @@
+{
+  "increment": "student-write",
+  "stage": "red",
+  "command": [
+    ".venv/bin/pytest",
+    "tests/adapters/test_student_uow.py",
+    "-k",
+    "write_success",
+    "-q"
+  ],
+  "exit_code": 1,
+  "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________________ test_student_write_success_is_explicit ____________________\n\ntmp_path = PosixPath('/tmp/pytest-of-devuser/pytest-131/test_student_write_success_is_0')\n\n    def test_student_write_success_is_explicit(tmp_path):\n        from enrollment.application import student_contracts\n        path = tmp_path / \"db\"\n        initialize(path)\n        session = StudentSession(path)\n        try:\n>           assert session.save(candidate(), False) == getattr(student_contracts, \"Saved\", \"SAVED\"), \"successful port writes return an explicit Saved outcome\"\nE           AssertionError: successful port writes return an explicit Saved outcome\nE           assert None == 'SAVED'\nE            +  where None = save(Student(student_id=StudentId(value='s'), programme_id=ProgrammeId(value='p'), name=StudentName(value='Alex'), email=StudentEmail(value='Alex@Example.com')), False)\nE            +    where save = <enrollment.adapters.persistence.sqlite.StudentSession object at 0x754d99879520>.save\nE            +    and   Student(student_id=StudentId(value='s'), programme_id=ProgrammeId(value='p'), name=StudentName(value='Alex'), email=StudentEmail(value='Alex@Example.com')) = candidate()\nE            +  and   'SAVED' = getattr(<module 'enrollment.application.student_contracts' from '/home/devuser/wsl-projects/sdd-ddd-tdd-codex/src/enrollment/application/student_contracts.py'>, 'Saved', 'SAVED')\n\ntests/adapters/test_student_uow.py:82: AssertionError\n=========================== short test summary info ============================\nFAILED tests/adapters/test_student_uow.py::test_student_write_success_is_explicit\n1 failed, 4 deselected in 0.07s\n",
+  "stderr": "",
+  "started_ns": 1792637467971430621,
+  "finished_ns": 1792637468292005954
+}
