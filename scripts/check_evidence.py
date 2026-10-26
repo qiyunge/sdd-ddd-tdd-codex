@@ -8,9 +8,14 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from scripts.acceptance_inventory import STUDENT_CASES
+from scripts.acceptance_inventory import ENROLLMENT_CASES, STUDENT_CASES
 from scripts.check_quality import FINAL, commands
 from scripts.record import ROOT, _test_id, digest
+
+DECLARATION = "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
+BASELINE = (
+    "specs/001-enroll-course/evidence/reconciliation/v300-baseline-inventory.json"
+)
 
 
 def chronology_errors(run: dict) -> list[str]:
@@ -46,6 +51,8 @@ def chronology_errors(run: dict) -> list[str]:
 def required_run_errors(runs: list[dict], required: dict) -> list[str]:
     """New declared work never inherits the output-only historical path."""
     errors = []
+    if any(run.get("increment") not in required for run in runs):
+        errors.append("Unknown required increment association")
     for name, associations in required.items():
         group = [r for r in runs if r.get("increment") == name]
         if not group or not associations or set(associations) - {"acceptance", "inner"}:
@@ -85,6 +92,33 @@ def required_run_errors(runs: list[dict], required: dict) -> list[str]:
     return errors
 
 
+def rejected_run_errors(root: Path, rejected: dict, required: dict) -> list[str]:
+    """Retain unusable attempts for review; never hide a valid required cycle."""
+    errors = []
+    for reference, reason in rejected.items():
+        path = root / reference
+        if not path.resolve().is_relative_to(root.resolve()):
+            errors.append("Invalid rejected execution reference")
+            continue
+        run = json.loads(path.read_text())
+        if (
+            not isinstance(reason, str)
+            or not reason.strip()
+            or run.get("increment") not in required
+            or run.get("stage") not in {"red", "green", "refactor"}
+        ):
+            errors.append("Invalid rejected execution classification")
+        invalid = chronology_errors(run)
+        try:
+            if run.get("test_id") != _test_id(run.get("command", []), None):
+                invalid.append("Invalid selection identity")
+        except ValueError:
+            invalid.append("Missing test selection")
+        if not invalid:
+            errors.append("Valid execution cannot be rejected")
+    return errors
+
+
 def validate_runs(runs: list[dict]) -> list[str]:
     errors = []
     groups = {}
@@ -105,7 +139,10 @@ def validate_runs(runs: list[dict]) -> list[str]:
             for r in group
             if r.get("stage") == "red"
             and r.get("exit_code") == 1
-            and "AssertionError" in r.get("stdout", "")
+            and any(
+                assertion in r.get("stdout", "")
+                for assertion in ("AssertionError", "Failed: DID NOT RAISE")
+            )
         ]
         greens = [
             r for r in group if r.get("stage") == "green" and r.get("exit_code") == 0
@@ -150,22 +187,18 @@ def validate(
         state = json.loads(manifest.read_text())
         required = state.get("required_increments", {})
         declaration_ref = state.get("increment_declaration")
-        declaration_path = (
-            root
-            / "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
-        )
+        declaration_path = root / DECLARATION
+        declaration = json.loads(declaration_path.read_text())
+        if declaration_ref != DECLARATION or not required:
+            errors.append("Missing required increment declaration")
+        elif declaration.get("increments") != required:
+            errors.append("Required increment declaration mismatch")
+        baseline_ref = state.get("baseline_inventory")
         if (
-            declaration_path.exists()
-            or state.get("review", {}).get("constitution") == "3.0.0"
+            baseline_ref != BASELINE
+            or declaration.get("baseline_inventory") != BASELINE
         ):
-            if (
-                declaration_ref
-                != "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
-                or not required
-            ):
-                errors.append("Missing required increment declaration")
-            elif json.loads(declaration_path.read_text()).get("increments") != required:
-                errors.append("Required increment declaration mismatch")
+            errors.append("Missing or inconsistent baseline inventory")
         if required != state.get("review", {}).get("required_increments", {}):
             errors.append("Required increment review mismatch")
         if required_increments is not None and not required_increments <= set(
@@ -173,6 +206,20 @@ def validate(
         ) | set(required):
             errors.append("Missing explicit required increments")
         current = digest(root)
+        if (
+            state.get("review", {}).get("constitution") != "3.0.0"
+            or state.get("review", {}).get("source_digest") != current
+        ):
+            errors.append("Missing or stale final implementation review")
+        rejected = state.get("rejected_execution_records", {})
+        if rejected != state.get("review", {}).get("rejected_execution_records", {}):
+            errors.append("Rejected execution review mismatch")
+        active_refs = set(state.get("execution_records", [])) | {
+            ref for refs in state.get("increments", {}).values() for ref in refs
+        }
+        if set(rejected) & (active_refs | set(state.get("historical_records", []))):
+            errors.append("Rejected execution used as active or historical proof")
+        errors.extend(rejected_run_errors(root, rejected, required))
         expected_artifacts = (
             set(state["checks"].values())
             | {str(FINAL / "checks/tests.xml"), str(FINAL / "checks/coverage.json")}
@@ -182,6 +229,8 @@ def validate(
             | ({state["review_reference"]} if "review_reference" in state else set())
             | {ref for refs in state.get("observations", {}).values() for ref in refs}
             | ({declaration_ref} if declaration_ref else set())
+            | ({baseline_ref} if baseline_ref else set())
+            | set(rejected)
         )
         if set(state["artifacts"]) != expected_artifacts:
             errors.append("Missing artifact hashes")
@@ -268,29 +317,40 @@ def validate(
             if any(child.tag in ("skipped", "failure", "error") for child in case)
         ):
             errors.append("Skipped or failed mandatory test")
-        scenario_ids = [
-            int(match.group(1))
-            for case in cases
-            if case.attrib.get("classname") == "tests.acceptance.test_enrollment"
-            and (
-                match := re.match(r"test_scenario\[(\d+)-", case.attrib.get("name", ""))
-            )
-        ]
-        if sorted(scenario_ids) != list(range(1, 16)) or state["scenarios"] != 15:
+        if state["scenarios"] != 19:
             errors.append("Missing or duplicate acceptance scenarios")
-        student_names = []
-        for case in cases:
-            if (
-                case.get("classname") == "tests.acceptance.test_student_details"
-                and case.get("name") in STUDENT_CASES
-            ):
-                name = case.attrib["name"]
-                student_names.append(name)
-                prop = case.find("./properties/property[@name='scenario']")
-                if prop is None or prop.get("value") != STUDENT_CASES[name]:
-                    errors.append("Missing or invalid Student scenario identity")
-        if sorted(student_names) != sorted(STUDENT_CASES):
-            errors.append("Missing or duplicate Student acceptance variants")
+        for filename, mapping in (
+            ("test_enrollment", ENROLLMENT_CASES),
+            ("test_student_details", STUDENT_CASES),
+        ):
+            names = []
+            for case in cases:
+                if case.get("classname") != "tests.acceptance." + filename:
+                    continue
+                name = case.get("name")
+                properties = case.findall("./properties/property[@name='scenario']")
+                if name in mapping:
+                    names.append(name)
+                    if (
+                        len(properties) != 1
+                        or properties[0].get("value") != mapping[name]
+                    ):
+                        errors.append("Missing or invalid acceptance scenario identity")
+                elif properties:
+                    errors.append("Unknown acceptance scenario identity")
+            if sorted(names) != sorted(mapping):
+                errors.append("Missing or duplicate acceptance variants: " + filename)
+        baseline = json.loads((root / BASELINE).read_text())
+        nodes = [
+            case.get("classname", "").replace(".", "/") + ".py::" + case.get("name", "")
+            for case in cases
+        ]
+        for original in baseline["cases"]:
+            node = original["node_id"]
+            if node.startswith("tests/acceptance/") and nodes.count(node) != 1:
+                errors.append(
+                    "Missing or duplicate baseline acceptance variant: " + node
+                )
         if "execution_records" in state:
             runs = [
                 json.loads((root / ref).read_text())

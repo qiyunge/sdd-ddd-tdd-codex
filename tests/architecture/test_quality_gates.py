@@ -96,20 +96,48 @@ def fixture(tmp_path):
     }
     (checks / "coverage.json").write_text(json.dumps(coverage))
     from scripts.acceptance_inventory import ENROLLMENT_CASES, STUDENT_CASES
+
     (checks / "tests.xml").write_text(
-        "<testsuites><testsuite>" + "".join(
+        "<testsuites><testsuite>"
+        + "".join(
             f'<testcase classname="tests.acceptance.{filename}" name="{name}"><properties><property name="scenario" value="{family}" /></properties></testcase>'
-            for filename,mapping in (("test_enrollment",ENROLLMENT_CASES),("test_student_details",STUDENT_CASES))
-            for name,family in mapping.items()
-        ) + "</testsuite></testsuites>"
+            for filename, mapping in (
+                ("test_enrollment", ENROLLMENT_CASES),
+                ("test_student_details", STUDENT_CASES),
+            )
+            for name, family in mapping.items()
+        )
+        + "</testsuite></testsuites>"
     )
-    declaration_ref = "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
-    baseline_ref = "specs/001-enroll-course/evidence/reconciliation/v300-baseline-inventory.json"
+    declaration_ref = (
+        "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
+    )
+    baseline_ref = (
+        "specs/001-enroll-course/evidence/reconciliation/v300-baseline-inventory.json"
+    )
     required = {"fixture": {"inner": ["tests/domain/test_behavior.py"]}}
-    declaration = root/declaration_ref
-    declaration.parent.mkdir(parents=True,exist_ok=True)
-    declaration.write_text(json.dumps({"constitution":"3.0.0","increments":required,"baseline_inventory":baseline_ref}))
-    (root/baseline_ref).write_text(json.dumps({"cases":[{"node_id":"tests/acceptance/test_enrollment.py::test_scenario[1-SUCCESS]"}]}))
+    declaration = root / declaration_ref
+    declaration.parent.mkdir(parents=True, exist_ok=True)
+    declaration.write_text(
+        json.dumps(
+            {
+                "constitution": "3.0.0",
+                "increments": required,
+                "baseline_inventory": baseline_ref,
+            }
+        )
+    )
+    (root / baseline_ref).write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "node_id": "tests/acceptance/test_enrollment.py::test_scenario[1-SUCCESS]"
+                    }
+                ]
+            }
+        )
+    )
     # The fixture explicitly supplies its own required cycles to the validator.
     cycles = []
     for stage, code in [("red", 1), ("green", 0), ("no-refactor", 0)]:
@@ -120,9 +148,12 @@ def fixture(tmp_path):
                     "stage": stage,
                     "exit_code": code,
                     "command": ["pytest", "tests/domain/test_behavior.py"],
-                    "activity":"inner", "test_id":"selection: tests/domain/test_behavior.py",
-                    "implementation_state":digest,"implementation_state_after":digest,
-                    "started_ns":len(cycles)*2+1,"finished_ns":len(cycles)*2+2,
+                    "activity": "inner",
+                    "test_id": "selection: tests/domain/test_behavior.py",
+                    "implementation_state": digest,
+                    "implementation_state_after": digest,
+                    "started_ns": len(cycles) * 2 + 1,
+                    "finished_ns": len(cycles) * 2 + 2,
                     "stdout": "AssertionError: required behavior"
                     if code
                     else "1 passed",
@@ -141,14 +172,23 @@ def fixture(tmp_path):
                 "digest": digest,
                 "checks": refs,
                 "scenarios": 19,
-                "required_increments":required, "increment_declaration":declaration_ref,"baseline_inventory":baseline_ref,
+                "required_increments": required,
+                "increment_declaration": declaration_ref,
+                "baseline_inventory": baseline_ref,
                 "increments": {"fixture": cycles},
-                "review": {"passed": True, "notes": "controlled test fixture", "constitution":"3.0.0", "source_digest":digest,"required_increments":required},
+                "review": {
+                    "passed": True,
+                    "notes": "controlled test fixture",
+                    "constitution": "3.0.0",
+                    "source_digest": digest,
+                    "required_increments": required,
+                },
                 "artifacts": {
                     ref: hashlib.sha256((root / ref).read_bytes()).hexdigest()
                     for ref in [
                         *refs.values(),
-                        declaration_ref,baseline_ref,
+                        declaration_ref,
+                        baseline_ref,
                         *cycles,
                         str((checks / "coverage.json").relative_to(root)),
                         str((checks / "tests.xml").relative_to(root)),
@@ -231,7 +271,9 @@ def test_sequence_and_tampering(tmp_path):
         elif mutation == "missing-scenario":
             p = trial / "specs/001-enroll-course/evidence/final/checks/tests.xml"
             p.write_text(
-                p.read_text().replace("test_scenario[15-outcome]", "unrelated")
+                p.read_text().replace(
+                    "test_scenario[15-COURSE_NOT_OFFERED]", "unrelated"
+                )
             )
         copy.write_text(json.dumps(state))
         assert validator.validate(copy, trial, required_increments={"fixture"}), (
@@ -388,10 +430,14 @@ def test_assembly_reads_consolidated_files_and_current_review(tmp_path):
     evidence = root / "specs/001-enroll-course/evidence"
     log = evidence / "reconciliation"
     log.mkdir(exist_ok=True)
-    declaration_ref = "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
-    declaration = json.loads((root/declaration_ref).read_text())
-    declaration["increments"] = {"coherent":{"inner":["tests/domain/test_behavior.py"]}}
-    (root/declaration_ref).write_text(json.dumps(declaration))
+    declaration_ref = (
+        "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
+    )
+    declaration = json.loads((root / declaration_ref).read_text())
+    declaration["increments"] = {
+        "coherent": {"inner": ["tests/domain/test_behavior.py"]}
+    }
+    (root / declaration_ref).write_text(json.dumps(declaration))
     for stage in ("red", "green"):
         raw = json.loads((root / f"{stage}.json").read_text())
         raw.update(
@@ -405,8 +451,9 @@ def test_assembly_reads_consolidated_files_and_current_review(tmp_path):
             {
                 "passed": True,
                 "notes": "current review",
-                "constitution":"3.0.0", "source_digest":module("record").digest(root),
-                "required_increments":declaration["increments"],
+                "constitution": "3.0.0",
+                "source_digest": module("record").digest(root),
+                "required_increments": declaration["increments"],
                 "historical_records": ["specs/001-enroll-course/evidence/review.json"],
             }
         )
@@ -514,11 +561,13 @@ def v300_fixture(tmp_path):
             )
         )
     state = json.loads(manifest.read_text())
-    declared_path = root/state["increment_declaration"]
+    declared_path = root / state["increment_declaration"]
     declared = json.loads(declared_path.read_text())
     declared["increments"] = declaration
     declared_path.write_text(json.dumps(declared))
-    state["artifacts"][state["increment_declaration"]] = hashlib.sha256(declared_path.read_bytes()).hexdigest()
+    state["artifacts"][state["increment_declaration"]] = hashlib.sha256(
+        declared_path.read_bytes()
+    ).hexdigest()
     state["required_increments"] = declaration
     state["review"]["required_increments"] = declaration
     state["increments"] = {"behavior": []}
@@ -773,3 +822,68 @@ def test_v300_recorder_wrapped_pytest_module_context():
         "version",
     ]
     assert recorder._test_id(command, None) == "selection: tests/domain -k version"
+
+
+def test_review_must_match_final_implementation(tmp_path):
+    root, manifest = fixture(tmp_path)
+    state = json.loads(manifest.read_text())
+    state["review"]["source_digest"] = "old-state"
+    manifest.write_text(json.dumps(state))
+    assert module("check_evidence").validate(manifest, root)
+
+
+def test_expected_exception_assertion_is_behavioral_red(tmp_path):
+    root, _ = fixture(tmp_path)
+    red = json.loads((root / "red.json").read_text())
+    green = json.loads((root / "green.json").read_text())
+    red["stdout"] = "E       Failed: DID NOT RAISE <class 'ValueError'>"
+    validator = module("check_evidence")
+    assert validator.validate_runs([red, green]) == []
+    for unrelated in ("ImportError: unavailable", "Failed: Timeout (>5s)"):
+        assert validator.validate_runs([dict(red, stdout=unrelated), green])
+
+
+@pytest.mark.parametrize("exclude_valid", [False, True])
+def test_reviewed_rejected_execution_retains_bytes_without_satisfying_cycles(
+    tmp_path, exclude_valid
+):
+    root, manifest = fixture(tmp_path)
+    log = root / "specs/001-enroll-course/evidence/reconciliation"
+    for stage in ("red", "green"):
+        raw = json.loads((root / f"{stage}.json").read_text())
+        raw["increment"] = "fixture"
+        (log / f"{stage}.json").write_text(json.dumps(raw))
+    rejected = dict(
+        raw,
+        stage="red",
+        exit_code=1,
+        started_ns=0,
+        finished_ns=0,
+        stdout="AssertionError: required behavior",
+        test_id="pytest",
+    )
+    rejected_path = log / "preliminary.json"
+    rejected_path.write_text(json.dumps(rejected))
+    original = rejected_path.read_bytes()
+    rejected_ref = str(rejected_path.relative_to(root))
+    review = json.loads(manifest.read_text())["review"]
+    review["rejected_execution_records"] = {
+        rejected_ref: "Executable-only identity; not valid new-cycle evidence"
+    }
+    if exclude_valid:
+        review["rejected_execution_records"][
+            str((log / "red.json").relative_to(root))
+        ] = "Attempt to hide valid required Red"
+    (log / "review.json").write_text(json.dumps(review))
+    assembler = module("assemble_evidence")
+    assembler.ROOT = root
+    if exclude_valid:
+        with pytest.raises(ValueError, match="rejected"):
+            assembler.assemble()
+    else:
+        assembler.assemble()
+        state = json.loads(manifest.read_text())
+        assert rejected_ref in state["artifacts"]
+        assert rejected_ref not in state["execution_records"]
+        assert rejected_path.read_bytes() == original
+        assert module("check_evidence").validate(manifest, root) == []

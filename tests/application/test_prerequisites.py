@@ -19,9 +19,9 @@ class Session:
             if self.missing == "student"
             else Student.create(
                 s,
-                ProgrammeId("p"),
-                StudentName("Alex"),
-                StudentEmail("alex@example.com"),
+                ProgrammeId.create("p"),
+                StudentName.create("Alex"),
+                StudentEmail.create("alex@example.com"),
             )
         )
 

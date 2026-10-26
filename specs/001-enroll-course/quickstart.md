@@ -1,6 +1,6 @@
 # Quickstart Validation Guide: Constitution v3.0.0
 
-This guide validates the target [plan](plan.md), [ADR-0001](adr/0001-entity-lifecycle-and-student-revisions.md), and contracts. Repository/version changes are not yet implemented. The existing test commands run now; passing the current suite does not establish the new acceptance outcomes until those cases and the revised inventory exist.
+This guide validates the implemented Repository lifecycle and Student saved-version contract from the [plan](plan.md), [ADR-0001](adr/0001-entity-lifecycle-and-student-revisions.md), and contracts. Final checks, semantic review, assembly and evidence validation must all pass against the same implementation before completion is reported.
 
 ## Prerequisites and setup
 
@@ -12,9 +12,14 @@ uv run python --version
 uv run pytest tests/acceptance -q
 ```
 
-Expected: Python 3.12 and current acceptance behavior. After implementation, the mandatory exact inventory must include enrollment-1 through enrollment-19 and student-details-1 through student-details-17, retaining every original parameterized case and Unicode variant. A total collected-test count is insufficient.
+Expected: Python 3.12 and all acceptance behavior. The mandatory exact inventory includes enrollment-1 through enrollment-19 and student-details-1 through student-details-17, retaining every original parameterized case and Unicode variant. The gate also checks every baseline acceptance node, including supplementary race/retry tests. A total collected-test count is insufficient.
 
 Fresh initialization uses the production connection setup and revised compatible schema. Hosts must provision valid prerequisite records and supply trusted identity verification before production serving. Deterministic verification exists only in tests. Reject incompatible/old schemas unchanged; this guide does not authorize migration/backfill or invent Student details/versions.
+
+Identifiers preserve every nonempty string, including U+0000 at the start or
+inside it. The schema measures identifier byte length and retains TEXT checks.
+Databases using the former TEXT-length constraints are refused unchanged;
+hosts must arrange external migration or fresh provisioning.
 
 ## Focused feedback commands
 
@@ -51,7 +56,7 @@ Keep all existing transport/schema tests: ID coercion, variables/operationName, 
 
 ## Trusted Student acceptance
 
-Use the host-only get_student/save_student operations described in the [Student contract](contracts/student-details.md), against real SQLite. Once implemented, obtain StudentSnapshot before replacement and pass snapshot.saved_version.value as the raw expected_version (Repository Ports receive the validated SavedVersion). A replacement test must never auto-refresh a deliberately old version. Existing callers that omit the required version must be updated.
+Use the host-only get_student/save_student operations described in the [Student contract](contracts/student-details.md), against real SQLite. Obtain StudentSnapshot before replacement and pass snapshot.saved_version.value as the raw expected_version (Repository Ports receive the validated SavedVersion). See the executable temporary-database example in [README](../../README.md#required-student-details-and-host-integration). Successful reads and saves return a detached StudentSnapshot; outdated replacements return OutdatedVersion. A replacement test must never auto-refresh a deliberately old version. Existing callers that omit the required version must be updated.
 
 | US2 scenarios | Expected behavior |
 |---|---|
@@ -110,6 +115,6 @@ Require all tests, exact scenario/variant inventory, complete Domain/Application
 
 Negative evidence fixtures must reject missing/skipped scenarios, absent/mismatched new-increment associations, unrelated Red/Green, overlapping/reversed execution, changed-during-run state, failing Green and stale/tampered final results. Preserve positive consolidated increment handling. Failed, skipped, blocked, missing or stale mandatory checks prevent completion. Planning documents and old green manifests do not certify implementation of these requirements.
 
-## Planning verification and next workflow
+## Review and repeat verification
 
-This documentation update is checked for links, scenario coverage, consistent contract names and absence of unresolved placeholders. It does not execute the future behavior or rewrite evidence. Next run $speckit-tasks to reassess remaining implementation work from the current source and this design; keep historical completed tasks/history intact.
+Inspect `evidence/reconciliation/v300-review.json` and its active `review.json` copy for the current digest, semantic findings, required increment associations, explicitly rejected preliminary records and historical limitations. Assembly retains and hashes rejected records without treating them as required-cycle proof. It refuses attempts to classify a valid execution as rejected. The validator requires the declared cycles to remain complete after classification. Preserve the archived original bytes. After later source, test or configuration changes, repeat all final checks and update both reviews before assembly and validation.

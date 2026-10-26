@@ -65,7 +65,7 @@ def test_domain_backed_constraints_and_email_conflict(tmp_path):
     session.close()
     session = StudentSession(path)
     try:
-        assert session.email_owner("alex@example.com") == StudentId("s")
+        assert session.email_owner("alex@example.com") == StudentId.create("s")
         assert create(session, "other", "aLEX@example.COM") == EmailKeyConflict
     finally:
         session.close()

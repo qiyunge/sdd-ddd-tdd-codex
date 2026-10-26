@@ -69,6 +69,10 @@ STUDENT_CASES.update(
     {
         "test_student_details_11": "student-details-11",
         **{
+            f"test_exact_identifiers_with_nul_round_trip[{variant}]": "student-details-11"
+            for variant in ("nul", "leading", "embedded")
+        },
+        **{
             f"test_student_details_12[{fault}]": "student-details-12"
             for fault in ("rejection", "exception", "commit")
         },

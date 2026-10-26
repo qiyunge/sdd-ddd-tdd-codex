@@ -508,3 +508,87 @@ def test_version_existence_and_email_precedence(tmp_path):
         == "name"
     )
     assert read_student(path) == initial
+
+
+@pytest.mark.parametrize(
+    "identity",
+    ["\0", "\0student", "student\0suffix"],
+    ids=["nul", "leading", "embedded"],
+)
+def test_exact_identifiers_with_nul_round_trip(tmp_path, identity, record_property):
+    from enrollment.adapters.persistence.sqlite import Session
+    from enrollment.application.student_contracts import StudentSnapshot
+    from enrollment.bootstrap import create_app
+    from enrollment.domain.values import CourseId, ProgrammeId, StudentId
+    from tests.acceptance.test_enrollment import request
+
+    path = tmp_path / "db"
+    initialize(path)
+    record_property("scenario", "student-details-11")
+    programme = identity + "programme"
+    course = identity + "course"
+    created = invoke(path, student_id=identity, programme_id=programme)
+    assert isinstance(created, StudentSnapshot), (
+        "Every nonempty text identity, including leading NUL, must commit"
+    )
+    assert created.student.student_id.value == identity
+    assert created.student.programme_id.value == programme
+    assert created.saved_version.value == 1
+    assert read_student(path, identity) == created
+
+    replacement_programme = programme + "replacement"
+    replaced = invoke(
+        path,
+        mode="replace",
+        student_id=identity,
+        programme_id=replacement_programme,
+        expected_version=created.saved_version.value,
+        name="Updated",
+    )
+    assert isinstance(replaced, StudentSnapshot)
+    assert replaced.student.student_id.value == identity
+    assert replaced.student.programme_id.value == replacement_programme
+    assert replaced.student.name.value == "Updated"
+    assert replaced.saved_version.value == 2
+    reloaded = read_student(path, identity)
+    assert reloaded == replaced
+    assert reloaded.student.student_id.value == identity
+    assert reloaded.student.programme_id.value == replacement_programme
+    assert reloaded.student.name.value == "Updated"
+
+    session = Session(path)
+    try:
+        session.create_programme(ProgrammeId.create(replacement_programme))
+        session.create_course(CourseId.create(course))
+        session.create_offering(
+            ProgrammeId.create(replacement_programme), CourseId.create(course)
+        )
+        session.commit()
+    finally:
+        session.close()
+    app = create_app(
+        path, lambda credential: identity if credential == "trusted" else None
+    )
+    response = request(app, token="trusted", student=identity, course=course)
+    assert "errors" not in response
+    assert response["data"]["enrollCourse"] == {
+        "__typename": "EnrollCourseSuccess",
+        "studentId": identity,
+        "courseId": course,
+    }
+    session = Session(path)
+    try:
+        enrollment = session.enrollment(
+            StudentId.create(identity), CourseId.create(course)
+        )
+        assert enrollment.student_id.value == identity
+        assert enrollment.course_id.value == course
+    finally:
+        session.close()
+    assert (
+        request(app, token="trusted", student=identity, course=course)["data"][
+            "enrollCourse"
+        ]["reason"]
+        == "ALREADY_ENROLLED"
+    )
+    assert read_student(path, identity) == replaced

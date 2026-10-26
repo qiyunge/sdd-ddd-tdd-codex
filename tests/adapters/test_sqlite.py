@@ -1,3 +1,4 @@
+import re
 import sqlite3
 from unittest.mock import patch
 
@@ -55,22 +56,26 @@ def test_persisted_values_use_shared_validation(kind, valid, invalid):
 def test_reads(database):
     s = Session(database)
     try:
-        assert s.student(StudentId("s")) == Student.create(
-            StudentId("s"),
-            ProgrammeId("p"),
-            StudentName("Alex"),
-            StudentEmail("alex@example.com"),
+        assert s.student(StudentId.create("s")) == Student.create(
+            StudentId.create("s"),
+            ProgrammeId.create("p"),
+            StudentName.create("Alex"),
+            StudentEmail.create("alex@example.com"),
         )
-        assert s.student(StudentId("absent")) is None
-        assert s.programme(ProgrammeId("p")) == Programme.create(ProgrammeId("p"))
-        assert s.programme(ProgrammeId("absent")) is None
-        assert s.course(CourseId("c")) == Course.create(CourseId("c"))
-        assert s.course(CourseId("absent")) is None
-        assert s.offering(ProgrammeId("p"), CourseId("c")) == (
-            ProgrammeCourseOffering.create(ProgrammeId("p"), CourseId("c"))
+        assert s.student(StudentId.create("absent")) is None
+        assert s.programme(ProgrammeId.create("p")) == Programme.create(
+            ProgrammeId.create("p")
         )
-        assert s.offering(ProgrammeId("p"), CourseId("absent")) is None
-        assert s.enrollment(StudentId("s"), CourseId("c")) is None
+        assert s.programme(ProgrammeId.create("absent")) is None
+        assert s.course(CourseId.create("c")) == Course.create(CourseId.create("c"))
+        assert s.course(CourseId.create("absent")) is None
+        assert s.offering(ProgrammeId.create("p"), CourseId.create("c")) == (
+            ProgrammeCourseOffering.create(
+                ProgrammeId.create("p"), CourseId.create("c")
+            )
+        )
+        assert s.offering(ProgrammeId.create("p"), CourseId.create("absent")) is None
+        assert s.enrollment(StudentId.create("s"), CourseId.create("c")) is None
     finally:
         s.close()
 
@@ -83,11 +88,11 @@ def test_valid_enrollment_restores_after_offering_removed(database):
         c.execute("DELETE FROM programme_course_offerings")
     s = Session(database)
     try:
-        assert s.enrollment(StudentId("s"), CourseId("c")) == Enrollment.create(
-            StudentId("s"), CourseId("c")
-        )
-        assert s.offering(ProgrammeId("p"), CourseId("c")) is None
-        assert s.student(StudentId("absent")) is None
+        assert s.enrollment(
+            StudentId.create("s"), CourseId.create("c")
+        ) == Enrollment.create(StudentId.create("s"), CourseId.create("c"))
+        assert s.offering(ProgrammeId.create("p"), CourseId.create("c")) is None
+        assert s.student(StudentId.create("absent")) is None
     finally:
         s.close()
 
@@ -103,7 +108,7 @@ def test_invalid_persisted_student_text(database, column, value):
     s = Session(database)
     try:
         with pytest.raises(DataIntegrityFailure):
-            s.student(StudentId("s"))
+            s.student(StudentId.create("s"))
     finally:
         s.close()
 
@@ -119,7 +124,7 @@ def test_dangling_programme_remains_representable(tmp_path):
         )
     s = Session(path)
     try:
-        student = s.student(StudentId("s"))
+        student = s.student(StudentId.create("s"))
         assert student is not None
         assert student.programme_id.value == "missing"
         assert student.name.value == "Alex"
@@ -152,7 +157,7 @@ def test_corrupt_row(database):
     s = Session(database)
     try:
         with pytest.raises(DataIntegrityFailure):
-            s.student(StudentId("s"))
+            s.student(StudentId.create("s"))
     finally:
         s.close()
 
@@ -177,10 +182,12 @@ def test_schema_id_constraints(tmp_path, table, columns, value):
         # No FK configuration here: test each column's own NOT NULL/TEXT/nonempty constraint.
         for column in columns:
             data = {key: "valid" for key in columns}
+            if table == "students":
+                data.update(name="Alex", email="alex@example.com", saved_version=1)
             data[column] = value
             with pytest.raises(sqlite3.IntegrityError):
                 db.execute(
-                    f"INSERT INTO {table} ({','.join(columns)}) VALUES ({','.join('?' for _ in columns)})",
+                    f"INSERT INTO {table} ({','.join(data)}) VALUES ({','.join('?' for _ in data)})",
                     tuple(data.values()),
                 )
 
@@ -215,9 +222,77 @@ def test_parameter_binding_and_thread_ownership(database):
 
     session = Session(database)
     try:
-        assert session.student(StudentId("s' OR 1=1 --")) is None
+        assert session.student(StudentId.create("s' OR 1=1 --")) is None
         with ThreadPoolExecutor(1) as workers:
             with pytest.raises(StorageFailure):
-                workers.submit(session.student, StudentId("s")).result(2)
+                workers.submit(session.student, StudentId.create("s")).result(2)
     finally:
         session.close()
+
+
+@pytest.mark.parametrize("raw", ["\0", "\0key", "key\0suffix"])
+def test_repository_nul_identifiers_round_trip(tmp_path, raw):
+    from enrollment.adapters.persistence.sqlite import StudentSession, initialize
+    from enrollment.application.student_contracts import StudentSnapshot
+    from enrollment.domain.models import Enrollment
+
+    path = tmp_path / "db"
+    initialize(path)
+    programme = ProgrammeId.create(raw)
+    course = CourseId.create(raw)
+    student = StudentId.create(raw)
+    session = StudentSession(path)
+    try:
+        assert session.create_programme(programme).programme_id.value == raw
+        assert session.create_course(course).course_id.value == raw
+        offering = session.create_offering(programme, course)
+        assert offering.programme_id.value == offering.course_id.value == raw
+        saved = session.create_student(
+            student,
+            programme,
+            StudentName.create("Alex"),
+            StudentEmail.create("alex@example.com"),
+        )
+        assert isinstance(saved, StudentSnapshot)
+        assert saved.student.student_id.value == raw
+        assert saved.student.programme_id.value == raw
+        assert saved.saved_version.value == 1
+        enrollment = session.create_enrollment(student, course)
+        assert isinstance(enrollment, Enrollment)
+        assert enrollment.student_id.value == enrollment.course_id.value == raw
+        session.commit()
+    finally:
+        session.close()
+    initialize(path)  # Corrected schema remains compatible and idempotent.
+    session = StudentSession(path)
+    try:
+        assert session.programme(programme).programme_id.value == raw
+        assert session.course(course).course_id.value == raw
+        assert session.offering(programme, course) == offering
+        assert session.snapshot(student) == saved
+        assert session.enrollment(student, course) == enrollment
+        # Values sharing the prefix before NUL still represent distinct keys.
+        assert session.create_course(
+            CourseId.create(raw + "other")
+        ).course_id.value == (raw + "other")
+        assert session.course(course).course_id.value == raw
+        session.commit()
+    finally:
+        session.close()
+
+
+def test_pre_nul_fix_schema_is_refused_without_changes(tmp_path):
+    from importlib.resources import files
+
+    from enrollment.adapters.persistence.sqlite import initialize
+
+    path = tmp_path / "old.db"
+    schema = files("enrollment.adapters.persistence").joinpath("schema.sql").read_text()
+    old_schema = re.sub(r"length\(CAST\((\w+) AS BLOB\)\)", r"length(\1)", schema)
+    with connect(path) as db:
+        db.executescript(old_schema)
+        db.execute("INSERT INTO programmes VALUES ('preserved')")
+    before = path.read_bytes()
+    with pytest.raises(StorageFailure, match="incompatible schema"):
+        initialize(path)
+    assert path.read_bytes() == before

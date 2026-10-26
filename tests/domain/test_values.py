@@ -26,15 +26,17 @@ def test_invalid(kind, bad):
 
 @pytest.mark.parametrize("kind", [StudentId, ProgrammeId, CourseId, SubjectId])
 def test_exact_immutable(kind):
-    v = kind(" A ")
+    v = kind.create(" A ")
     assert v.value == " A "
     with pytest.raises(FrozenInstanceError):
         v.value = "b"
 
 
 def test_distinct_and_trusted():
-    assert StudentId("a") != CourseId("a")
-    assert VerifiedIdentity.create(SubjectId("a")).subject_id == SubjectId("a")
+    assert StudentId.create("a") != CourseId.create("a")
+    assert VerifiedIdentity.create(
+        SubjectId.create("a")
+    ).subject_id == SubjectId.create("a")
     with pytest.raises(ValueError):
         VerifiedIdentity("a")
     with pytest.raises(ValueError):
@@ -47,3 +49,12 @@ def test_factory_rejects_unusable_identifiers(kind, bad):
     assert isinstance(kind.create(bad), InvalidIdentifier)
     created = kind.create(" A ")
     assert isinstance(created, kind) and created.value == " A "
+
+
+@pytest.mark.parametrize("kind", [StudentId, ProgrammeId, CourseId, SubjectId])
+@pytest.mark.parametrize("raw", ["\0", "\0key", "key\0suffix"])
+def test_nul_is_nonempty_exact_identifier_text(kind, raw):
+    created = kind.create(raw)
+    assert isinstance(created, kind)
+    assert created.value == raw
+    assert created != kind.create(raw + "different")

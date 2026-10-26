@@ -98,12 +98,23 @@ def test_primary_checker_detects_direction_and_framework_leaks(tmp_path):
         assert result.returncode == expected, result.stdout + result.stderr
 
 
-CONSTRUCTORS = {
+ENTITIES = {
     "Student",
     "Programme",
     "Course",
     "ProgrammeCourseOffering",
     "Enrollment",
+}
+CONSTRUCTORS = ENTITIES | {
+    "Identifier",
+    "StudentId",
+    "ProgrammeId",
+    "CourseId",
+    "SubjectId",
+    "RequiredText",
+    "StudentName",
+    "StudentEmail",
+    "SavedVersion",
     "VerifiedIdentity",
 }
 
@@ -115,10 +126,26 @@ def direct_constructors(root: Path) -> list[str]:
     }
     repository = root / "src/enrollment/adapters/persistence/sqlite.py"
     findings = []
-    for path in (root / "src/enrollment").rglob("*.py"):
+    paths = list((root / "src/enrollment").rglob("*.py"))
+    paths.extend((root / "tests").rglob("*.py"))
+    for path in paths:
         if path in allowed:
             continue
         tree = ast.parse(path.read_text())
+        misuse = set()
+        if path.is_relative_to(root / "tests/domain"):
+            for block in ast.walk(tree):
+                if isinstance(block, ast.With) and any(
+                    isinstance(item.context_expr, ast.Call)
+                    and isinstance(item.context_expr.func, ast.Attribute)
+                    and item.context_expr.func.attr == "raises"
+                    and any(
+                        isinstance(arg, ast.Name) and arg.id == "ValueError"
+                        for arg in item.context_expr.args
+                    )
+                    for item in block.items
+                ):
+                    misuse.update(ast.walk(block))
         aliases = {}
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
@@ -160,17 +187,20 @@ def direct_constructors(root: Path) -> list[str]:
             if (
                 isinstance(node, ast.Call)
                 and resolve(node.func).split(".")[-1] in CONSTRUCTORS
+                and node not in misuse
             ):
                 findings.append(
                     f"{path.relative_to(root)}:{node.lineno}: unsupported constructor"
                 )
-            if path != repository and isinstance(
-                node, (ast.Name, ast.Attribute, ast.Call)
+            if (
+                path.is_relative_to(root / "src")
+                and path != repository
+                and isinstance(node, (ast.Name, ast.Attribute, ast.Call))
             ):
                 parts = resolve(node).split(".")
                 if (
                     len(parts) >= 2
-                    and parts[-2] in CONSTRUCTORS - {"VerifiedIdentity"}
+                    and parts[-2] in ENTITIES
                     and parts[-1] in {"create", "reconstitute"}
                 ):
                     findings.append(
@@ -218,3 +248,61 @@ def test_repository_only_factories_and_alias_references(tmp_path):
     assert direct_constructors(tmp_path), (
         "Repositories must use supported Domain factories"
     )
+
+
+def test_value_object_factories_and_ordinary_test_callers(tmp_path):
+    probe = tmp_path / "src/enrollment/adapters/identity/probe.py"
+    probe.parent.mkdir(parents=True)
+    for name in (
+        "Identifier",
+        "StudentId",
+        "ProgrammeId",
+        "CourseId",
+        "SubjectId",
+        "RequiredText",
+        "StudentName",
+        "StudentEmail",
+        "SavedVersion",
+        "VerifiedIdentity",
+    ):
+        for expression in ("Value(raw)", "Alias(raw)"):
+            probe.write_text(
+                f"from enrollment.domain.values import {name} as Value\n"
+                f"Alias = Value\nx = {expression}\n"
+            )
+            assert direct_constructors(tmp_path), (name, expression)
+        probe.write_text(
+            f"from enrollment.domain.values import {name} as Value\n"
+            "x = Value.create(raw)\n"
+        )
+        assert direct_constructors(tmp_path) == []
+    probe.unlink()
+    ordinary = tmp_path / "tests/adapters/test_probe.py"
+    ordinary.parent.mkdir(parents=True)
+    ordinary.write_text(
+        "from enrollment.domain.values import StudentId\nx = StudentId('s')\n"
+    )
+    assert direct_constructors(tmp_path), "Ordinary tests use supported APIs too"
+    ordinary.write_text(
+        "from enrollment.domain.values import StudentId\nx = StudentId.create('s')\n"
+    )
+    assert direct_constructors(tmp_path) == []
+    misuse = tmp_path / "tests/domain/test_probe.py"
+    misuse.parent.mkdir(parents=True)
+    misuse.write_text(
+        "import pytest\nfrom enrollment.domain.values import StudentId\n"
+        "def test_internal_contract():\n"
+        "    with pytest.raises(ValueError):\n        StudentId(None)\n"
+    )
+    assert direct_constructors(tmp_path) == []
+
+
+def test_all_domain_types_expose_supported_factories():
+    import inspect
+
+    from enrollment.domain import models, values
+
+    for module in (models, values):
+        for name, value in vars(module).items():
+            if inspect.isclass(value) and value.__module__ == module.__name__:
+                assert callable(getattr(value, "create", None)), name

@@ -15,7 +15,7 @@ class Verifier:
         return (
             None
             if self.subject is None
-            else VerifiedIdentity.create(SubjectId(self.subject))
+            else VerifiedIdentity.create(SubjectId.create(self.subject))
         )
 
 

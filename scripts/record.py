@@ -72,9 +72,17 @@ def capture(
 
 def _test_id(command: list[str], request: dict | None) -> str:
     """Identify the requested selection; a command alone cannot prove one test ran."""
-    start = 1
-    if command[1:3] == ["-m", "pytest"]:
-        start = 3
+    start = next(
+        (
+            index + 1
+            for index, part in enumerate(command)
+            if Path(part).name in {"pytest", "py.test"}
+            and (index == 0 or command[index - 1] == "-m")
+        ),
+        None,
+    )
+    if start is None:
+        raise ValueError("Missing meaningful test identity")
     selected = []
     index = start
     while index < len(command):

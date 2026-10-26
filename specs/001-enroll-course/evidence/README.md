@@ -34,8 +34,9 @@ exclusions are permitted only in structurally declarative Protocol modules.
 
 Historical records and original review remain unchanged. `history-index.json` and
 `evidence/history/pre-reconciliation/` preserve original final artifact hashes/bytes.
-Current review reassesses grouped work under constitution v2.0.0 using actual retained
-commands/results, never rewriting history or inferring TDD from final Green.
+The archived review reassessed grouped work under constitution v2.0.0 using actual
+retained commands/results. The active review is now governed by v3.0.0; neither
+review rewrites history or infers TDD from final Green.
 
 ## Constitution v2.3.1 capture
 
@@ -61,8 +62,9 @@ fields stay unchanged and are not v2.3.1 chronology.
 .venv/bin/python -m scripts.record us2-checkpoint verification .venv/bin/pytest tests/acceptance/test_student_details.py tests/acceptance/test_student_record_integrity.py -q
 ```
 
-Supported construction is `Identifier.create` / `RequiredText.create` for raw input,
-`.reconstitute` for stored input, `VerifiedIdentity.create(SubjectId)`, and
+Supported construction is `Identifier.create` / `RequiredText.create` /
+`SavedVersion.create` for raw or stored input with identical invariants,
+`VerifiedIdentity.create(SubjectId)`, and
 `Student.create`, `Programme.create`, `Course.create`, `ProgrammeCourseOffering.create`,
 and `Enrollment.create` for validated Domain values. Record `.reconstitute` does not
 replay offering eligibility or email availability.
@@ -87,3 +89,48 @@ Keep source/tests/config stable during runs and executions nonoverlapping.
 Executable/module names alone do not identify tests; multi-test commands are
 selections and retain all target/filter context. Consider refactoring and record
 passing verification afterward; historical metadata is never silently defaulted.
+
+The recorder locates pytest inside direct executable, `python -m pytest`, and
+`python -m coverage run -m pytest` commands. Interpreter/module switches do not
+become test identities. Pytest targets, node IDs, marker filters and `-k` expressions
+remain part of the recorded selection.
+
+`reconciliation/v300-review.json` records the current semantic and chronology
+review; `reconciliation/review.json` is its active assembly input. Both bind the
+final implementation digest and declared required increments. The manifest hashes
+the declaration, baseline inventory, reviews, checks, required execution records
+and preserved historical references. Exact validation covers 19 enrollment and 17
+Student families, every mandatory parameter variant and every baseline acceptance
+node; wrong labels, missing/duplicate/skipped cases and stale reviews fail.
+
+An early v300-gates attempt recorded the pytest executable as its test identity.
+Its original bytes remain available under `rejected_execution_records` with a
+review reason and manifest hash. It cannot satisfy any required cycle. Independently
+valid recorded gate Red/Green runs supply that proof. This classification is
+explicit and checked: a valid execution cannot be hidden as rejected, and all
+required cycles must pass after rejected attempts are removed. Historical records
+without sufficient associations remain historical rather than fabricated proof.
+
+The trusted host contract returns `StudentSnapshot` after read/create/replacement
+commit and cleanup. Replacement supplies raw `snapshot.saved_version.value` and
+returns OutdatedVersion for a stale snapshot, without an automatic retry. See the
+[runnable host example](../../../README.md#required-student-details-and-host-integration).
+Schema initialization refuses incompatible stored versions/guards without changing
+the database. Uncertain commit returns a technical failure and requires a later
+independent read; it never authorizes deletion or reversal of potentially committed
+records. Enrollment SDL and rejection vocabulary remain unchanged.
+
+T192's `v300-exact-identifiers` increment records acceptance failure before the
+Repository failures for valid U+0000-prefixed identifiers. Domain factory cases
+already passed and are verification, not a new Domain Red. Identifier constraints
+now measure `length(CAST(identifier AS BLOB))` while retaining the TEXT check,
+so nonempty NUL-containing identities survive all five tables unchanged. The
+acceptance cases cover committed snapshots, conditional replacement and HTTP
+enrollment; Repository tests cover provisioning/restoration and schema refusal.
+The corrected Student column-constraint fixture supplies valid name, email and
+version fields so those unrelated constraints cannot mask the identifier check.
+The exact inventory includes the three new Student scenario-11 variants.
+`history/pre-t192-alignment/index.json` hashes the preserved current evidence
+bytes from before this increment. Databases using the prior TEXT-length checks
+are incompatible and remain unchanged when initialization refuses them; migration
+remains an external host responsibility.

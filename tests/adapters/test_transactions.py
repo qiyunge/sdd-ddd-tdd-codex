@@ -5,7 +5,7 @@ from enrollment.domain.models import Enrollment
 from enrollment.domain.values import CourseId, StudentId
 from tests.support.database import rows
 
-PAIR = Enrollment.create(StudentId("s"), CourseId("c"))
+PAIR = Enrollment.create(StudentId.create("s"), CourseId.create("c"))
 
 
 def test_commit_and_reconstitution(database):
@@ -16,7 +16,7 @@ def test_commit_and_reconstitution(database):
     assert rows(database) == [("s", "c")]
     s = Session(database)
     try:
-        assert s.enrollment(StudentId("s"), CourseId("c")) == PAIR
+        assert s.enrollment(StudentId.create("s"), CourseId.create("c")) == PAIR
     finally:
         s.close()
 
@@ -86,7 +86,7 @@ def test_pair_unique_and_foreign_key_classification(tmp_path):
             session.create_enrollment(PAIR.student_id, PAIR.course_id) == PairConflict
         )
         with pytest.raises(StorageFailure) as failure:
-            session.create_enrollment(StudentId("missing"), CourseId("c"))
+            session.create_enrollment(StudentId.create("missing"), CourseId.create("c"))
         assert isinstance(failure.value, StorageFailure)
     finally:
         session.close()

@@ -1,6 +1,15 @@
 # Student enrollment
+This project is based on ***Extension_Lab03_GraphQL***, which focuses on implementing GraphQL queries.
 
-Python 3.12 application using graphql-core, Flask, Waitress and local SQLite. The only business endpoint is POST `/graphql`, with the mutation in [the schema](specs/001-enroll-course/contracts/schema.graphqls). Prerequisite student, programme, course and offering data is managed by the host.
+**GitHub Repository:** [sdd-ddd-tdd-codex](https://github.com/qiyunge/sdd-ddd-tdd-codex)
+
+Unlike a conventional implementation, this project was developed using **Codex Agent and Spec-Kit**, following a Specification-Driven Development (**SDD**) workflow. Implementation follows the Red → Green → Refactor cycle, with tests driving development against the approved specifications. Implementation follows the Red → Green → Refactor cycle, with tests driving development (TDD) against the approved specifications.
+
+To better explore transaction management, business rules, and concurrency, the implementation focuses on a GraphQL Mutation rather than a business Query. The enrollCourse use case serves as the primary example, demonstrating a complete enrollment workflow involving validation, eligibility checks, persistence, and transactional consistency.
+
+The application is built with Python 3.12, graphql-core, Flask, Waitress, and local SQLite. Its only business endpoint is POST /graphql. The GraphQL schema defines the enrollCourse mutation and includes a placeholder Query root. Prerequisite student, programme, course, and offering data are managed by the host application.
+
+See the GraphQL schema for the API contract.
 
 ## Develop and verify
 
@@ -23,7 +32,7 @@ bash scripts/check-quality.sh
 .venv/bin/python -m scripts.check_evidence
 ```
 
-Checks capture raw results first. Assembly then binds those results and TDD transcripts to the source/config/test digest. Validation rejects missing, failed, skipped, tampered or stale evidence. Review notes live in `specs/001-enroll-course/evidence/review.json`; changing implementation, tests or configuration requires all three stages again. Historical failures are retained. Complete Domain/Application statement and branch coverage must be 100%; architecture, strict mypy, Ruff and Import Linter must pass.
+Checks capture raw results first. Review the final state in `specs/001-enroll-course/evidence/reconciliation/v300-review.json` and its active copy `evidence/reconciliation/review.json`. Assembly binds those reviews, required TDD increments, the baseline acceptance inventory and raw results to the source/config/test digest. Validation rejects missing, failed, skipped, tampered or stale evidence. Changing implementation, tests or configuration requires all three stages again. Historical failures are retained. Complete Domain/Application statement and branch coverage must be 100%; architecture, strict mypy, Ruff and Import Linter must pass.
 
 ## Host integration
 
@@ -75,8 +84,56 @@ a dictionary containing `mode` (`create` or `replace`), `student_id`, `programme
 `name`, and `email`, plus a factory returning
 `enrollment.adapters.persistence.sqlite.StudentSession(database_path)`. Replacement
 supplies the complete record. This operation is not a web endpoint. It returns a
-committed Student or an explicit invalid-input, existence, email-conflict or technical
-failure outcome. Programming defects propagate to the host error boundary.
+committed `StudentSnapshot(student, saved_version)` or an explicit invalid-input,
+existence, outdated-version, email-conflict or technical failure outcome. Read the
+current snapshot through `get_student(student_id, sessions)` and supply its raw
+`snapshot.saved_version.value` as `expected_version` when replacing. Omitting that
+version is invalid input. An outdated replacement changes nothing; deliberately
+reload and reconsider the full replacement before retrying. Programming defects
+propagate to the host error boundary.
+
+This self-contained example uses a fresh temporary database:
+
+```python
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from enrollment.adapters.persistence.sqlite import StudentSession, initialize
+from enrollment.application.student_contracts import StudentSnapshot
+from enrollment.application.student_details import get_student, save_student
+from enrollment.domain.outcomes import OutdatedVersion
+
+with TemporaryDirectory() as directory:
+    database = Path(directory) / "enrollment.db"
+    initialize(database)
+    sessions = lambda: StudentSession(database)
+    details = dict(
+        student_id="s", programme_id="p", name="Alex", email="Alex@example.com"
+    )
+    created = save_student(dict(details, mode="create"), sessions)
+    assert isinstance(created, StudentSnapshot)
+    assert created.saved_version.value == 1
+
+    snapshot = get_student("s", sessions)
+    assert isinstance(snapshot, StudentSnapshot)
+    command = dict(
+        details,
+        mode="replace",
+        name="Alex Smith",
+        expected_version=snapshot.saved_version.value,
+    )
+    updated = save_student(command, sessions)
+    assert isinstance(updated, StudentSnapshot)
+    assert updated.saved_version.value == 2
+    assert isinstance(save_student(command, sessions), OutdatedVersion)
+```
+
+Snapshot reads finish their transaction and close the connection before returning.
+Creation and replacement report success only after commit. If the commit outcome is
+uncertain, the host receives `StudentResult.STORAGE_FAILURE`; reconcile through a
+later independent `get_student` read. Do not delete or revert a potentially committed
+record or automatically replay a replacement against a refreshed version. A lost
+response after confirmed commit leaves the committed record intact.
 
 Value Objects use `.create(raw)` for both supplied and stored input when their
 validation rules are identical. Invalid input returns `InvalidIdentifier`,
@@ -95,7 +152,11 @@ Use the adapter's `connect` helper for direct provisioning: it registers Domain-
 SQLite validation/comparison functions. Unconfigured writes fail closed. Initialization
 refuses legacy Student schemas without changing their data; hosts must provision a
 fresh compatible schema or arrange their own audited migration. No names/emails are
-fabricated. Compatible initialization is idempotent. Enrollment still cannot write
+fabricated, and old rows receive no fabricated saved versions. Fresh creation starts
+at version 1; every committed replacement, including identical details, advances it
+by one. The SQL guard rejects updates without that advancement, but supported edits
+still require the conditional host operation and the originally read version.
+Compatible initialization is idempotent. Enrollment still cannot write
 Student details and its public GraphQL schema/rejection precedence is unchanged.
 
 For validation and lightweight execution recording see

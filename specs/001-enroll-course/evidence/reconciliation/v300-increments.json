@@ -48,6 +48,20 @@
       "inner": [
         "tests/architecture/test_quality_gates.py"
       ]
+    },
+    "v300-recorder": {
+      "inner": [
+        "tests/architecture/test_quality_gates.py::test_v300_recorder_wrapped_pytest_module_context"
+      ]
+    },
+    "v300-exact-identifiers": {
+      "acceptance": [
+        "tests/acceptance/test_student_details.py"
+      ],
+      "inner": [
+        "tests/domain/test_values.py",
+        "tests/adapters/test_sqlite.py"
+      ]
     }
   }
 }

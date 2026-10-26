@@ -3,7 +3,12 @@
 import hashlib
 import json
 
-from scripts.check_evidence import required_run_errors
+from scripts.check_evidence import (
+    BASELINE,
+    DECLARATION,
+    rejected_run_errors,
+    required_run_errors,
+)
 from scripts.check_quality import FINAL, commands
 from scripts.record import ROOT, digest
 
@@ -19,22 +24,33 @@ def assemble() -> None:
     refs = {name: str(FINAL / "checks" / f"{name}.json") for name in commands(ROOT)}
     review_ref = "specs/001-enroll-course/evidence/reconciliation/review.json"
     review = json.loads((ROOT / review_ref).read_text())
-    declaration_ref = (
-        "specs/001-enroll-course/evidence/reconciliation/v300-increments.json"
-    )
+    declaration_ref = DECLARATION
     declaration_path = ROOT / declaration_ref
-    required = {}
-    if declaration_path.exists():
-        required = json.loads(declaration_path.read_text())["increments"]
-        if not required or review.get("required_increments") != required:
-            raise ValueError("Required increment declaration/review mismatch")
-    elif review.get("constitution") == "3.0.0" or review.get("required_increments"):
+    if not declaration_path.exists():
         raise ValueError("Missing required increment declaration")
+    declaration = json.loads(declaration_path.read_text())
+    required = declaration["increments"]
+    if not required or review.get("required_increments") != required:
+        raise ValueError("Required increment declaration/review mismatch")
+    if declaration.get("baseline_inventory") != BASELINE:
+        raise ValueError("Missing baseline inventory declaration")
+    if review.get("constitution") != "3.0.0" or review.get("source_digest") != digest(
+        ROOT
+    ):
+        raise ValueError("Missing or stale final implementation review")
+    rejected = review.get("rejected_execution_records", {})
+    rejection_errors = rejected_run_errors(ROOT, rejected, required)
+    if set(rejected) - set(execution) or rejection_errors:
+        raise ValueError(
+            "Invalid rejected execution review: " + "; ".join(rejection_errors)
+        )
     historical = list(review.get("historical_records", []))
     if required:
         new_execution = []
         for ref in execution:
             raw = json.loads((ROOT / ref).read_text())
+            if ref in rejected:
+                continue
             if raw["increment"] in required:
                 new_execution.append(ref)
             else:
@@ -51,20 +67,25 @@ def assemble() -> None:
         set(refs.values())
         | set(execution)
         | set(historical)
+        | set(rejected)
         | {
             str(FINAL / "checks/tests.xml"),
             str(FINAL / "checks/coverage.json"),
             review_ref,
+            declaration_ref,
+            BASELINE,
         }
     )
     state = {
         "digest": digest(ROOT),
         "checks": refs,
-        "scenarios": 15,
+        "scenarios": 19,
         "execution_records": execution,
         "review_reference": review_ref,
         "review": review,
         "historical_records": historical,
+        "rejected_execution_records": rejected,
+        "baseline_inventory": BASELINE,
         "artifacts": {
             ref: hashlib.sha256((ROOT / ref).read_bytes()).hexdigest()
             for ref in sorted(artifacts)

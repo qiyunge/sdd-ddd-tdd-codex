@@ -49,7 +49,7 @@ def test_operation_modes_and_precise_outcomes(tmp_path):
     initialize(path)
     assert invoke(path, mode="replace", expected_version=1) == "STUDENT_NOT_FOUND"
     assert isinstance(invoke(path, mode="unknown"), InvalidStudentDetails)
-    assert invoke(path).student.student_id == StudentId("s")
+    assert invoke(path).student.student_id == StudentId.create("s")
     assert invoke(path) == "STUDENT_ALREADY_EXISTS"
 
 

@@ -47,7 +47,7 @@ class FlowSession(Session):
         (
             False,
             True,
-            Enrollment.create(StudentId("s"), CourseId("c")),
+            Enrollment.create(StudentId.create("s"), CourseId.create("c")),
             ["enrollment", "offering", "add", "commit", "close"],
         ),
     ],
@@ -88,7 +88,8 @@ def test_second_unobservable_conflict_keeps_the_saved_pair():
         == Failure.PERSISTENCE_FAILURE
     )
     assert all(
-        session.retained == Enrollment.create(StudentId("s"), CourseId("c"))
+        session.retained
+        == Enrollment.create(StudentId.create("s"), CourseId.create("c"))
         for session in sessions
     )
 
